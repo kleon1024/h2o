@@ -24,7 +24,7 @@ class NumberedListBlockState extends State<NumberedListBlock> {
             this.isHovering = isHovering;
           });
         },
-        child: TextButton(onPressed: (){},child: Text(this.widget.text)),
+        child: TextButton(onPressed: () {}, child: Text(this.widget.text)),
       ),
       isHovering
           ? TextButton(onPressed: () {}, child: Text("Editing"))
