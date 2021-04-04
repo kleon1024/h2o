@@ -1,4 +1,3 @@
-
 enum BlockType {
   text,
   h1,
@@ -6,4 +5,11 @@ enum BlockType {
   h3,
   numbered_list,
   bulleted_list,
+}
+
+enum NodeType {
+  Directory,
+  TextChannel,
+  Document,
+  Table,
 }

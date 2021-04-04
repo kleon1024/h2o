@@ -1,9 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:h2o/components/nodes/node.dart';
 import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
-import 'package:h2o/pages/channel/channel_page.dart';
+import 'package:h2o/global/enum.dart';
 
 class TeamTree extends StatelessWidget {
+  final nodes = [
+    NodeType.Directory,
+    NodeType.TextChannel,
+    NodeType.Document,
+    NodeType.Table,
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -24,23 +32,8 @@ class TeamTree extends StatelessWidget {
           slivers: [
             SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-              return TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(CupertinoPageRoute(builder: (ctx) {
-                    return ChannelPage();
-                  }));
-                },
-                child: Container(
-                  padding: EdgeInsets.only(left: 12.0 * index),
-                  child: Row(
-                    children: [
-                      Icon(CupertinoIcons.number, size: 18),
-                      Text("channel"),
-                    ],
-                  ),
-                ),
-              );
-            }, childCount: 3))
+              return Node(type: nodes[index]);
+            }, childCount: nodes.length))
           ],
         ),
       ),

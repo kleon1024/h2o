@@ -24,11 +24,9 @@ class NumberedListBlockState extends State<NumberedListBlock> {
             this.isHovering = isHovering;
           });
         },
-        child: TextButton(onPressed: () {}, child: Text(this.widget.text)),
+        child: Text(widget.text),
       ),
-      isHovering
-          ? TextButton(onPressed: () {}, child: Text("Editing"))
-          : Container(),
+      isHovering ? InkWell(onTap: () {}, child: Text("Editing")) : Container(),
     ]));
   }
 }
