@@ -13,7 +13,7 @@ type Basics struct {
 
 func RegisterBasics(r *gin.RouterGroup, svc *options.ApiService) {
 	h := Basics{svc}
-	r.GET("/", h.GetHello)
+	r.GET("", h.GetHello)
 }
 
 func (h *Basics) GetHello(c *gin.Context) {

@@ -25,19 +25,20 @@ const (
 )
 
 type Block struct {
-	UUID       uuid.UUID        `gorm:"type:char(36);primary_key"`
+	ID         uuid.UUID        `gorm:"type:char(36);primary_key"`
 	Type       int              `gorm:"column:type;not null"`
 	Revision   int              `gorm:"column:revision;not null"`
-	Attributes []BlockAttribute `gorm:"foreignkey:BlockUUID"`
-	Node       Node             `gorm:"foreignkey:NodeUUID"`
-	NodeUUID   uuid.UUID        `gorm:"type:char(36)"`
+	Attributes []BlockAttribute `gorm:"foreignkey:BlockID"`
+	Node       Node             `gorm:"foreignkey:NodeID"`
+	NodeID     uuid.UUID        `gorm:"type:char(36)"`
+	Revisions  []BlockRevision  `gorm:"foreignKey:BlockID"`
 
-	CreatedBy     User      `gorm:"foreignkey:CreatedByUUID"`
-	CreatedByUUID uuid.UUID `gorm:"type:char(36)"`
-	UpdatedBy     User      `gorm:"foreignkey:UpdatedByUUID"`
-	UpdatedByUUID uuid.UUID `gorm:"type:char(36)"`
-	DeletedBy     User      `gorm:"foreignkey:DeletedByUUID"`
-	DeletedByUUID uuid.UUID `gorm:"type:char(36)"`
+	CreatedBy     User      `gorm:"foreignkey:CreatedUserID"`
+	CreatedUserID uuid.UUID `gorm:"type:char(36)"`
+	UpdatedBy     User      `gorm:"foreignkey:UpdatedUserID"`
+	UpdatedUserID uuid.UUID `gorm:"type:char(36)"`
+	DeletedBy     User      `gorm:"foreignkey:DeletedUserID"`
+	DeletedUserID uuid.UUID `gorm:"type:char(36)"`
 
 	CreatedAt time.Time `gorm:"column:createdAt"`
 	UpdatedAt time.Time `gorm:"column:updatedAt"`

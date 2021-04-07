@@ -29,9 +29,9 @@ const (
 )
 
 type BlockAttribute struct {
-	ID        uint      `gorm:"primary_key;auto_increment"`
-	BlockUUID uuid.UUID `gorm:"column:block_uuid;type:char(36)"`
-	Block     Block     `gorm:"foreignkey:BlockUUID"`
-	Key       string    `gorm:"column:key"`
-	Value     string    `gorm:"column:value"`
+	ID      uuid.UUID `gorm:"type:char(36);primary_key"`
+	BlockID uuid.UUID `gorm:"type:char(36)"`
+	Block   Block     `gorm:"foreignkey:BlockID"`
+	Key     string    `gorm:"column:key"`
+	Value   string    `gorm:"column:value"`
 }

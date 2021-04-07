@@ -5,6 +5,7 @@ import (
 	"h2o/cmd/api/app/options"
 	"h2o/pkg/api/dao"
 	"h2o/pkg/api/handler"
+	"h2o/pkg/api/middleware"
 	"h2o/pkg/util/orm"
 	"os"
 
@@ -60,8 +61,13 @@ func run(cmd *cobra.Command, args []string, cfg *options.ApiServiceConfig) error
 func setupRouter(svc *options.ApiService) *gin.Engine {
 	r := gin.Default()
 
-	basics := r.Group("/")
+	basics := r.Group(BasePath + "")
+	basics.Use(middleware.Translation())
 	handler.RegisterBasics(basics, svc)
+
+	users := r.Group(BasePath + "/users")
+	users.Use(middleware.Translation())
+	handler.RegisterUsers(users, svc)
 
 	return r
 }

@@ -7,22 +7,17 @@ import (
 )
 
 const (
-	NodeTypeDirectory = "directory"
-	NodeTypeChannel   = "channel"
-	NodeTypeDocument  = "document"
-	NodeTypeTable     = "table"
+	TeamTypeNormal = "normal"
+	TeamTypeUser   = "user"
 )
 
-type Node struct {
-	UUID      uuid.UUID `gorm:"type:char(36);primary_key"`
-	Type      string    `gorm:"column:type;not null"`
-	Namespace string    `gorm:"namespace"`
-	Parent    *Node     `gorm:"foreignkey:ParentID"`
-	ParentID  uuid.UUID `gorm:"type:char(36)"`
-	Children  []Node    `gorm:"foreignkey:ParentID"`
-	TeamID    uuid.UUID `gorm:"type:char(36)"`
-	Team      Team      `gorm:"foreignkey:TeamID"`
-	Blocks    []Block   `gorm:"foreignkey:NodeID"`
+type Team struct {
+	ID   uuid.UUID `gorm:"type:char(36);primary_key"`
+	Type string    `gorm:"column:type;not null"`
+	Name string    `gorm:"name"`
+
+	Members []User `gorm:"many2many:team_members"`
+	Nodes   []Node `gorm:"foreignkey:TeamID"`
 
 	CreatedBy     User      `gorm:"foreignkey:CreatedUserID"`
 	CreatedUserID uuid.UUID `gorm:"type:char(36)"`
