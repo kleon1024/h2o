@@ -13,7 +13,10 @@ func NewApiService(
 	cfg *ApiServiceConfig,
 	db *gorm.DB,
 ) *ApiService {
-	return &ApiService{}
+	return &ApiService{
+		Config:   cfg,
+		Database: db,
+	}
 }
 
 type ApiServiceConfig struct {

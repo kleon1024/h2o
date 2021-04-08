@@ -14,9 +14,9 @@ const (
 )
 
 type Column struct {
-	ID      uuid.UUID `gorm:"type:char(36);primary_key"`
-	TableID uuid.UUID `gorm:"type:cahr(36);not null"`
-	Table   Table     `gorm:"foreignkey:TableID;not null"`
+	ID           uuid.UUID  `gorm:"type:char(36);primary_key"`
+	TableBlockID uuid.UUID  `gorm:"type:cahr(36);not null"`
+	Table        TableBlock `gorm:"foreignkey:TableBlockID;not null"`
 
 	CreatedAt time.Time `gorm:"column:createdAt;not null"`
 	UpdatedAt time.Time `gorm:"column:updatedAt;not null"`

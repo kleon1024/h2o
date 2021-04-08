@@ -8,12 +8,13 @@ import (
 
 type ServiceConfig struct {
 	// The config file
-	ConfigFile string
+	ConfigFile string `mapstructure:"configFile"`
 
 	// The listening port of api
-	ListeningPort int
+	ListeningPort int `mapstructure:"listeningPort"`
 
-	DBConfig DBConfig
+	DBConfig  DBConfig  `mapstructure:"db"`
+	JWTConfig JWTConfig `mapstructure:"jwt"`
 }
 
 type DBConfig struct {
@@ -23,6 +24,13 @@ type DBConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
 	Database string `mapstructure:"database"`
+}
+
+type JWTConfig struct {
+	Secret                 string `mapstructure:"secret"`
+	AccessTokenExpireHours int    `mapstructure:"accessTokenExpireHours"`
+	RefreshTokenExpireDays int    `mapstructure:"refreshTokenExpireDays"`
+	Issuer                 string `mapstructure:"issuer"`
 }
 
 func (cfg *ServiceConfig) Init(conf string) error {
@@ -43,7 +51,8 @@ func (cfg *ServiceConfig) load(v *viper.Viper) error {
 	if err := v.ReadInConfig(); err != nil {
 		return err
 	}
-	v.UnmarshalKey("db", &cfg.DBConfig)
+	v.Unmarshal(&cfg)
 	logrus.Infof("Service config file %v loaded", cfg.ConfigFile)
+	logrus.Debugf("Service config: %v", cfg)
 	return nil
 }

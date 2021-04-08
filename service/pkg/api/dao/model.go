@@ -6,12 +6,15 @@ func init() {
 	Models = append(
 		Models,
 		Block{},
-		BlockAttribute{},
 		BlockRevision{},
 		Node{},
 		User{},
 		Team{},
-		Table{},
+		TableBlock{},
+		TableReferenceBlock{},
 		Column{},
+		NumberedListBlock{},
+		ImageBlock{},
+		CheckboxBlock{},
 	)
 }
