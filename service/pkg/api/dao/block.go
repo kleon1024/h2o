@@ -7,6 +7,10 @@ import (
 )
 
 const (
+	BlockIdentifier = "block"
+)
+
+const (
 	BlockTypeText           = 0
 	BlockTypeHeading1       = 1
 	BlockTypeHeading2       = 2

@@ -8,6 +8,10 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	TeamIdentifier = "team"
+)
+
 type Team struct {
 	ID   uuid.UUID `gorm:"type:char(36);primary_key"`
 	Name string    `gorm:"name;not null"`
@@ -62,4 +66,31 @@ func (u *Team) Find(db *gorm.DB, offset int, limit int, wheres []orm.WhereCondit
 		return nil, err
 	}
 	return &s, nil
+}
+
+func (u *Team) FindNodes(db *gorm.DB, offset int, limit int) (*[]Node, error) {
+	var s []Node
+	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
+		tx = tx.Model(u)
+		tx = tx.Where("deleted = ?", 0)
+		tx = tx.Offset(offset)
+		tx = tx.Limit(limit)
+		return tx.Association("Nodes").Find(&s)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
+func (u *Team) Exists(db *gorm.DB) (bool, error) {
+	var count int64
+	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
+		tx = tx.Where(u)
+		return tx.Count(&count).Error
+	})
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
