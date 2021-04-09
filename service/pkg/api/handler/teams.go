@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"h2o/cmd/api/app/options"
 	"h2o/pkg/api/dao"
 	"h2o/pkg/api/dto"
@@ -19,8 +20,8 @@ type Teams struct {
 func RegisterTeams(r *gin.RouterGroup, svc *options.ApiService) {
 	h := Teams{svc}
 	r.GET("", h.ListTeams)
-	r.GET("/{teamID}/nodes", h.ListTeamNodes)
-	r.POST("/{teamID}/nodes", h.CreateTeamNode)
+	r.GET("/:teamID/nodes", h.ListTeamNodes)
+	r.POST("/:teamID/nodes", h.CreateTeamNode)
 }
 
 // @id ListTeams
@@ -34,8 +35,6 @@ func RegisterTeams(r *gin.RouterGroup, svc *options.ApiService) {
 func (h *Teams) ListTeams(c *gin.Context) {
 	userValue, _ := c.Get(middleware.UserKey)
 	user := userValue.(dao.User)
-
-	logrus.WithField("uid", user.ID.String()).Debug("")
 
 	p := &dto.Pagination{
 		Offset: dto.DefaultOffset,
@@ -56,8 +55,6 @@ func (h *Teams) ListTeams(c *gin.Context) {
 		outputs[i].Name = team.Name
 	}
 
-	logrus.WithField("teams", *teams).Debug()
-
 	middleware.Success(c, dto.ListTeamsOutput{
 		Pagination: *p,
 		Teams:      outputs,
@@ -72,7 +69,7 @@ func (h *Teams) ListTeams(c *gin.Context) {
 // @param body body dto.Pagination true "body"
 // @success 200 {object} middleware.Response{data=dto.ListTeamNodesOutput} "success"
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
-// @router /api/v1/teams/{teamID}/nodes [GET]
+// @router /api/v1/teams/:teamID/nodes [GET]
 func (h *Teams) ListTeamNodes(c *gin.Context) {
 	// userValue, _ := c.Get(middleware.UserKey)
 	// user := userValue.(dao.User)
@@ -93,19 +90,17 @@ func (h *Teams) ListTeamNodes(c *gin.Context) {
 		return
 	}
 
-	teamID, err := uuid.Parse(path.TeamID)
-	if err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
-	}
-
+	teamID, _ := uuid.Parse(path.TeamID)
 	team := dao.Team{
 		ID: teamID,
 	}
-
+	logrus.WithField("teamID", teamID).Debug()
 	nodes, err := team.FindNodes(h.Service.Database, query.Offset, query.Limit)
 	if err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
+		return
 	}
+	logrus.WithField("good", teamID).Debug()
 
 	outputs := make([]dto.ListTeamNodesInstance, len(*nodes))
 	for i, node := range *nodes {
@@ -113,8 +108,6 @@ func (h *Teams) ListTeamNodes(c *gin.Context) {
 		outputs[i].Type = node.Type
 		outputs[i].ParentID = node.ParentID.String()
 	}
-
-	logrus.WithField("nodes", *nodes).Debug()
 
 	middleware.Success(c, dto.ListTeamNodesOutput{
 		Pagination: *query,
@@ -131,7 +124,7 @@ func (h *Teams) ListTeamNodes(c *gin.Context) {
 // @success 200 {object} middleware.Response{data=dto.ListTeamNodesInstance} "success"
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @failure 404 {object} middleware.Response{data=interface{}} "not found"
-// @router /api/v1/teams/{teamID}/nodes [POST]
+// @router /api/v1/teams/:teamID/nodes [POST]
 func (h *Teams) CreateTeamNode(c *gin.Context) {
 	// userValue, _ := c.Get(middleware.UserKey)
 	// user := userValue.(dao.User)
@@ -165,10 +158,15 @@ func (h *Teams) CreateTeamNode(c *gin.Context) {
 		return
 	}
 
-	node := dao.Node{
-		TeamID: teamID,
+	if _, ok := dao.NodeTypeMap[body.Type]; !ok {
+		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node type"))
+		return
 	}
 
+	node := dao.Node{
+		TeamID: teamID,
+		Type:   body.Type,
+	}
 	if body.ParentID != "" {
 		parentID, err := uuid.Parse(body.ParentID)
 		if err != nil {

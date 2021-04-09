@@ -18,7 +18,7 @@ type ListTeamsInstance struct {
 }
 
 type ListTeamNodesInputPath struct {
-	TeamID string `json:"teamID" example:"0f1400e6-bec9-458d-94c6-cfca966710d4" validate:"uuid"`
+	TeamID string `json:"teamID" uri:"teamID" example:"0f1400e6-bec9-458d-94c6-cfca966710d4" validate:"required,uuid"`
 }
 
 func (p *ListTeamNodesInputPath) Bind(c *gin.Context) error {
@@ -39,6 +39,7 @@ type ListTeamNodesInstance struct {
 
 type CreateTeamNodeInputBody struct {
 	ParentID string `json:"parentID"`
+	Type     string `json:"type"`
 }
 
 func (p *CreateTeamNodeInputBody) Bind(c *gin.Context) error {

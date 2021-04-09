@@ -10,7 +10,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 type Users struct {
@@ -68,7 +67,6 @@ func (h *Users) CreateUser(c *gin.Context) {
 				middleware.Error(c, http.StatusBadRequest, err)
 				return
 			}
-			logrus.WithField("uid", user.ID).Debug()
 		} else {
 			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("user exists and token usable"))
 		}

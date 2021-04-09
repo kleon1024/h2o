@@ -9,7 +9,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 type Tokens struct {
@@ -32,7 +31,6 @@ func RegisterTokens(r *gin.RouterGroup, svc *options.ApiService) {
 func (h *Tokens) GetTokens(c *gin.Context) {
 	userValue, _ := c.Get(middleware.UserKey)
 	user := userValue.(dao.User)
-	logrus.WithField("uid", user.ID.String()).Debug("")
 
 	accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, err := middleware.GenerateTokens(&user, &h.Service.Config.JWTConfig)
 	if err != nil {

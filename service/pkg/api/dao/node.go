@@ -11,13 +11,19 @@ import (
 const (
 	NodeIdentifier = "node"
 )
-
 const (
 	NodeTypeDirectory = "directory"
 	NodeTypeChannel   = "channel"
 	NodeTypeDocument  = "document"
 	NodeTypeTable     = "table"
 )
+
+var NodeTypeMap = map[string]struct{}{
+	NodeTypeDirectory: {},
+	NodeTypeChannel:   {},
+	NodeTypeDocument:  {},
+	NodeTypeTable:     {},
+}
 
 type Node struct {
 	ID       uuid.UUID `gorm:"type:char(36);primary_key"`

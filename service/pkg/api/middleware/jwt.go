@@ -54,15 +54,6 @@ func GenerateTokens(user *dao.User, config *config.JWTConfig) (accessToken strin
 		user,
 		config,
 	)
-
-	logrus.WithField("accessToken", accessToken).Debug()
-	token, err := jwt.ParseWithClaims(accessToken, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(config.Secret), nil
-	})
-	claims, ok := token.Claims.(*jwt.StandardClaims)
-	if ok {
-		logrus.WithField("claims.Id", claims.Id)
-	}
 	return
 }
 
