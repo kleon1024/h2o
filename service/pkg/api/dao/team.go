@@ -1,20 +1,16 @@
 package dao
 
 import (
+	"h2o/pkg/util/orm"
 	"time"
 
 	"github.com/google/uuid"
-)
-
-const (
-	TeamTypeNormal = "normal"
-	TeamTypeUser   = "user"
+	"gorm.io/gorm"
 )
 
 type Team struct {
 	ID   uuid.UUID `gorm:"type:char(36);primary_key"`
-	Type string    `gorm:"column:type;not null"`
-	Name string    `gorm:"name"`
+	Name string    `gorm:"name;not null"`
 
 	Members []User `gorm:"many2many:team_members"`
 	Nodes   []Node `gorm:"foreignkey:TeamID"`
@@ -30,4 +26,40 @@ type Team struct {
 	UpdatedAt time.Time `gorm:"column:updatedAt"`
 	DeletedAt time.Time `gorm:"column:deletedAt"`
 	Deleted   int       `gorm:"column:deleted"`
+}
+
+func (u *Team) BeforeCreate(tx *gorm.DB) error {
+	empty := uuid.UUID{}
+	if u.ID != empty {
+		return nil
+	}
+	u.ID = uuid.New()
+	u.Deleted = 0
+	u.CreatedAt = time.Now().UTC()
+	u.UpdatedAt = time.Now().UTC()
+	u.DeletedAt = time.Now().UTC()
+
+	return nil
+}
+
+func (u *Team) Save(db *gorm.DB) error {
+	return orm.WithTransaction(db, func(tx *gorm.DB) error {
+		return tx.Save(u).Error
+	})
+}
+
+func (u *Team) Find(db *gorm.DB, offset int, limit int, wheres []orm.WhereCondition) (*[]Team, error) {
+	var s []Team
+	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
+		for _, where := range wheres {
+			tx = tx.Where(where.Query, where.Args...)
+		}
+		tx = tx.Offset(offset)
+		tx = tx.Limit(limit)
+		return tx.Find(&s).Error
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
 }

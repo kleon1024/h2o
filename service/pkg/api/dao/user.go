@@ -22,6 +22,8 @@ type User struct {
 	Email    string    `gorm:"column:email;not null"`
 	Password string    `gorm:"column:password;not null"`
 
+	Teams []Team `gorm:"many2many:team_members"`
+
 	CreatedAt time.Time `gorm:"column:createdAt;not null"`
 	UpdatedAt time.Time `gorm:"column:updatedAt;not null"`
 	DeletedAt time.Time `gorm:"column:deletedAt;not null"`
@@ -29,6 +31,10 @@ type User struct {
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {
+	empty := uuid.UUID{}
+	if u.ID != empty {
+		return nil
+	}
 	u.ID = uuid.New()
 	if u.Type == UserTypeAnonymous {
 		u.Name = u.ID.String()
@@ -45,4 +51,36 @@ func (u *User) Save(db *gorm.DB) error {
 	return orm.WithTransaction(db, func(tx *gorm.DB) error {
 		return tx.Save(u).Error
 	})
+}
+
+func (u *User) Find(db *gorm.DB, offset int, limit int, wheres []orm.WhereCondition) (*[]User, error) {
+	var s []User
+	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
+		tx = tx.Where(u)
+		for _, where := range wheres {
+			tx = tx.Where(where.Query, where.Args...)
+		}
+		tx = tx.Offset(offset)
+		tx = tx.Limit(limit)
+		return tx.Find(&s).Error
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
+func (u *User) FindTeams(db *gorm.DB, offset int, limit int) (*[]Team, error) {
+	var s []Team
+	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
+		tx = tx.Model(u)
+		tx = tx.Where("deleted = ?", 0)
+		tx = tx.Offset(offset)
+		tx = tx.Limit(limit)
+		return tx.Association("Teams").Find(&s)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
 }

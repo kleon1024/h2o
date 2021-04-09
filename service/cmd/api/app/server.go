@@ -9,6 +9,7 @@ import (
 	"h2o/pkg/util/orm"
 	"os"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -60,14 +61,29 @@ func run(cmd *cobra.Command, args []string, cfg *options.ApiServiceConfig) error
 
 func setupRouter(svc *options.ApiService) *gin.Engine {
 	r := gin.Default()
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowHeaders = append(config.AllowHeaders, "authorization")
+	r.Use(cors.New(config))
 
 	basics := r.Group(BasePath + "")
 	basics.Use(middleware.Translation())
 	handler.RegisterBasics(basics, svc)
 
+	tokens := r.Group(BasePath + "/tokens")
+	tokens.Use(middleware.Translation())
+	tokens.Use(middleware.JWT(svc, middleware.JWTSubjectRefreshToken, true))
+	handler.RegisterTokens(tokens, svc)
+
 	users := r.Group(BasePath + "/users")
 	users.Use(middleware.Translation())
+	users.Use(middleware.JWT(svc, middleware.JWTSubjectAccessToken, false))
 	handler.RegisterUsers(users, svc)
+
+	teams := r.Group(BasePath + "/teams")
+	teams.Use(middleware.Translation())
+	teams.Use(middleware.JWT(svc, middleware.JWTSubjectAccessToken, true))
+	handler.RegisterTeams(teams, svc)
 
 	return r
 }

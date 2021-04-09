@@ -29,13 +29,11 @@ func Translation() gin.HandlerFunc {
 			val.RegisterTagNameFunc(func(fld reflect.StructField) string {
 				return fld.Tag.Get("en_comment")
 			})
-			break
 		case "zh":
 			zh_translations.RegisterDefaultTranslations(val, trans)
 			val.RegisterTagNameFunc(func(fld reflect.StructField) string {
 				return fld.Tag.Get("comment")
 			})
-			break
 		}
 		c.Set(TranslatorKey, trans)
 		c.Set(ValidatorKey, val)

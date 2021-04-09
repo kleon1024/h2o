@@ -2,6 +2,11 @@ package orm
 
 import "gorm.io/gorm"
 
+type WhereCondition struct {
+	Query interface{}
+	Args  []interface{}
+}
+
 func WithTransaction(db *gorm.DB, fn func(tx *gorm.DB) error) error {
 	tx := db.Begin()
 	defer func() {

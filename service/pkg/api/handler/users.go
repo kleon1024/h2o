@@ -8,15 +8,9 @@ import (
 	"h2o/pkg/api/middleware"
 	"h2o/pkg/config"
 	"net/http"
-	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-)
-
-const (
-	JWTSubjectAccessToken  = "AccessToken"
-	JWTSubjectRefreshToken = "RefreshToken"
+	"github.com/sirupsen/logrus"
 )
 
 type Users struct {
@@ -26,21 +20,6 @@ type Users struct {
 func RegisterUsers(r *gin.RouterGroup, svc *options.ApiService) {
 	h := Users{svc}
 	r.POST("", h.CreateUser)
-	r.POST("/tokens", h.CreateTokens)
-}
-
-func (h *Users) generateToken(subject string, expiresTime time.Time, user dao.User) (string, error) {
-	claims := jwt.StandardClaims{
-		Audience:  user.Name,
-		ExpiresAt: expiresTime.Unix(),
-		Id:        user.ID.String(),
-		IssuedAt:  time.Now().Unix(),
-		Issuer:    h.Service.Config.JWTConfig.Issuer,
-		NotBefore: time.Now().Unix(),
-		Subject:   subject,
-	}
-	jwtSecret := []byte(h.Service.Config.JWTConfig.Secret)
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(jwtSecret)
 }
 
 // @id CreateUser
@@ -50,7 +29,7 @@ func (h *Users) generateToken(subject string, expiresTime time.Time, user dao.Us
 // @description 无关联匿名账号登录，有登录账号，返回tokens
 // @description 有关联匿名账号登录，无登录账号，匿名账号更新为正式账号，返回tokens
 // @description 有关联匿名账号登录，有登录账号，匿名账号更新为登录账号，返回tokens
-// @tags 用户
+// @tags User
 // @accept json
 // @produce json
 // @param body body dto.CreateUserInputBody true "body"
@@ -58,40 +37,46 @@ func (h *Users) generateToken(subject string, expiresTime time.Time, user dao.Us
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/users [POST]
 func (h *Users) CreateUser(c *gin.Context) {
+	var user dao.User
+	userValue, _ := c.Get(middleware.UserKey)
+	if userValue != nil {
+		user = userValue.(dao.User)
+	}
+
 	p := &dto.CreateUserInputBodyType{}
 	if err := p.Bind(c); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
-	var user dao.User
+
 	if p.Type == dao.UserTypeAnonymous {
-		user = dao.User{
-			Type: dao.UserTypeAnonymous,
+		if userValue == nil {
+			user = dao.User{
+				Type: dao.UserTypeAnonymous,
+			}
+			if err := user.Save(h.Service.Database); err != nil {
+				middleware.Error(c, http.StatusBadRequest, err)
+				return
+			}
+			team := dao.Team{
+				Name:      user.Name,
+				Members:   []dao.User{user},
+				CreatedBy: user,
+				UpdatedBy: user,
+			}
+			if err := team.Save(h.Service.Database); err != nil {
+				middleware.Error(c, http.StatusBadRequest, err)
+				return
+			}
+			logrus.WithField("uid", user.ID).Debug()
+		} else {
+			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("user exists and token usable"))
 		}
 	} else {
 		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("unsupported user type"))
 	}
-	if err := user.Save(h.Service.Database); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
-		return
-	}
 
-	jwtConfig := h.Service.Config.JWTConfig
-	accessTokenExpiresAt := time.Now().UTC().Add(time.Hour * time.Duration(jwtConfig.AccessTokenExpireHours))
-	accessToken, err := h.generateToken(
-		JWTSubjectAccessToken,
-		accessTokenExpiresAt,
-		user,
-	)
-	if err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
-	}
-	refreshTokenExpiresAt := time.Now().UTC().Add(time.Hour * time.Duration(jwtConfig.RefreshTokenExpireDays*24))
-	refreshToken, err := h.generateToken(
-		JWTSubjectRefreshToken,
-		refreshTokenExpiresAt,
-		user,
-	)
+	accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, err := middleware.GenerateTokens(&user, &h.Service.Config.JWTConfig)
 	if err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 	}
@@ -109,15 +94,3 @@ func (h *Users) CreateUser(c *gin.Context) {
 		},
 	})
 }
-
-// @id CreateTokens
-// @summary 获取Tokens
-// @description 使用refresh token获取新token
-// @tags 用户
-// @accept json
-// @produce json
-// @param body body dto.CreateUserInputBody true "body"
-// @success 200 {object} middleware.Response{data=dto.CreateUserOutput} "success"
-// @failure 400 {object} middleware.Response{data=interface{}} "failure"
-// @router /api/v1/users/tokens [POST]
-func (h *Users) CreateTokens(c *gin.Context) {}

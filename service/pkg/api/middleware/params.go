@@ -11,8 +11,10 @@ import (
 )
 
 const (
-	ValidatorKey  = "Validator"
-	TranslatorKey = "Translator"
+	ValidatorKey    = "Validator"
+	TranslatorKey   = "Translator"
+	UserKey         = "User"
+	TokenSubjectKey = "TokenSubject"
 )
 
 const (
@@ -29,8 +31,6 @@ func GetValidParams(c *gin.Context, params interface{}, bind int) error {
 		bindFunc = c.ShouldBindUri
 	case BindTypeHeader:
 		bindFunc = c.ShouldBindHeader
-	default:
-		bindFunc = c.ShouldBind
 	}
 	if err := bindFunc(params); err != nil {
 		return err
@@ -58,11 +58,11 @@ func GetValidParams(c *gin.Context, params interface{}, bind int) error {
 func getValidator(c *gin.Context) (*validator.Validate, error) {
 	val, ok := c.Get(ValidatorKey)
 	if !ok {
-		return nil, fmt.Errorf("Cannot find any validator")
+		return nil, fmt.Errorf("cannot find any validator")
 	}
 	validator, ok := val.(*validator.Validate)
 	if !ok {
-		return nil, fmt.Errorf("Failed to get validator")
+		return nil, fmt.Errorf("failed to get validator")
 	}
 	return validator, nil
 }
@@ -70,11 +70,11 @@ func getValidator(c *gin.Context) (*validator.Validate, error) {
 func getTranslator(c *gin.Context) (ut.Translator, error) {
 	trans, ok := c.Get(TranslatorKey)
 	if !ok {
-		return nil, fmt.Errorf("Cannot find any translator")
+		return nil, fmt.Errorf("cannot find any translator")
 	}
 	translator, ok := trans.(ut.Translator)
 	if !ok {
-		return nil, fmt.Errorf("Failed to get translator")
+		return nil, fmt.Errorf("failed to get translator")
 	}
 	return translator, nil
 }
