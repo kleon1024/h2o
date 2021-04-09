@@ -1,29 +1,34 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/team.dart';
 import 'package:h2o/components/nodes/node.dart';
 import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
+import 'package:h2o/dao/node.dart';
 import 'package:h2o/dao/team.dart';
-import 'package:h2o/global/enum.dart';
 import 'package:h2o/model/navigation_page.dart';
 import 'package:provider/provider.dart';
 
-class TeamTree extends StatelessWidget {
-  final nodes = [
-    NodeType.Directory,
-    NodeType.TextChannel,
-    NodeType.Document,
-    NodeType.Table,
-  ];
+class TeamTree extends StatefulWidget {
+  @override
+  createState() => TeamTreeState();
+}
 
+class TeamTreeState extends State<TeamTree> {
   @override
   Widget build(BuildContext context) {
     final teamDao = Provider.of<TeamDao>(context);
+    final nodeDao = Provider.of<NodeDao>(context);
     final navigationPageModel = Provider.of<NavigationPageModel>(context);
 
     TeamBean? team;
-    if (teamDao.teams.length < 1) {
+    if (teamDao.teams.length > 0) {
       team = teamDao.teams[navigationPageModel.currentTeamIndex];
+    }
+
+    List<NodeBean> nodes = [];
+    if (team != null && nodeDao.nodeMap.containsKey(team.id)) {
+      nodes = nodeDao.nodeMap[team.id]!;
     }
 
     return Container(
@@ -34,19 +39,26 @@ class TeamTree extends StatelessWidget {
           borderRadius: BorderRadius.all(Radius.circular(8))),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          title: Text(team == null ? "" : team.name),
-          titleSpacing: 0.0,
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(36),
+          child: AppBar(
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            title: Text(team == null ? "" : team.name),
+            titleSpacing: 0.0,
+          ),
         ),
-        body: BouncingScrollView(
-          slivers: [
-            SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-              return Node(type: nodes[index]);
-            }, childCount: nodes.length))
-          ],
+        body: InkWell(
+          onTap: () {},
+          onHover: (isHovering) {},
+          child: BouncingScrollView(
+            slivers: [
+              SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                return Node(nodes[index]);
+              }, childCount: nodes.length))
+            ],
+          ),
         ),
       ),
     );

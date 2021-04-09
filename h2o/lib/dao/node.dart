@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:h2o/api/api.dart';
-import 'package:h2o/bean/team.dart';
+import 'package:h2o/bean/node.dart';
 import 'package:h2o/model/global.dart';
 
-class TeamDao extends ChangeNotifier {
+class NodeDao extends ChangeNotifier {
   BuildContext? context;
-  List<TeamBean> teams = [];
+  Map<String, List<NodeBean>> nodeMap = {};
   CancelToken cancelToken = CancelToken();
   GlobalModel? globalModel;
 
@@ -14,23 +14,29 @@ class TeamDao extends ChangeNotifier {
     if (this.context == null) {
       this.context = context;
       this.globalModel = globalModel;
-      globalModel.teamDao = this;
+      globalModel.nodeDao = this;
 
+      globalModel.registerCallback(EventType.TEAM_LIST_UPDATED, updateNodes);
       globalModel.registerCallback(
-          EventType.FIRST_TIME_LOGIN_SUCCESS, updateTeams);
+          EventType.TEAM_SIDEBAR_INDEX_CHANGED, updateNodes);
     }
   }
 
-  Future updateTeams() async {
-    List<TeamBean>? teams = await Api.listTeams(
+  Future updateNodes() async {
+    var teams = this.globalModel!.teamDao!.teams;
+    if (teams.length < 1) {
+      return;
+    }
+    String teamID =
+        teams[this.globalModel!.navigationPageModel!.currentTeamIndex].id;
+    List<NodeBean>? nodes = await Api.listTeamNodes(
+      teamID,
       data: {"offset": 0, "limit": 10},
       options: this.globalModel!.userDao!.accessTokenOptions(),
     );
 
-    if (teams != null) {
-      this.teams = teams;
-      notifyListeners();
-      this.globalModel!.triggerCallback(EventType.TEAM_LIST_UPDATED);
+    if (nodes != null) {
+      nodeMap[teamID] = nodes;
     }
   }
 

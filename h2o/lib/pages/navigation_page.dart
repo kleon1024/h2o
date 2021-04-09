@@ -19,11 +19,14 @@ class NavigationPage extends StatelessWidget {
         statusBarColor: Colors.transparent,
       ),
       child: Scaffold(
-        body: Row(
-          children: [
-            Expanded(flex: 1, child: TeamSideBar()),
-            Expanded(flex: 8, child: TeamTree()),
-          ],
+        body: Container(
+          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+          child: Row(
+            children: [
+              Expanded(flex: 1, child: TeamSideBar()),
+              Expanded(flex: 8, child: TeamTree()),
+            ],
+          ),
         ),
       ),
     );

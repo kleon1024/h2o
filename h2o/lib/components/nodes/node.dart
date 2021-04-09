@@ -1,4 +1,6 @@
+import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:h2o/bean/node.dart';
 import 'package:h2o/components/nodes/directory_node.dart';
 import 'package:h2o/components/nodes/document_node.dart';
 import 'package:h2o/components/nodes/table_node.dart';
@@ -6,14 +8,19 @@ import 'package:h2o/components/nodes/text_channel_node.dart';
 import 'package:h2o/global/enum.dart';
 
 class Node extends StatelessWidget {
-  final NodeType type;
+  final NodeBean node;
 
-  const Node({required this.type});
+  const Node(this.node);
 
   @override
   Widget build(BuildContext context) {
+    NodeType? type = EnumToString.fromString(NodeType.values, this.node.type);
+    if (type == null) {
+      return Container();
+    }
+
     Widget node;
-    switch (this.type) {
+    switch (type) {
       case NodeType.Directory:
         node = DirectoryNode(name: "develop", indentLevel: 0);
         break;

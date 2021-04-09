@@ -1,10 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:h2o/api/api.dart';
+import 'package:h2o/dao/node.dart';
 import 'package:h2o/dao/team.dart';
 import 'package:h2o/dao/user.dart';
 import 'package:h2o/model/global.dart';
 import 'package:h2o/model/navigation_page.dart';
+import 'package:h2o/pages/navigation_page.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
@@ -15,8 +17,10 @@ void main() async {
     EasyLocalization(
         child: MultiProvider(
           providers: [
+            ChangeNotifierProvider(create: (_) => GlobalModel()),
             ChangeNotifierProvider(create: (_) => UserDao()),
-            ChangeNotifierProvider(create: (_) => NavigationPageModel())
+            ChangeNotifierProvider(create: (_) => TeamDao()),
+            ChangeNotifierProvider(create: (_) => NodeDao()),
           ],
           child: MyApp(),
         ),
@@ -45,10 +49,9 @@ class MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     final globalModel = Provider.of<GlobalModel>(context)..setContext(context);
-    final userDao = Provider.of<UserDao>(context)
-      ..setContext(context, globalModel);
-    final teamDao = Provider.of<TeamDao>(context)
-      ..setContext(context, globalModel);
+    Provider.of<UserDao>(context)..setContext(context, globalModel);
+    Provider.of<TeamDao>(context)..setContext(context, globalModel);
+    Provider.of<NodeDao>(context)..setContext(context, globalModel);
 
     return MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -57,6 +60,7 @@ class MyAppState extends State<MyApp> {
         locale: context.locale,
         title: 'Flutter Demo',
         theme: ThemeData(brightness: Brightness.dark),
-        home: ChangeNotifierProvider(create: (_) => NavigationPageModel()));
+        home: ChangeNotifierProvider(
+            create: (_) => NavigationPageModel(), child: NavigationPage()));
   }
 }
