@@ -14,9 +14,6 @@ UserBean _$UserBeanFromJson(Map<String, dynamic> json) {
         TokenBean.fromJson(json['accessToken'] as Map<String, dynamic>),
     refreshToken:
         TokenBean.fromJson(json['refreshToken'] as Map<String, dynamic>),
-    teams: (json['teams'] as List<dynamic>?)
-        ?.map((e) => TeamBean.fromJson(e as Map<String, dynamic>))
-        .toList(),
   );
 }
 
@@ -25,5 +22,4 @@ Map<String, dynamic> _$UserBeanToJson(UserBean instance) => <String, dynamic>{
       'name': instance.name,
       'accessToken': instance.accessToken,
       'refreshToken': instance.refreshToken,
-      'teams': instance.teams,
     };

@@ -4,19 +4,23 @@ import 'package:dio/dio.dart';
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:h2o/api/api.dart';
-import 'package:h2o/bean/team.dart';
 import 'package:h2o/bean/user.dart';
 import 'package:h2o/global/enum.dart';
+import 'package:h2o/model/global.dart';
 import 'package:h2o/utils/local_storage.dart';
 
 class UserDao extends ChangeNotifier {
   BuildContext? context;
   UserBean? user;
   CancelToken cancelToken = CancelToken();
+  GlobalModel? globalModel;
 
-  setContext(BuildContext context) async {
+  setContext(BuildContext context, GlobalModel globalModel) async {
     if (this.context == null) {
       this.context = context;
+      this.globalModel = globalModel;
+      globalModel.userDao = this;
+
       var json = await LocalStorage.getJson(StorageKey.USER);
       UserBean? userBean;
       if (json != null) {
@@ -36,7 +40,9 @@ class UserDao extends ChangeNotifier {
 
       debugPrint("login as " + this.user!.id);
 
-      await updateTeams();
+      if (this.isLogin()) {
+        this.globalModel!.triggerCallback(EventType.FIRST_TIME_LOGIN_SUCCESS);
+      }
     }
   }
 
@@ -94,18 +100,6 @@ class UserDao extends ChangeNotifier {
     Timer(duration, () async {
       await this.refreshToken();
     });
-  }
-
-  updateTeams() async {
-    List<TeamBean>? teams = await Api.listTeams(
-      data: {"offset": 0, "limit": 1},
-      options: accessTokenOptions(),
-    );
-
-    if (teams != null) {
-      this.user!.teams = teams;
-      this.refresh();
-    }
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:enum_to_string/enum_to_string.dart';
+import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/response.dart';
 import 'package:h2o/bean/team.dart';
 import 'package:h2o/bean/user.dart';
@@ -29,8 +30,7 @@ class Api {
   static Future<ResponseBean?> request(
     HttpMethod method,
     String url, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
+    Map<String, dynamic>? data,
     CancelToken? cancelToken,
     Options? options,
   }) async {
@@ -40,9 +40,16 @@ class Api {
       options = Options(method: EnumToString.convertToString(method));
     }
 
+    Map<String, dynamic>? queryParameters;
+    if (method == HttpMethod.GET) {
+      queryParameters = data;
+      data = null;
+    }
+
     var response;
     try {
-      response = await _client.request(url, data: data, options: options);
+      response = await _client.request(url,
+          data: data, queryParameters: queryParameters, options: options);
     } catch (e) {}
     if (response != null) {
       ResponseBean resp = ResponseBean.fromJson(response.data);
@@ -52,7 +59,9 @@ class Api {
 
   // APIs
   static Future<UserBean?> createUser(
-      {dynamic data, CancelToken? cancelToken, Options? options}) async {
+      {Map<String, dynamic>? data,
+      CancelToken? cancelToken,
+      Options? options}) async {
     ResponseBean? response = await request(HttpMethod.POST, '/api/v1/users',
         data: data, cancelToken: cancelToken, options: options);
     if (response != null && response.errorCode == 0) {
@@ -61,7 +70,9 @@ class Api {
   }
 
   static Future<UserBean?> refreshToken(
-      {dynamic data, CancelToken? cancelToken, Options? options}) async {
+      {Map<String, dynamic>? data,
+      CancelToken? cancelToken,
+      Options? options}) async {
     ResponseBean? response = await request(HttpMethod.GET, '/api/v1/tokens',
         data: data, cancelToken: cancelToken, options: options);
     if (response != null && response.errorCode == 0) {
@@ -70,12 +81,39 @@ class Api {
   }
 
   static Future<List<TeamBean>?> listTeams(
-      {dynamic data, CancelToken? cancelToken, Options? options}) async {
+      {Map<String, dynamic>? data,
+      CancelToken? cancelToken,
+      Options? options}) async {
     ResponseBean? response = await request(HttpMethod.GET, '/api/v1/teams',
         data: data, cancelToken: cancelToken, options: options);
     if (response != null && response.errorCode == 0) {
       List items = response.data["teams"];
       return items.map((i) => TeamBean.fromJson(i)).toList();
+    }
+  }
+
+  static Future<List<NodeBean>?> listTeamNodes(String teamID,
+      {Map<String, dynamic>? data,
+      CancelToken? cancelToken,
+      Options? options}) async {
+    ResponseBean? response = await request(
+        HttpMethod.GET, '/api/v1/teams/' + teamID + '/nodes',
+        data: data, cancelToken: cancelToken, options: options);
+    if (response != null && response.errorCode == 0) {
+      List items = response.data["nodes"];
+      return items.map((i) => NodeBean.fromJson(i)).toList();
+    }
+  }
+
+  static Future<NodeBean?> createTeamNode(String teamID,
+      {Map<String, dynamic>? data,
+        CancelToken? cancelToken,
+        Options? options}) async {
+    ResponseBean? response = await request(
+        HttpMethod.POST, '/api/v1/teams/' + teamID + '/nodes',
+        data: data, cancelToken: cancelToken, options: options);
+    if (response != null && response.errorCode == 0) {
+      return NodeBean.fromJson(response.data);
     }
   }
 }

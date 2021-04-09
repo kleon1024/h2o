@@ -10,14 +10,12 @@ class UserBean {
   String name;
   TokenBean accessToken;
   TokenBean refreshToken;
-  List<TeamBean>? teams;
 
   UserBean({
     required this.id,
     required this.name,
     required this.accessToken,
     required this.refreshToken,
-    this.teams = const [],
   });
 
   factory UserBean.fromJson(Map<String, dynamic> json) =>

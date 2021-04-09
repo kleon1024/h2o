@@ -1,3 +1,4 @@
+import 'package:h2o/bean/node.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'team.g.dart';

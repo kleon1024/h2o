@@ -2,20 +2,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:h2o/bean/team.dart';
 import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
-import 'package:h2o/dao/user.dart';
+import 'package:h2o/dao/team.dart';
 import 'package:h2o/model/navigation_page.dart';
 import 'package:provider/provider.dart';
 
 class TeamSideBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final userDao = Provider.of<UserDao>(context);
+    final teamDao = Provider.of<TeamDao>(context);
     final navigationPageModel = Provider.of<NavigationPageModel>(context);
 
-    List<TeamBean> teams = [];
-    if (userDao.user != null && userDao.user!.teams != null) {
-      teams = userDao.user!.teams!;
-    }
+    List<TeamBean> teams = teamDao.teams;
 
     return BouncingScrollView(
       slivers: [
@@ -26,7 +23,7 @@ class TeamSideBar extends StatelessWidget {
                   EdgeInsets.only(top: 8 + (index == 0 ? 18 : 0), bottom: 8),
               child: InkWell(
                   onTap: () {
-                    navigationPageModel.currentTeamIndex = index;
+                    navigationPageModel.onTapTeamIcon(index);
                   },
                   child: CircleAvatar(
                     child: Text(teams[index].name[0].toUpperCase()),
