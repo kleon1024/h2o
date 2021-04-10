@@ -72,7 +72,7 @@ func (u *Team) FindNodes(db *gorm.DB, offset int, limit int) (*[]Node, error) {
 	var s []Node
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
 		tx = tx.Model(u)
-		tx = tx.Where("deleted = ?", 0)
+		tx = tx.Where("deleted = 0")
 		tx = tx.Offset(offset)
 		tx = tx.Limit(limit)
 		return tx.Association("Nodes").Find(&s)
@@ -86,7 +86,7 @@ func (u *Team) FindNodes(db *gorm.DB, offset int, limit int) (*[]Node, error) {
 func (u *Team) Exists(db *gorm.DB) (bool, error) {
 	var count int64
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
-		tx = tx.Where(u)
+		tx = tx.Model(u).Where(u).Where("deleted = 0")
 		return tx.Count(&count).Error
 	})
 	if err != nil {

@@ -22,12 +22,15 @@ func (p *Pagination) Bind(c *gin.Context) error {
 	return middleware.GetValidParams(c, p, middleware.BindTypeQuery)
 }
 
-type PaginationTotal struct {
+type PaginationOutput struct {
 	// 数据条目总数
 	Total int `json:"total"`
-}
-
-type PaginationStream struct {
 	// 是否还有后续数据
 	More int `json:"more"`
+}
+
+type ShortUserOutput struct {
+	ID   string `json:"id" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
+	Name string `json:"name" example:"Mike"`
+	Type string `json:"type"`
 }

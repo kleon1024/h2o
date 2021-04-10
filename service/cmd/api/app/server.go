@@ -85,5 +85,10 @@ func setupRouter(svc *options.ApiService) *gin.Engine {
 	teams.Use(middleware.JWT(svc, middleware.JWTSubjectAccessToken, true))
 	handler.RegisterTeams(teams, svc)
 
+	nodes := r.Group(BasePath + "/nodes")
+	nodes.Use(middleware.Translation())
+	nodes.Use(middleware.JWT(svc, middleware.JWTSubjectAccessToken, true))
+	handler.RegisterNodes(nodes, svc)
+
 	return r
 }

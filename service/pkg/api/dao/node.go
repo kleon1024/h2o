@@ -103,7 +103,7 @@ func (u *Node) FindBlocks(db *gorm.DB, offset int, limit int) (*[]Block, error) 
 func (u *Node) Exists(db *gorm.DB) (bool, error) {
 	var count int64
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
-		tx = tx.Where(u)
+		tx = tx.Model(u).Where(u).Where("deleted = 0")
 		return tx.Count(&count).Error
 	})
 	if err != nil {

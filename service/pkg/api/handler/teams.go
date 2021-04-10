@@ -105,6 +105,7 @@ func (h *Teams) ListTeamNodes(c *gin.Context) {
 	outputs := make([]dto.ListTeamNodesInstance, len(*nodes))
 	for i, node := range *nodes {
 		outputs[i].ID = node.ID.String()
+		outputs[i].Name = node.Name
 		outputs[i].Type = node.Type
 		outputs[i].ParentID = node.ParentID.String()
 	}
@@ -120,14 +121,13 @@ func (h *Teams) ListTeamNodes(c *gin.Context) {
 // @tags Team
 // @produce json
 // @param teamID path string true "teamID"
-// @param body body dto.Pagination true "body"
 // @success 200 {object} middleware.Response{data=dto.ListTeamNodesInstance} "success"
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @failure 404 {object} middleware.Response{data=interface{}} "not found"
 // @router /api/v1/teams/:teamID/nodes [POST]
 func (h *Teams) CreateTeamNode(c *gin.Context) {
-	// userValue, _ := c.Get(middleware.UserKey)
-	// user := userValue.(dao.User)
+	userValue, _ := c.Get(middleware.UserKey)
+	user := userValue.(dao.User)
 	// TODO: RABC
 
 	path := &dto.ListTeamNodesInputPath{}
@@ -137,7 +137,7 @@ func (h *Teams) CreateTeamNode(c *gin.Context) {
 	}
 
 	body := &dto.CreateTeamNodeInputBody{}
-	if err := path.Bind(c); err != nil {
+	if err := body.Bind(c); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
@@ -158,14 +158,18 @@ func (h *Teams) CreateTeamNode(c *gin.Context) {
 		return
 	}
 
+	logrus.WithField("type", body.Type).WithField("name", body.Name).Debug()
 	if _, ok := dao.NodeTypeMap[body.Type]; !ok {
 		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node type"))
 		return
 	}
 
 	node := dao.Node{
-		TeamID: teamID,
-		Type:   body.Type,
+		Name:      body.Name,
+		TeamID:    teamID,
+		Type:      body.Type,
+		CreatedBy: user,
+		UpdatedBy: user,
 	}
 	if body.ParentID != "" {
 		parentID, err := uuid.Parse(body.ParentID)
@@ -192,6 +196,7 @@ func (h *Teams) CreateTeamNode(c *gin.Context) {
 
 	middleware.Success(c, &dto.ListTeamNodesInstance{
 		ID:       node.ID.String(),
+		Name:     node.Name,
 		Type:     node.Type,
 		ParentID: node.ParentID.String(),
 	})
