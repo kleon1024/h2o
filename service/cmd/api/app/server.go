@@ -90,5 +90,10 @@ func setupRouter(svc *options.ApiService) *gin.Engine {
 	nodes.Use(middleware.JWT(svc, middleware.JWTSubjectAccessToken, true))
 	handler.RegisterNodes(nodes, svc)
 
+	blocks := r.Group(BasePath + "/blocks")
+	blocks.Use(middleware.Translation())
+	blocks.Use(middleware.JWT(svc, middleware.JWTSubjectAccessToken, true))
+	handler.RegisterBlocks(blocks, svc)
+
 	return r
 }

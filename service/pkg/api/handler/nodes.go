@@ -30,7 +30,7 @@ func RegisterNodes(r *gin.RouterGroup, svc *options.ApiService) {
 // @produce json
 // @param nodeID path string true "nodeID"
 // @param body body dto.Pagination true "body"
-// @success 200 {object} middleware.Response{data=dto.ListNodeBlocksOutput} "success"
+// @success 200 {object} middleware.Response{data=dto.BlockOutput} "success"
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/nodes/:nodeID/blocks [GET]
 func (h *Nodes) ListNodeBlocks(c *gin.Context) {
@@ -45,8 +45,8 @@ func (h *Nodes) ListNodeBlocks(c *gin.Context) {
 	}
 
 	query := &dto.Pagination{
-		Offset: dto.DefaultOffset,
-		Limit:  dto.DefaultLimit,
+		// Offset: dto.DefaultOffset,
+		// Limit:  dto.DefaultLimit,
 	}
 	if err := query.Bind(c); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
@@ -65,7 +65,7 @@ func (h *Nodes) ListNodeBlocks(c *gin.Context) {
 	}
 	logrus.WithField("good", nodeID).Debug()
 
-	outputs := make([]dto.ListNodeBlocksInstance, len(*blocks))
+	outputs := make([]dto.BlockOutput, len(*blocks))
 	for i, block := range *blocks {
 		outputs[i].ID = block.ID.String()
 		outputs[i].Text = block.Text
@@ -86,7 +86,7 @@ func (h *Nodes) ListNodeBlocks(c *gin.Context) {
 // @tags Node
 // @produce json
 // @param nodeID path string true "nodeID"
-// @success 200 {object} middleware.Response{data=dto.ListNodeBlocksInstance} "success"
+// @success 200 {object} middleware.Response{data=dto.BlockOutput} "success"
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @failure 404 {object} middleware.Response{data=interface{}} "not found"
 // @router /api/v1/nodes/:nodeID/blocks [POST]
@@ -142,7 +142,7 @@ func (h *Nodes) CreateNodeBlock(c *gin.Context) {
 		middleware.Error(c, http.StatusBadRequest, err)
 	}
 
-	middleware.Success(c, &dto.ListNodeBlocksInstance{
+	middleware.Success(c, &dto.BlockOutput{
 		ID:        block.ID.String(),
 		Text:      block.Text,
 		Type:      block.Type,

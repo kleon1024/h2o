@@ -90,6 +90,14 @@ func (u *Block) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
+func (u *Block) BeforeSave(tx *gorm.DB) error {
+	u.UpdatedAt = time.Now().UTC()
+	if u.Deleted == 1 {
+		u.DeletedAt = time.Now().UTC()
+	}
+	return nil
+}
+
 func (u *Block) Save(db *gorm.DB) error {
 	return orm.WithTransaction(db, func(tx *gorm.DB) error {
 		return tx.Save(u).Error
