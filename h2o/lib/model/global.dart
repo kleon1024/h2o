@@ -11,6 +11,7 @@ enum EventType {
   TEAM_SIDEBAR_INDEX_CHANGED,
   TEAM_LIST_UPDATED,
   NODE_CREATED,
+  NODE_BLOCKS_UPDATED,
 }
 
 class GlobalModel extends ChangeNotifier {

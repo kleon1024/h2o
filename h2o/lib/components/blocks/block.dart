@@ -8,13 +8,19 @@ import 'package:h2o/components/blocks/heading_two_block.dart';
 import 'package:h2o/components/blocks/numbered_list_block.dart';
 import 'package:h2o/components/blocks/text_block.dart';
 import 'package:h2o/dao/block.dart';
+import 'package:h2o/dao/node.dart';
+import 'package:h2o/model/document/document_page.dart';
+import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class Block extends StatelessWidget {
   final BlockBean blockBean;
   final bool showCreator;
+  final bool editing;
+  final NodeType nodeType;
 
-  const Block(this.blockBean, {this.showCreator = false});
+  const Block(this.blockBean, this.nodeType,
+      {this.showCreator = false, this.editing = false});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +29,7 @@ class Block extends StatelessWidget {
         EnumToString.fromString(BlockType.values, blockBean.type)!;
     switch (blockType) {
       case BlockType.text:
-        block = TextBlock(blockBean);
+        block = TextBlock(blockBean, editing: editing);
         break;
       case BlockType.heading1:
         block = HeadingOneBlock(text: "Heading 1");
@@ -45,6 +51,22 @@ class Block extends StatelessWidget {
           child: Text("Unmatched version"),
         );
     }
+
+    Function()? onTap;
+    Function(bool)? onHover;
+
+    if (nodeType == NodeType.document) {
+      final documentPageModel = Provider.of<DocumentPageModel>(context);
+      onTap = () {
+        documentPageModel.onTapBlock(blockBean);
+      };
+    }
+
+    block = InkWell(
+      onTap: onTap,
+      focusColor: Theme.of(context).cardColor,
+      child: block,
+    );
 
     if (this.showCreator) {
       return Row(

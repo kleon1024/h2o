@@ -5,6 +5,7 @@ import 'package:h2o/bean/block.dart';
 import 'package:h2o/components/blocks/block.dart';
 import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
 import 'package:h2o/dao/block.dart';
+import 'package:h2o/dao/node.dart';
 import 'package:h2o/model/channel/channel_page.dart';
 import 'package:provider/provider.dart';
 
@@ -53,6 +54,7 @@ class ChannelPage extends StatelessWidget {
                       ),
                       child: Block(
                         blocks[index],
+                        NodeType.channel,
                         showCreator: true,
                       ));
                 }, childCount: blocks.length),

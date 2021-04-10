@@ -41,13 +41,14 @@ class BlockDao extends ChangeNotifier {
   Future updateBlocks(NodeBean nodeBean) async {
     List<BlockBean>? blocks = await Api.listNodeBlocks(
       nodeBean.id,
-      data: {"offset": 0, "limit": 10},
+      data: {"offset": 0, "limit": 100},
       options: this.globalModel!.userDao!.accessTokenOptions(),
       cancelToken: cancelToken,
     );
 
     if (blocks != null) {
       blockMap[nodeBean.id] = blocks;
+      this.globalModel!.triggerCallback(EventType.NODE_BLOCKS_UPDATED);
       notifyListeners();
     }
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:h2o/bean/block.dart';
+import 'package:h2o/model/document/document_page.dart';
+import 'package:provider/provider.dart';
 
 class TextBlock extends StatelessWidget {
   final BlockBean block;
@@ -10,21 +12,34 @@ class TextBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (this.editing) {
-      final TextEditingController editingController =
-          TextEditingController(text: this.block.text);
+      final documentPageModel = Provider.of<DocumentPageModel>(context);
+      debugPrint("editing:" + block.id);
+
       return TextField(
-        style: TextStyle(
-          fontSize: 14,
+        focusNode: documentPageModel.focusMap[block.id]!,
+        style: Theme.of(context).textTheme.bodyText1!,
+        onSubmitted: (_) {
+          documentPageModel.onSubmitCreateBlock(block);
+        },
+        controller: documentPageModel.editingController,
+        onChanged: documentPageModel.onTextFieldChanged,
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          isDense: true,
+          hintText: "command",
+          fillColor: Theme.of(context).cardColor,
+          filled: true,
+          contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         ),
-        controller: editingController,
-        decoration: InputDecoration(border: InputBorder.none, isDense: true),
       );
     }
 
-    return Text(
-      this.block.text,
-      textAlign: TextAlign.left,
-      style: TextStyle(fontSize: 14, height: 1.5),
-    );
+    return Container(
+        padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+        child: Text(
+          this.block.text,
+          textAlign: TextAlign.left,
+          style: Theme.of(context).textTheme.bodyText1!,
+        ));
   }
 }
