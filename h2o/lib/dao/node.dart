@@ -4,6 +4,13 @@ import 'package:h2o/api/api.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/model/global.dart';
 
+enum NodeType {
+  directory,
+  channel,
+  document,
+  table,
+}
+
 class NodeDao extends ChangeNotifier {
   BuildContext? context;
   Map<String, List<NodeBean>> nodeMap = {};
@@ -19,6 +26,7 @@ class NodeDao extends ChangeNotifier {
       globalModel.registerCallback(EventType.TEAM_LIST_UPDATED, updateNodes);
       globalModel.registerCallback(
           EventType.TEAM_SIDEBAR_INDEX_CHANGED, updateNodes);
+      globalModel.registerCallback(EventType.NODE_CREATED, updateNodes);
     }
   }
 

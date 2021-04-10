@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:h2o/bean/block.dart';
 
 class TextBlock extends StatelessWidget {
-  final String text;
+  final BlockBean block;
   final bool editing;
 
-  const TextBlock({this.text = "", this.editing = false});
+  const TextBlock(this.block, {this.editing = false});
 
   @override
   Widget build(BuildContext context) {
     if (this.editing) {
       final TextEditingController editingController =
-          TextEditingController(text: this.text);
+          TextEditingController(text: this.block.text);
       return TextField(
         style: TextStyle(
           fontSize: 14,
@@ -21,7 +22,7 @@ class TextBlock extends StatelessWidget {
     }
 
     return Text(
-      this.text,
+      this.block.text,
       textAlign: TextAlign.left,
       style: TextStyle(fontSize: 14, height: 1.5),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:h2o/dao/block.dart';
 import 'package:h2o/dao/node.dart';
 import 'package:h2o/dao/team.dart';
 import 'package:h2o/dao/user.dart';
@@ -9,6 +10,7 @@ enum EventType {
   REFRESH_TOKEN_SUCCESS,
   TEAM_SIDEBAR_INDEX_CHANGED,
   TEAM_LIST_UPDATED,
+  NODE_CREATED,
 }
 
 class GlobalModel extends ChangeNotifier {
@@ -16,6 +18,7 @@ class GlobalModel extends ChangeNotifier {
   UserDao? userDao;
   TeamDao? teamDao;
   NodeDao? nodeDao;
+  BlockDao? blockDao;
 
   Map<EventType, List<Future Function()>> callbackRegistry = {};
 

@@ -1,40 +1,41 @@
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:h2o/bean/node.dart';
+import 'package:h2o/components/nodes/channel_node.dart';
 import 'package:h2o/components/nodes/directory_node.dart';
 import 'package:h2o/components/nodes/document_node.dart';
 import 'package:h2o/components/nodes/table_node.dart';
-import 'package:h2o/components/nodes/text_channel_node.dart';
-import 'package:h2o/global/enum.dart';
+import 'package:h2o/dao/node.dart';
 
 class Node extends StatelessWidget {
-  final NodeBean node;
+  final NodeBean nodeBean;
 
-  const Node(this.node);
+  const Node(this.nodeBean);
 
   @override
   Widget build(BuildContext context) {
-    NodeType? type = EnumToString.fromString(NodeType.values, this.node.type);
+    NodeType? type =
+        EnumToString.fromString(NodeType.values, this.nodeBean.type);
     if (type == null) {
       return Container();
     }
 
     Widget node;
     switch (type) {
-      case NodeType.Directory:
-        node = DirectoryNode(name: "develop", indentLevel: 0);
+      case NodeType.directory:
+        node = DirectoryNode(nodeBean);
         break;
-      case NodeType.TextChannel:
-        node = TextChannelNode(name: "程序开发", indentLevel: 1);
+      case NodeType.channel:
+        node = ChannelNode(nodeBean);
         break;
-      case NodeType.Document:
-        node = DocumentNode(name: "开发文档", indentLevel: 2);
+      case NodeType.document:
+        node = DocumentNode(nodeBean);
         break;
-      case NodeType.Table:
-        node = TableNode(name: "CPU性能优化", indentLevel: 3);
+      case NodeType.table:
+        node = TableNode(nodeBean);
         break;
       default:
-        node = DirectoryNode(name: "unknown", indentLevel: 0);
+        node = DirectoryNode(nodeBean);
         break;
     }
     return node;

@@ -4,18 +4,18 @@ import 'package:flutter/material.dart';
 class BasicNode extends StatelessWidget {
   final String name;
   final int indentLevel;
-  final IconData icon;
-  final Function() onTapNode;
-  final Function() onTapPlus;
+  final IconData? icon;
+  final Function()? onTapNode;
+  final Function()? onTapPlus;
   final bool expanded;
 
   const BasicNode({
     required this.name,
     required this.indentLevel,
-    required this.icon,
     required this.expanded,
-    required this.onTapNode,
-    required this.onTapPlus,
+    this.icon,
+    this.onTapNode,
+    this.onTapPlus,
   });
 
   @override

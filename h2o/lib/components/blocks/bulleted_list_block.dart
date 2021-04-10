@@ -4,7 +4,7 @@ class BulletedListBlock extends StatefulWidget {
   final String text;
   final bool hoverEffect;
 
-  const BulletedListBlock({this.text = "", this.hoverEffect = true});
+  const BulletedListBlock({this.text = "", this.hoverEffect = false});
 
   @override
   State<StatefulWidget> createState() => BulletedListBlockState();

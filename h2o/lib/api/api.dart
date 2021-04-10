@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:enum_to_string/enum_to_string.dart';
+import 'package:h2o/bean/block.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/response.dart';
 import 'package:h2o/bean/team.dart';
@@ -15,9 +16,10 @@ class Api {
     _client.options.receiveTimeout = 15 * 1000; // 15s
     _client.interceptors.add(LogInterceptor(
       responseBody: true,
-      requestHeader: true,
+      requestHeader: false,
+      requestBody: false,
       responseHeader: false,
-      request: true,
+      request: false,
     ));
   }
 
@@ -107,13 +109,38 @@ class Api {
 
   static Future<NodeBean?> createTeamNode(String teamID,
       {Map<String, dynamic>? data,
-        CancelToken? cancelToken,
-        Options? options}) async {
+      CancelToken? cancelToken,
+      Options? options}) async {
     ResponseBean? response = await request(
         HttpMethod.POST, '/api/v1/teams/' + teamID + '/nodes',
         data: data, cancelToken: cancelToken, options: options);
     if (response != null && response.errorCode == 0) {
       return NodeBean.fromJson(response.data);
+    }
+  }
+
+  static Future<List<BlockBean>?> listNodeBlocks(String nodeID,
+      {Map<String, dynamic>? data,
+      CancelToken? cancelToken,
+      Options? options}) async {
+    ResponseBean? response = await request(
+        HttpMethod.GET, '/api/v1/nodes/' + nodeID + '/blocks',
+        data: data, cancelToken: cancelToken, options: options);
+    if (response != null && response.errorCode == 0) {
+      List items = response.data["blocks"];
+      return items.map((i) => BlockBean.fromJson(i)).toList();
+    }
+  }
+
+  static Future<BlockBean?> createNodeBlock(String nodeID,
+      {Map<String, dynamic>? data,
+      CancelToken? cancelToken,
+      Options? options}) async {
+    ResponseBean? response = await request(
+        HttpMethod.POST, '/api/v1/nodes/' + nodeID + '/blocks',
+        data: data, cancelToken: cancelToken, options: options);
+    if (response != null && response.errorCode == 0) {
+      return BlockBean.fromJson(response.data);
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:h2o/bean/node.dart';
@@ -6,7 +7,9 @@ import 'package:h2o/components/nodes/node.dart';
 import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
 import 'package:h2o/dao/node.dart';
 import 'package:h2o/dao/team.dart';
+import 'package:h2o/model/add_node_page.dart';
 import 'package:h2o/model/navigation_page.dart';
+import 'package:h2o/pages/team/add_node_page.dart';
 import 'package:provider/provider.dart';
 
 class TeamTree extends StatefulWidget {
@@ -48,17 +51,31 @@ class TeamTreeState extends State<TeamTree> {
             titleSpacing: 0.0,
           ),
         ),
-        body: InkWell(
-          onTap: () {},
-          onHover: (isHovering) {},
-          child: BouncingScrollView(
-            slivers: [
-              SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                return Node(nodes[index]);
-              }, childCount: nodes.length))
-            ],
-          ),
+        body: BouncingScrollView(
+          slivers: [
+            SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+              return Node(nodes[index]);
+            }, childCount: nodes.length)),
+            SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+              return ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(builder: (ctx) {
+                      return ChangeNotifierProvider(
+                          create: (_) => AddNodePageModel(team!),
+                          child: AddNodePage());
+                    }),
+                  );
+                },
+                icon: Icon(CupertinoIcons.add, size: 16),
+                label: Text(tr("team.add_node")),
+                style: ElevatedButton.styleFrom(
+                    primary: Theme.of(context).highlightColor),
+              );
+            }, childCount: 1)),
+          ],
         ),
       ),
     );

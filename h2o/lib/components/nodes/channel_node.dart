@@ -4,14 +4,14 @@ import 'package:h2o/bean/node.dart';
 import 'package:h2o/components/nodes/basic_node.dart';
 import 'package:h2o/dao/node.dart';
 import 'package:h2o/global/icons.dart';
-import 'package:h2o/model/document/document_page.dart';
-import 'package:h2o/pages/document/document_page.dart';
+import 'package:h2o/model/channel/channel_page.dart';
+import 'package:h2o/pages/channel/channel_page.dart';
 import 'package:provider/provider.dart';
 
-class DocumentNode extends StatelessWidget {
+class ChannelNode extends StatelessWidget {
   final NodeBean nodeBean;
 
-  const DocumentNode(this.nodeBean);
+  const ChannelNode(this.nodeBean);
 
   @override
   Widget build(BuildContext context) {
@@ -19,13 +19,13 @@ class DocumentNode extends StatelessWidget {
       expanded: false,
       indentLevel: 0,
       name: nodeBean.name,
-      icon: IconMap.nodeType[NodeType.document],
+      icon: IconMap.nodeType[NodeType.channel],
       onTapNode: () {
         Navigator.of(context).push(
           CupertinoPageRoute(builder: (ctx) {
             return ChangeNotifierProvider(
-                create: (_) => DocumentPageModel(context, nodeBean),
-                child: DocumentPage());
+                create: (_) => ChannelPageModel(context, nodeBean),
+                child: ChannelPage());
           }),
         );
       },

@@ -1,25 +1,23 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:h2o/bean/block.dart';
 import 'package:h2o/components/blocks/block.dart';
 import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
-import 'package:h2o/global/enum.dart';
+import 'package:h2o/dao/block.dart';
+import 'package:h2o/model/channel/channel_page.dart';
+import 'package:provider/provider.dart';
 
 class ChannelPage extends StatelessWidget {
-  final TextEditingController _editingController = TextEditingController();
-
-  final blocks = [
-    BlockType.h1,
-    BlockType.text,
-    BlockType.bulleted_list,
-    BlockType.bulleted_list,
-    BlockType.bulleted_list,
-    BlockType.numbered_list,
-  ];
-
   @override
   Widget build(BuildContext context) {
-    _editingController.text = "";
+    final channelPageModel = Provider.of<ChannelPageModel>(context);
+    final blockDao = Provider.of<BlockDao>(context);
+
+    List<BlockBean> blocks = [];
+    if (blockDao.blockMap.containsKey(channelPageModel.node.id)) {
+      blocks = blockDao.blockMap[channelPageModel.node.id]!.reversed.toList();
+    }
 
     OutlineInputBorder inputBorder = OutlineInputBorder(
       borderRadius: const BorderRadius.all(
@@ -29,12 +27,16 @@ class ChannelPage extends StatelessWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(tr("app.title")),
-        actions: [
-          IconButton(onPressed: () {}, icon: Icon(Icons.search)),
-          IconButton(onPressed: () {}, icon: Icon(Icons.group)),
-        ],
+      backgroundColor: Theme.of(context).cardColor,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(36),
+        child: AppBar(
+          title: Text(tr("app.title")),
+          actions: [
+            IconButton(onPressed: () {}, icon: Icon(Icons.search)),
+            IconButton(onPressed: () {}, icon: Icon(Icons.group)),
+          ],
+        ),
       ),
       body: Column(children: [
         Expanded(
@@ -46,11 +48,11 @@ class ChannelPage extends StatelessWidget {
                 delegate: SliverChildBuilderDelegate((context, index) {
                   return Container(
                       padding: EdgeInsets.symmetric(
-                        vertical: 10,
+                        vertical: 5,
                         horizontal: 20,
                       ),
                       child: Block(
-                        type: blocks[index],
+                        blocks[index],
                         showCreator: true,
                       ));
                 }, childCount: blocks.length),
@@ -65,26 +67,21 @@ class ChannelPage extends StatelessWidget {
             children: [
               Expanded(
                 child: TextField(
+                  focusNode: channelPageModel.focusNode,
                   style: Theme.of(context).textTheme.bodyText1,
-                  controller: _editingController,
+                  controller: channelPageModel.controller,
                   textInputAction: TextInputAction.send,
                   keyboardType: TextInputType.text,
+                  onSubmitted: channelPageModel.onTapCreateBlock,
                   decoration: InputDecoration(
                     isDense: true,
                     contentPadding:
                         EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    fillColor: Theme.of(context).highlightColor,
+                    fillColor: Theme.of(context).canvasColor,
                     filled: true,
-                    hintText: "Input Here",
                     enabledBorder: inputBorder,
                     focusedBorder: inputBorder,
                   ),
-                ),
-              ),
-              InkWell(
-                onTap: () {},
-                child: Icon(
-                  CupertinoIcons.plus,
                 ),
               ),
             ],

@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:h2o/api/api.dart';
+import 'package:h2o/dao/block.dart';
 import 'package:h2o/dao/node.dart';
 import 'package:h2o/dao/team.dart';
 import 'package:h2o/dao/user.dart';
@@ -21,6 +22,7 @@ void main() async {
             ChangeNotifierProvider(create: (_) => UserDao()),
             ChangeNotifierProvider(create: (_) => TeamDao()),
             ChangeNotifierProvider(create: (_) => NodeDao()),
+            ChangeNotifierProvider(create: (_) => BlockDao()),
           ],
           child: MyApp(),
         ),
@@ -52,6 +54,7 @@ class MyAppState extends State<MyApp> {
     Provider.of<UserDao>(context)..setContext(context, globalModel);
     Provider.of<TeamDao>(context)..setContext(context, globalModel);
     Provider.of<NodeDao>(context)..setContext(context, globalModel);
+    Provider.of<BlockDao>(context)..setContext(context, globalModel);
 
     return MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -59,7 +62,12 @@ class MyAppState extends State<MyApp> {
         supportedLocales: context.supportedLocales,
         locale: context.locale,
         title: 'Flutter Demo',
-        theme: ThemeData(brightness: Brightness.dark),
+        theme: ThemeData(
+          brightness: Brightness.dark,
+          accentColor: Colors.indigoAccent,
+          toggleableActiveColor: Colors.indigoAccent,
+          textSelectionTheme: TextSelectionThemeData(cursorColor: Colors.white),
+        ),
         home: ChangeNotifierProvider(
             create: (_) => NavigationPageModel(), child: NavigationPage()));
   }
