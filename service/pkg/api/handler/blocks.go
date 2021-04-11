@@ -65,12 +65,14 @@ func (h *Blocks) UpdateBlock(c *gin.Context) {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
+	block.PreBlockID = preBlock.ID
 
 	posBlock := dao.Block{}
 	if err := posBlock.Exists(h.Service.Database, body.PosBlockID); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
+	block.PosBlockID = posBlock.ID
 
 	if _, ok := dao.BlockTypeMap[body.Type]; !ok {
 		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block type"))
@@ -189,6 +191,7 @@ func (h *Blocks) PatchBlock(c *gin.Context) {
 			middleware.Error(c, http.StatusBadRequest, err)
 			return
 		}
+		block.PreBlockID = preBlock.ID
 	}
 
 	posBlock := dao.Block{}
@@ -197,6 +200,7 @@ func (h *Blocks) PatchBlock(c *gin.Context) {
 			middleware.Error(c, http.StatusBadRequest, err)
 			return
 		}
+		block.PosBlockID = posBlock.ID
 	}
 
 	block.UpdatedBy = user

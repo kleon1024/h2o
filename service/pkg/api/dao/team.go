@@ -33,8 +33,7 @@ type Team struct {
 }
 
 func (u *Team) BeforeCreate(tx *gorm.DB) error {
-	empty := uuid.UUID{}
-	if u.ID != empty {
+	if u.ID != EmptyUUID {
 		return nil
 	}
 	u.ID = uuid.New()
@@ -91,14 +90,18 @@ func (u *Team) FindNodes(db *gorm.DB, offset int, limit int) (*[]Node, error) {
 	return &s, nil
 }
 
-func (u *Team) Exists(db *gorm.DB) (bool, error) {
-	var count int64
-	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
-		tx = tx.Model(u).Where(u).Where("deleted = 0")
-		return tx.Count(&count).Error
-	})
+func (u *Team) Exists(db *gorm.DB, uuidString string) error {
+	uuidInstance, err := uuid.Parse(uuidString)
 	if err != nil {
-		return false, err
+		return err
 	}
-	return count > 0, nil
+	if uuidInstance == EmptyUUID {
+		return nil
+	}
+	u.ID = uuidInstance
+	err = orm.WithTransaction(db, func(tx *gorm.DB) error {
+		tx = tx.Model(u).Where(u).Where("deleted = 0")
+		return tx.First(&u).Error
+	})
+	return err
 }

@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"fmt"
 	"h2o/pkg/util/orm"
 	"time"
 
@@ -82,8 +81,7 @@ type Block struct {
 }
 
 func (u *Block) BeforeCreate(tx *gorm.DB) error {
-	empty := uuid.UUID{}
-	if u.ID != empty {
+	if u.ID != EmptyUUID {
 		return nil
 	}
 	u.ID = uuid.New()
@@ -180,22 +178,13 @@ func (u *Block) Exists(db *gorm.DB, uuidString string) error {
 	if err != nil {
 		return err
 	}
-	emptyUUID := uuid.UUID{}
-	if uuidInstance == emptyUUID {
+	if uuidInstance == EmptyUUID {
 		return nil
 	}
 	u.ID = uuidInstance
-	var count int64
 	err = orm.WithTransaction(db, func(tx *gorm.DB) error {
 		tx = tx.Model(u).Where(u).Where("deleted = 0")
-		return tx.Count(&count).Error
+		return tx.First(&u).Error
 	})
-	if count == 0 {
-		if err != nil {
-			err = fmt.Errorf("%v;resource not exist", err)
-		} else {
-			err = fmt.Errorf("resource not exist")
-		}
-	}
 	return err
 }

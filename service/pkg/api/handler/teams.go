@@ -107,7 +107,9 @@ func (h *Teams) ListTeamNodes(c *gin.Context) {
 		outputs[i].ID = node.ID.String()
 		outputs[i].Name = node.Name
 		outputs[i].Type = node.Type
-		outputs[i].ParentID = node.ParentID.String()
+		outputs[i].PreNodeID = node.PreNodeID.String()
+		outputs[i].PosNodeID = node.PosNodeID.String()
+		outputs[i].Indent = node.Indent
 	}
 
 	middleware.Success(c, dto.ListTeamNodesOutput{
@@ -142,52 +144,52 @@ func (h *Teams) CreateTeamNode(c *gin.Context) {
 		return
 	}
 
-	teamID, err := uuid.Parse(path.TeamID)
-	if err != nil {
+	team := dao.Team{}
+	if err := team.Exists(h.Service.Database, path.TeamID); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
-	}
-	team := dao.Team{
-		ID: teamID,
-	}
-	if teamExists, err := team.Exists(h.Service.Database); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
-		return
-	} else if !teamExists {
-		middleware.Error(c, http.StatusNotFound, err)
+	} else if team.ID == dao.EmptyUUID {
+		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid team id"))
 		return
 	}
 
-	logrus.WithField("type", body.Type).WithField("name", body.Name).Debug()
 	if _, ok := dao.NodeTypeMap[body.Type]; !ok {
 		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node type"))
 		return
 	}
 
+	preNode := &dao.Node{}
+	if err := preNode.Exists(h.Service.Database, body.PreNodeID); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
+	posNode := &dao.Node{}
+	if err := posNode.Exists(h.Service.Database, body.PosNodeID); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
 	node := dao.Node{
 		Name:      body.Name,
-		TeamID:    teamID,
+		PreNodeID: preNode.ID,
+		PosNodeID: posNode.ID,
+		TeamID:    team.ID,
 		Type:      body.Type,
 		CreatedBy: user,
 		UpdatedBy: user,
+		Indent:    body.Indent,
 	}
-	if body.ParentID != "" {
-		parent := dao.Node{}
-		if err := parent.Exists(h.Service.Database, body.ParentID); err != nil {
-			middleware.Error(c, http.StatusBadRequest, err)
-			return
-		}
-		node.ParentID = parent.ID
-	}
-
-	if err := node.Save(h.Service.Database); err != nil {
+	if err := node.Save(h.Service.Database, preNode, posNode); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 	}
 
 	middleware.Success(c, &dto.ListTeamNodesInstance{
-		ID:       node.ID.String(),
-		Name:     node.Name,
-		Type:     node.Type,
-		ParentID: node.ParentID.String(),
+		ID:        node.ID.String(),
+		Name:      node.Name,
+		Type:      node.Type,
+		PreNodeID: node.PreNodeID.String(),
+		PosNodeID: node.PosNodeID.String(),
+		Indent:    node.Indent,
 	})
 }

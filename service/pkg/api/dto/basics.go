@@ -13,9 +13,9 @@ const (
 
 type Pagination struct {
 	// 偏移，从0开始，默认为0
-	Offset int `json:"offset" form:"offset" example:"0" validate:"required,min=0"`
+	Offset int `json:"offset" form:"offset" example:"0" validate:"min=0"`
 	// 分页大小，默认为10
-	Limit int `json:"limit" form:"limit" example:"10" validate:"required,min=1,max=1000"`
+	Limit int `json:"limit" form:"limit" example:"10" validate:"min=1,max=1000"`
 }
 
 func (p *Pagination) Bind(c *gin.Context) error {

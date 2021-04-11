@@ -8,6 +8,8 @@ import (
 	"h2o/pkg/api/middleware"
 	"h2o/pkg/config"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -21,6 +23,9 @@ func RegisterNodes(r *gin.RouterGroup, svc *options.ApiService) {
 	h := Nodes{svc}
 	r.GET("/:nodeID/blocks", h.ListNodeBlocks)
 	r.POST("/:nodeID/blocks", h.CreateNodeBlock)
+	r.PUT("/:nodeID", h.UpdateNode)
+	r.PATCH("/:nodeID", h.PatchNode)
+	r.DELETE("/:nodeID", h.DeleteNode)
 }
 
 // @id ListNodeBlocks
@@ -109,6 +114,9 @@ func (h *Nodes) CreateNodeBlock(c *gin.Context) {
 	if err := node.Exists(h.Service.Database, path.NodeID); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
+	} else if node.ID == dao.EmptyUUID {
+		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
+		return
 	}
 
 	preBlock := dao.Block{}
@@ -152,5 +160,267 @@ func (h *Nodes) CreateNodeBlock(c *gin.Context) {
 		Revision:   block.Revision,
 		AuthorID:   block.UpdatedUserID.String(),
 		UpdatedAt:  block.UpdatedAt.Format(config.DateFormatString),
+	})
+}
+
+// @id UpdateNode
+// @summary 全量更新节点
+// @tags Node
+// @produce json
+// @param nodeID path string true "nodeID"
+// @param body body dto.UpdateNodeInput true "body"
+// @success 200 {object} middleware.Response{data=dto.NodeOutput} "success"
+// @failure 400 {object} middleware.Response{data=interface{}} "failure"
+// @router /api/v1/nodes/:nodeID [PUT]
+func (h *Nodes) UpdateNode(c *gin.Context) {
+	userValue, _ := c.Get(middleware.UserKey)
+	user := userValue.(dao.User)
+	// TODO: RBAC
+
+	path := &dto.NodeInputPath{}
+	if err := path.Bind(c); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
+	body := &dto.UpdateNodeInputBody{}
+	if err := body.Bind(c); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
+	node := dao.Node{}
+	if err := node.Exists(h.Service.Database, path.NodeID); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	} else if node.ID == dao.EmptyUUID {
+		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
+		return
+	}
+
+	preNode := dao.Node{}
+	if err := preNode.Exists(h.Service.Database, body.PreNodeID); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+	node.PreNodeID = preNode.ID
+
+	posNode := dao.Node{}
+	if err := posNode.Exists(h.Service.Database, body.PosNodeID); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+	node.PosNodeID = posNode.ID
+
+	if _, ok := dao.NodeTypeMap[body.Type]; !ok {
+		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node type"))
+		return
+	}
+	node.Type = body.Type
+	node.Name = body.Name
+	node.Indent = body.Indent
+
+	team := dao.Team{}
+	if err := team.Exists(h.Service.Database, body.TeamID); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	} else if team.ID == dao.EmptyUUID {
+		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid team id"))
+		return
+	}
+	node.TeamID = team.ID
+
+	node.UpdatedUserID = user.ID
+	if err := node.Save(h.Service.Database, &preNode, &posNode); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
+	middleware.Success(c, &dto.NodeOutput{
+		ID:        node.ID.String(),
+		Name:      node.Name,
+		Type:      node.Type,
+		Indent:    node.Indent,
+		TeamID:    node.TeamID.String(),
+		PreNodeID: node.PreNodeID.String(),
+		PosNodeID: node.PosNodeID.String(),
+	})
+}
+
+// @id PatchNode
+// @summary 增量更新节点
+// @tags Node
+// @produce json
+// @param nodeID path string true "nodeID"
+// @param body body dto.PatchNodeInput true "body"
+// @success 200 {object} middleware.Response{data=dto.NodeOutput} "success"
+// @failure 400 {object} middleware.Response{data=interface{}} "failure"
+// @router /api/v1/nodes/:nodeID [PATCH]
+func (h *Nodes) PatchNode(c *gin.Context) {
+	userValue, _ := c.Get(middleware.UserKey)
+	user := userValue.(dao.User)
+	// TODO: RBAC
+
+	path := &dto.NodeInputPath{}
+	if err := path.Bind(c); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
+	body := &dto.PatchNodeInputBody{
+		Indent: -1,
+	}
+	if err := body.Bind(c); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
+	node := dao.Node{}
+	if err := node.Exists(h.Service.Database, path.NodeID); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	} else if node.ID == dao.EmptyUUID {
+		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
+		return
+	}
+
+	if body.Type != "" {
+		if _, ok := dao.NodeTypeMap[body.Type]; !ok {
+			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node type"))
+			return
+		}
+		node.Type = body.Type
+	}
+
+	if body.Name != "" {
+		illegalChar := regexp.MustCompile(`[[/:;$@#%^*+=\|~]]`)
+		spaceChar := regexp.MustCompile(`[\s]`)
+		name := body.Name
+		name = strings.TrimSpace(name)
+		name = illegalChar.ReplaceAllString(name, "")
+		name = spaceChar.ReplaceAllString(name, "-")
+		if len(name) == 0 {
+			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node name"))
+			return
+		}
+		node.Name = name
+	}
+
+	if body.Indent != -1 {
+		if body.Indent < 0 {
+			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid indent level"))
+			return
+		}
+	}
+
+	if body.TeamID != "" {
+		team := dao.Team{}
+		if err := team.Exists(h.Service.Database, body.TeamID); err != nil {
+			middleware.Error(c, http.StatusBadRequest, err)
+			return
+		} else if team.ID == dao.EmptyUUID {
+			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid team id"))
+			return
+		}
+		node.TeamID = team.ID
+	}
+
+	preNode := &dao.Node{}
+	if body.PreNodeID != "" {
+		if err := preNode.Exists(h.Service.Database, body.PreNodeID); err != nil {
+			middleware.Error(c, http.StatusBadRequest, err)
+			return
+		}
+		node.PreNodeID = preNode.ID
+	}
+
+	posNode := &dao.Node{}
+	if body.PosNodeID != "" {
+		if err := posNode.Exists(h.Service.Database, body.PosNodeID); err != nil {
+			middleware.Error(c, http.StatusBadRequest, err)
+			return
+		}
+		node.PosNodeID = posNode.ID
+	}
+
+	node.UpdatedUserID = user.ID
+	if err := node.Save(h.Service.Database, preNode, posNode); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
+	middleware.Success(c, &dto.NodeOutput{
+		ID:        node.ID.String(),
+		Name:      node.Name,
+		Type:      node.Type,
+		Indent:    node.Indent,
+		TeamID:    node.TeamID.String(),
+		PreNodeID: node.PreNodeID.String(),
+		PosNodeID: node.PosNodeID.String(),
+	})
+}
+
+// @id DeleteNode
+// @summary 删除节点
+// @tags Node
+// @produce json
+// @param nodeID path string true "nodeID"
+// @success 200 {object} middleware.Response{data=interface{}} "success"
+// @failure 400 {object} middleware.Response{data=interface{}} "failure"
+// @router /api/v1/nodes/:nodeID [DELETE]
+func (h *Nodes) DeleteNode(c *gin.Context) {
+	userValue, _ := c.Get(middleware.UserKey)
+	user := userValue.(dao.User)
+	// TODO: RBAC
+
+	path := &dto.NodeInputPath{}
+	if err := path.Bind(c); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
+	node := dao.Node{}
+	if err := node.Exists(h.Service.Database, path.NodeID); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+	preNode, err := node.FindPreNode(h.Service.Database)
+	if err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+	posNode, err := node.FindPosNode(h.Service.Database)
+	if err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+	if posNode.ID != dao.EmptyUUID {
+		if preNode.ID != dao.EmptyUUID {
+			preNode.PosNodeID = posNode.ID
+			posNode.PreNodeID = preNode.ID
+		} else {
+			posNode.PreNodeID = dao.EmptyUUID
+		}
+	} else if preNode.ID != dao.EmptyUUID {
+		preNode.PosNodeID = dao.EmptyUUID
+	}
+
+	node.Deleted = 1
+	node.UpdatedBy = user
+	node.DeletedBy = user
+
+	if err := node.Save(h.Service.Database, preNode, posNode); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
+	middleware.Success(c, &dto.NodeOutput{
+		ID:        node.ID.String(),
+		Name:      node.Name,
+		Type:      node.Type,
+		Indent:    node.Indent,
+		TeamID:    node.TeamID.String(),
+		PreNodeID: node.PreNodeID.String(),
+		PosNodeID: node.PosNodeID.String(),
 	})
 }

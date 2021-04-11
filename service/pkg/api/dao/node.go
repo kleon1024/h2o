@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"fmt"
 	"h2o/pkg/util/orm"
 	"time"
 
@@ -30,13 +29,13 @@ type Node struct {
 	ID        uuid.UUID `gorm:"type:char(36);primary_key"`
 	Type      string    `gorm:"column:type;not null"`
 	Name      string    `gorm:"name;not null"`
-	Parent    *Node     `gorm:"foreignkey:ParentID"`
-	ParentID  uuid.UUID `gorm:"type:char(36)"`
-	Children  []Node    `gorm:"foreignkey:ParentID"`
 	TeamID    uuid.UUID `gorm:"type:char(36)"`
 	Team      Team      `gorm:"foreignkey:TeamID"`
 	Blocks    []Block   `gorm:"foreignkey:NodeID"`
 	PreNodeID uuid.UUID `gorm:"type:char(36)"`
+	PreNode   *Node     `gorm:"foreignkey:PreNodeID"`
+	PosNodeID uuid.UUID `gorm:"type:char(36)"`
+	PosNode   *Node     `gorm:"foreignkey:PosNodeID"`
 	Indent    int       `gorm:"column:indent;not null"`
 
 	CreatedBy     User      `gorm:"foreignkey:CreatedUserID"`
@@ -53,8 +52,7 @@ type Node struct {
 }
 
 func (u *Node) BeforeCreate(tx *gorm.DB) error {
-	empty := uuid.UUID{}
-	if u.ID != empty {
+	if u.ID != EmptyUUID {
 		return nil
 	}
 	u.ID = uuid.New()
@@ -74,9 +72,27 @@ func (u *Node) BeforeSave(tx *gorm.DB) error {
 	return nil
 }
 
-func (u *Node) Save(db *gorm.DB) error {
+func (u *Node) Save(db *gorm.DB, pre *Node, pos *Node) error {
 	return orm.WithTransaction(db, func(tx *gorm.DB) error {
-		return tx.Save(u).Error
+		err := tx.Save(u).Error
+		if err != nil {
+			return err
+		}
+		if pre.ID != EmptyUUID {
+			pre.PosNodeID = u.ID
+			err = tx.Save(pre).Error
+			if err != nil {
+				return err
+			}
+		}
+		if pos.ID != EmptyUUID {
+			pos.PreNodeID = u.ID
+			err = tx.Save(pre).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 }
 
@@ -111,27 +127,50 @@ func (u *Node) FindBlocks(db *gorm.DB, offset int, limit int) (*[]Block, error) 
 	return &s, nil
 }
 
+func (u *Node) FindPosNode(db *gorm.DB) (*Node, error) {
+	var s []Node
+	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
+		tx = tx.Model(u)
+		tx = tx.Where("deleted = 0")
+		return tx.Association("PosNode").Find(&s)
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(s) == 0 {
+		return &Node{}, nil
+	}
+	return &s[0], nil
+}
+
+func (u *Node) FindPreNode(db *gorm.DB) (*Node, error) {
+	var s []Node
+	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
+		tx = tx.Model(u)
+		tx = tx.Where("deleted = 0")
+		return tx.Association("PreNode").Find(&s)
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(s) == 0 {
+		return &Node{}, nil
+	}
+	return &s[0], nil
+}
+
 func (u *Node) Exists(db *gorm.DB, uuidString string) error {
 	uuidInstance, err := uuid.Parse(uuidString)
 	if err != nil {
 		return err
 	}
-	emptyUUID := uuid.UUID{}
-	if uuidInstance == emptyUUID {
+	if uuidInstance == EmptyUUID {
 		return nil
 	}
 	u.ID = uuidInstance
-	var count int64
 	err = orm.WithTransaction(db, func(tx *gorm.DB) error {
 		tx = tx.Model(u).Where(u).Where("deleted = 0")
-		return tx.Count(&count).Error
+		return tx.First(&u).Error
 	})
-	if count == 0 {
-		if err != nil {
-			err = fmt.Errorf("%v;resource not exist", err)
-		} else {
-			err = fmt.Errorf("resource not exist")
-		}
-	}
 	return err
 }

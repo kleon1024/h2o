@@ -31,8 +31,7 @@ type User struct {
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {
-	empty := uuid.UUID{}
-	if u.ID != empty {
+	if u.ID != EmptyUUID {
 		return nil
 	}
 	u.ID = uuid.New()
