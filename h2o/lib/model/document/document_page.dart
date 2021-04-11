@@ -24,19 +24,13 @@ class DocumentPageModel extends ChangeNotifier {
 
   final editingController = TextEditingController();
   final focusMap = {
-    "": FocusNode(),
+    EMPTY_UUID: FocusNode(),
   };
 
   // New
   bool editingNew = false;
-  String editingBlockID = ZERO_UUID;
-  BlockBean editingBlock = BlockBean(
-      id: "",
-      type: EnumToString.convertToString(BlockType.text),
-      text: "",
-      revision: 0,
-      authorID: "",
-      updatedAt: "");
+  String editingBlockID = "";
+  BlockBean editingBlock = BlockBean();
 
   Future updateFocus() async {
     List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.id]!;
@@ -62,15 +56,9 @@ class DocumentPageModel extends ChangeNotifier {
       editingNew = true;
       focusMap[""]!.requestFocus();
     }
-    editingBlockID = ZERO_UUID;
+    editingBlockID = "";
     editingController.text = "";
-    editingBlock = BlockBean(
-        id: "",
-        type: EnumToString.convertToString(BlockType.text),
-        text: "",
-        revision: 0,
-        authorID: "",
-        updatedAt: "");
+    editingBlock = BlockBean();
     notifyListeners();
   }
 
@@ -95,7 +83,7 @@ class DocumentPageModel extends ChangeNotifier {
         // createNodeBlockAfter
       }
     }
-    editingBlockID = ZERO_UUID;
+    editingBlockID = "";
     notifyListeners();
   }
 

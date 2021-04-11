@@ -7,6 +7,7 @@ import 'package:h2o/components/nodes/node.dart';
 import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
 import 'package:h2o/dao/node.dart';
 import 'package:h2o/dao/team.dart';
+import 'package:h2o/global/consts.dart';
 import 'package:h2o/model/add_node_page.dart';
 import 'package:h2o/model/navigation_page.dart';
 import 'package:h2o/pages/team/add_node_page.dart';
@@ -55,16 +56,33 @@ class TeamTreeState extends State<TeamTree> {
           slivers: [
             SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-              return Node(nodes[index]);
+              return Node(nodes[index], onTapPlus: () {
+                Navigator.of(context).push(
+                  CupertinoPageRoute(builder: (ctx) {
+                    return ChangeNotifierProvider(
+                        create: (_) => AddNodePageModel(team!, nodes[index].id,
+                            nodes[index].posNodeID, nodes[index].indent, true),
+                        child: AddNodePage());
+                  }),
+                );
+              });
             }, childCount: nodes.length)),
             SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
+              String preNodeID = EMPTY_UUID;
+              String posNodeID = EMPTY_UUID;
+              int indent = 0;
+              if (nodes.length > 0) {
+                preNodeID = nodes[nodes.length - 1].id;
+              }
+
               return ElevatedButton.icon(
                 onPressed: () {
                   Navigator.of(context).push(
                     CupertinoPageRoute(builder: (ctx) {
                       return ChangeNotifierProvider(
-                          create: (_) => AddNodePageModel(team!),
+                          create: (_) => AddNodePageModel(
+                              team!, preNodeID, posNodeID, indent, false),
                           child: AddNodePage());
                     }),
                   );

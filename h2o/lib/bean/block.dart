@@ -1,3 +1,4 @@
+import 'package:h2o/global/consts.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'block.g.dart';
@@ -5,6 +6,8 @@ part 'block.g.dart';
 @JsonSerializable()
 class BlockBean {
   String id;
+  String preBlockID;
+  String posBlockID;
   String type;
   String text;
   int revision;
@@ -12,12 +15,14 @@ class BlockBean {
   String updatedAt;
 
   BlockBean({
-    required this.id,
-    required this.type,
-    required this.text,
-    required this.revision,
-    required this.authorID,
-    required this.updatedAt,
+    this.id = EMPTY_UUID,
+    this.preBlockID = EMPTY_UUID,
+    this.posBlockID = EMPTY_UUID,
+    this.type = "text",
+    this.text = "",
+    this.revision = 0,
+    this.authorID = EMPTY_UUID,
+    this.updatedAt = "",
   });
 
   factory BlockBean.fromJson(Map<String, dynamic> json) =>

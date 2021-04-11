@@ -1,16 +1,22 @@
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:h2o/bean/node.dart';
-import 'package:h2o/components/nodes/channel_node.dart';
-import 'package:h2o/components/nodes/directory_node.dart';
-import 'package:h2o/components/nodes/document_node.dart';
-import 'package:h2o/components/nodes/table_node.dart';
 import 'package:h2o/dao/node.dart';
+import 'package:h2o/global/icons.dart';
+import 'package:h2o/model/channel/channel_page.dart';
+import 'package:h2o/model/document/document_page.dart';
+import 'package:h2o/pages/channel/channel_page.dart';
+import 'package:h2o/pages/document/document_page.dart';
+import 'package:h2o/pages/table/table_page.dart';
+import 'package:provider/provider.dart';
 
 class Node extends StatelessWidget {
   final NodeBean nodeBean;
+  final Function()? onTapExpand;
+  final Function()? onTapPlus;
 
-  const Node(this.nodeBean);
+  const Node(this.nodeBean, {this.onTapExpand, this.onTapPlus});
 
   @override
   Widget build(BuildContext context) {
@@ -19,25 +25,87 @@ class Node extends StatelessWidget {
     if (type == null) {
       return Container();
     }
+    Function()? onTapNode;
 
-    Widget node;
+    IconData iconData = IconMap.nodeType[type]!;
+
     switch (type) {
-      case NodeType.directory:
-        node = DirectoryNode(nodeBean);
-        break;
-      case NodeType.channel:
-        node = ChannelNode(nodeBean);
+      case NodeType.document:
+        onTapNode = () {
+          Navigator.of(context).push(
+            CupertinoPageRoute(builder: (ctx) {
+              return ChangeNotifierProvider(
+                  create: (_) => ChannelPageModel(context, nodeBean),
+                  child: ChannelPage());
+            }),
+          );
+        };
         break;
       case NodeType.document:
-        node = DocumentNode(nodeBean);
+        onTapNode = () {
+          Navigator.of(context).push(
+            CupertinoPageRoute(builder: (ctx) {
+              return ChangeNotifierProvider(
+                  create: (_) => DocumentPageModel(context, nodeBean),
+                  child: DocumentPage());
+            }),
+          );
+        };
         break;
       case NodeType.table:
-        node = TableNode(nodeBean);
+        onTapNode = () {
+          Navigator.of(context).push(
+            CupertinoPageRoute(builder: (ctx) {
+              return TablePage();
+            }),
+          );
+        };
         break;
       default:
-        node = DirectoryNode(nodeBean);
-        break;
+        onTapNode = onTapExpand;
     }
-    return node;
+
+    return Container(
+      child: Row(children: [
+        InkWell(
+          onTap: this.onTapExpand,
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 4),
+            child: Icon(
+                nodeBean.expanded
+                    ? CupertinoIcons.chevron_down
+                    : CupertinoIcons.chevron_right,
+                size: 16),
+          ),
+        ),
+        Expanded(
+            child: InkWell(
+          onTap: onTapNode,
+          child: Container(
+            padding: EdgeInsets.only(left: 12.0 * nodeBean.indent),
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Icon(iconData, size: 16),
+                  Text(" "),
+                  Text(
+                    nodeBean.name,
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        )),
+        InkWell(
+          onTap: this.onTapPlus,
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 4),
+            child: Icon(CupertinoIcons.plus, size: 16),
+          ),
+        ),
+      ]),
+    );
   }
 }

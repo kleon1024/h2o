@@ -23,6 +23,155 @@ class AddNodePage extends StatelessWidget {
           bodyTestStyle.merge(TextStyle(color: Theme.of(context).cardColor));
     }
 
+    var slivers = [
+      SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 15,
+                ),
+                Container(
+                    padding: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                    child: Text(
+                      tr("team.add_node.name"),
+                      style: Theme.of(context).textTheme.bodyText1,
+                    )),
+                TextField(
+                  style: Theme.of(context).textTheme.bodyText1,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.deny(
+                        RegExp(r"[/:;$@#%^*+=\|~]")),
+                  ],
+                  autofocus: true,
+                  onChanged: addNodePageModel.onTextFieldChanged,
+                  controller: addNodePageModel.controller,
+                  textInputAction: TextInputAction.done,
+                  keyboardType: TextInputType.text,
+                  decoration: InputDecoration(
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                    fillColor: Theme.of(context).canvasColor,
+                    filled: true,
+                    border: InputBorder.none,
+                    suffix: InkWell(
+                      onTap: () {
+                        addNodePageModel.controller.clear();
+                      },
+                      child: Container(
+                        padding: EdgeInsets.only(right: 8),
+                        child: Icon(CupertinoIcons.clear_circled,
+                            size: 16, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ]);
+        }, childCount: 1),
+      ),
+      SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 15,
+                ),
+                Container(
+                    padding: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                    child: Text(
+                      tr("team.add_node.type"),
+                      style: Theme.of(context).textTheme.bodyText1,
+                    ))
+              ]);
+        }, childCount: 1),
+      ),
+      SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          NodeType nodeType = NodeType.values[index];
+          return RadioListTile<NodeType>(
+            title: Row(children: [
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text(
+                      tr("team.add_node.type." +
+                          EnumToString.convertToString(nodeType)),
+                      style: Theme.of(context).textTheme.bodyText1,
+                    ),
+                    Text(
+                      tr("team.add_node.type." +
+                          EnumToString.convertToString(nodeType) +
+                          ".description"),
+                      style: Theme.of(context).textTheme.caption,
+                    ),
+                  ])),
+              Icon(IconMap.nodeType[nodeType], size: 16)
+            ]),
+            tileColor: Theme.of(context).canvasColor,
+            value: nodeType,
+            groupValue: addNodePageModel.nodeType,
+            onChanged: addNodePageModel.onNodeTypeRadioChanged,
+          );
+        }, childCount: NodeType.values.length),
+      ),
+    ];
+
+    if (addNodePageModel.showIndentRadio) {
+      slivers.addAll([
+        SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 15,
+                  ),
+                  Container(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                      child: Text(
+                        tr("team.add_node.indent"),
+                        style: Theme.of(context).textTheme.bodyText1,
+                      ))
+                ]);
+          }, childCount: 1),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            IndentType nodeType = IndentType.values[index];
+            return RadioListTile<IndentType>(
+              title: Row(children: [
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      Text(
+                        tr("team.add_node.indent." +
+                            EnumToString.convertToString(nodeType)),
+                        style: Theme.of(context).textTheme.bodyText1,
+                      ),
+                      Text(
+                        tr("team.add_node.indent." +
+                            EnumToString.convertToString(nodeType) +
+                            ".description"),
+                        style: Theme.of(context).textTheme.caption,
+                      ),
+                    ])),
+                Icon(IconMap.nodeType[nodeType], size: 16)
+              ]),
+              tileColor: Theme.of(context).canvasColor,
+              value: nodeType,
+              groupValue: addNodePageModel.indentType,
+              onChanged: addNodePageModel.onIndentTypeRadioChanged,
+            );
+          }, childCount: IndentType.values.length),
+        )
+      ]);
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).cardColor,
       appBar: PreferredSize(
@@ -66,103 +215,7 @@ class AddNodePage extends StatelessWidget {
       body: Container(
         child: BouncingScrollView(
           scrollBar: true,
-          slivers: [
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        height: 15,
-                      ),
-                      Container(
-                          padding:
-                              EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                          child: Text(
-                            tr("team.add_node.name"),
-                            style: Theme.of(context).textTheme.bodyText1,
-                          )),
-                      TextField(
-                        style: Theme.of(context).textTheme.bodyText1,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.deny(
-                              RegExp(r"[/:;$@#%^*+=\|~]")),
-                        ],
-                        autofocus: true,
-                        onChanged: addNodePageModel.onTextFieldChanged,
-                        controller: addNodePageModel.controller,
-                        textInputAction: TextInputAction.done,
-                        keyboardType: TextInputType.text,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 10),
-                          fillColor: Theme.of(context).canvasColor,
-                          filled: true,
-                          border: InputBorder.none,
-                          suffix: InkWell(
-                            onTap: () {
-                              addNodePageModel.controller.clear();
-                            },
-                            child: Container(
-                              padding: EdgeInsets.only(right: 8),
-                              child: Icon(CupertinoIcons.clear_circled,
-                                  size: 16, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ]);
-              }, childCount: 1),
-            ),
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        height: 15,
-                      ),
-                      Container(
-                          padding:
-                              EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                          child: Text(
-                            tr("team.add_node.type"),
-                            style: Theme.of(context).textTheme.bodyText1,
-                          ))
-                    ]);
-              }, childCount: 1),
-            ),
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                NodeType nodeType = NodeType.values[index];
-                return RadioListTile<NodeType>(
-                  title: Row(children: [
-                    Expanded(
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                          Text(
-                            tr("team.add_node.type." +
-                                EnumToString.convertToString(nodeType)),
-                            style: Theme.of(context).textTheme.bodyText1,
-                          ),
-                          Text(
-                            tr("team.add_node.type." +
-                                EnumToString.convertToString(nodeType) +
-                                ".description"),
-                            style: Theme.of(context).textTheme.caption,
-                          ),
-                        ])),
-                    Icon(IconMap.nodeType[nodeType], size: 16)
-                  ]),
-                  tileColor: Theme.of(context).canvasColor,
-                  value: nodeType,
-                  groupValue: addNodePageModel.nodeType,
-                  onChanged: addNodePageModel.onRadioChanged,
-                );
-              }, childCount: NodeType.values.length),
-            )
-          ],
+          slivers: slivers,
         ),
       ),
     );

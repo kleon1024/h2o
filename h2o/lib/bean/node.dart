@@ -7,13 +7,20 @@ class NodeBean {
   String id;
   String type;
   String name;
-  String parentID;
+  int indent;
+  String preNodeID;
+  String posNodeID;
+  @JsonKey(ignore: true)
+  bool expanded;
 
   NodeBean({
     required this.id,
     required this.type,
     required this.name,
-    required this.parentID,
+    required this.indent,
+    required this.preNodeID,
+    required this.posNodeID,
+    this.expanded = false,
   });
 
   factory NodeBean.fromJson(Map<String, dynamic> json) =>
