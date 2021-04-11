@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"fmt"
 	"h2o/pkg/util/orm"
 	"time"
 
@@ -58,6 +59,10 @@ type Block struct {
 	Node       Node            `gorm:"foreignkey:NodeID"`
 	NodeID     uuid.UUID       `gorm:"type:char(36)"`
 	Revisions  []BlockRevision `gorm:"foreignKey:BlockID"`
+	PreBlockID uuid.UUID       `gorm:"type:char(36)"`
+	PreBlock   *Block          `gorm:"foreignKey:PreBlockID"`
+	PosBlockID uuid.UUID       `gorm:"type:char(36)"`
+	PosBlock   *Block          `gorm:"foreignKey:PosBlockID"`
 	SubBlockID uuid.UUID       `gorm:"type:char(36)"`
 
 	CreatedBy     User      `gorm:"foreignkey:CreatedUserID"`
@@ -67,13 +72,13 @@ type Block struct {
 	DeletedBy     User      `gorm:"foreignkey:DeletedUserID"`
 	DeletedUserID uuid.UUID `gorm:"type:char(36)"`
 
-	ColumnRatio float32 `gorm:"columnRatio"`
-	IndentLevel int     `gorm:"column:indentLevel"`
+	ColumnRatio float32 `gorm:"column:ratio;not null"`
+	IndentLevel int     `gorm:"column:indent_level;not null"`
 
-	CreatedAt time.Time `gorm:"column:createdAt"`
-	UpdatedAt time.Time `gorm:"column:updatedAt"`
-	DeletedAt time.Time `gorm:"column:deletedAt"`
-	Deleted   int       `gorm:"column:deleted"`
+	CreatedAt time.Time `gorm:"column:created_at;not null"`
+	UpdatedAt time.Time `gorm:"column:updated_at;not null"`
+	DeletedAt time.Time `gorm:"column:deleted_at;not null"`
+	Deleted   int       `gorm:"column:deleted;not null"`
 }
 
 func (u *Block) BeforeCreate(tx *gorm.DB) error {
@@ -98,9 +103,27 @@ func (u *Block) BeforeSave(tx *gorm.DB) error {
 	return nil
 }
 
-func (u *Block) Save(db *gorm.DB) error {
+func (u *Block) Save(db *gorm.DB, pre *Block, pos *Block) error {
 	return orm.WithTransaction(db, func(tx *gorm.DB) error {
-		return tx.Save(u).Error
+		err := tx.Save(u).Error
+		if err != nil {
+			return err
+		}
+		if pre.ID != EmptyUUID {
+			pre.PosBlockID = u.ID
+			err = tx.Save(pre).Error
+			if err != nil {
+				return err
+			}
+		}
+		if pos.ID != EmptyUUID {
+			pos.PreBlockID = u.ID
+			err = tx.Save(pre).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 }
 
@@ -120,14 +143,59 @@ func (u *Block) Find(db *gorm.DB, offset int, limit int, wheres []orm.WhereCondi
 	return &s, nil
 }
 
-func (u *Block) Exists(db *gorm.DB) (bool, error) {
-	var count int64
+func (u *Block) FindPosBlock(db *gorm.DB) (*Block, error) {
+	var s []Block
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
+		tx = tx.Model(u)
+		tx = tx.Where("deleted = 0")
+		return tx.Association("PosBlock").Find(&s)
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(s) == 0 {
+		return &Block{}, nil
+	}
+	return &s[0], nil
+}
+
+func (u *Block) FindPreBlock(db *gorm.DB) (*Block, error) {
+	var s []Block
+	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
+		tx = tx.Model(u)
+		tx = tx.Where("deleted = 0")
+		return tx.Association("PreBlock").Find(&s)
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(s) == 0 {
+		return &Block{}, nil
+	}
+	return &s[0], nil
+}
+
+func (u *Block) Exists(db *gorm.DB, uuidString string) error {
+	uuidInstance, err := uuid.Parse(uuidString)
+	if err != nil {
+		return err
+	}
+	emptyUUID := uuid.UUID{}
+	if uuidInstance == emptyUUID {
+		return nil
+	}
+	u.ID = uuidInstance
+	var count int64
+	err = orm.WithTransaction(db, func(tx *gorm.DB) error {
 		tx = tx.Model(u).Where(u).Where("deleted = 0")
 		return tx.Count(&count).Error
 	})
-	if err != nil {
-		return false, err
+	if count == 0 {
+		if err != nil {
+			err = fmt.Errorf("%v;resource not exist", err)
+		} else {
+			err = fmt.Errorf("resource not exist")
+		}
 	}
-	return count > 0, nil
+	return err
 }

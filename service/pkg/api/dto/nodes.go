@@ -20,8 +20,10 @@ type ListNodeBlocksOutput struct {
 }
 
 type CreateNodeBlockInputBody struct {
-	Type string `json:"type" form:"type" validate:"required,min=1"`
-	Text string `json:"text" form:"text"`
+	Type       string `json:"type" example:"text" validate:"required,min=1"`
+	Text       string `json:"text" example:"text"`
+	PreBlockID string `json:"preBlockID" example:"0f1400e6-bec9-458d-94c6-cfca966710d4" validate:"required,uuid"`
+	PosBlockID string `json:"posBlockID" example:"0f1400e6-bec9-458d-94c6-cfca966710d4" validate:"required,uuid"`
 }
 
 func (p *CreateNodeBlockInputBody) Bind(c *gin.Context) error {

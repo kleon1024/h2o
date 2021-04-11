@@ -172,22 +172,12 @@ func (h *Teams) CreateTeamNode(c *gin.Context) {
 		UpdatedBy: user,
 	}
 	if body.ParentID != "" {
-		parentID, err := uuid.Parse(body.ParentID)
-		if err != nil {
+		parent := dao.Node{}
+		if err := parent.Exists(h.Service.Database, body.ParentID); err != nil {
 			middleware.Error(c, http.StatusBadRequest, err)
 			return
 		}
-		parent := dao.Node{
-			ID: parentID,
-		}
-		if nodeExists, err := parent.Exists(h.Service.Database); err != nil {
-			middleware.Error(c, http.StatusBadRequest, err)
-			return
-		} else if !nodeExists {
-			middleware.Error(c, http.StatusNotFound, err)
-			return
-		}
-		node.ParentID = parentID
+		node.ParentID = parent.ID
 	}
 
 	if err := node.Save(h.Service.Database); err != nil {

@@ -51,15 +51,24 @@ func (h *Blocks) UpdateBlock(c *gin.Context) {
 		return
 	}
 
-	blockID, _ := uuid.Parse(path.BlockID)
-	block := dao.Block{
-		ID: blockID,
-	}
-	if blockExists, err := block.Exists(h.Service.Database); err != nil {
+	block := dao.Block{}
+	if err := block.Exists(h.Service.Database, path.BlockID); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
-	} else if !blockExists {
-		middleware.Error(c, http.StatusNotFound, err)
+	} else if block.ID == dao.EmptyUUID {
+		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block id"))
+		return
+	}
+
+	preBlock := dao.Block{}
+	if err := preBlock.Exists(h.Service.Database, body.PreBlockID); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
+	posBlock := dao.Block{}
+	if err := posBlock.Exists(h.Service.Database, body.PosBlockID); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -75,25 +84,19 @@ func (h *Blocks) UpdateBlock(c *gin.Context) {
 	}
 	block.Text = body.Text
 
-	nodeID, _ := uuid.Parse(body.NodeID)
-	node := dao.Node{
-		ID: nodeID,
-	}
-	if nodeExists, err := node.Exists(h.Service.Database); err != nil {
+	node := dao.Node{}
+	if err := node.Exists(h.Service.Database, body.NodeID); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
-	} else if !nodeExists {
-		middleware.Error(c, http.StatusNotFound, err)
-		return
 	}
-	block.NodeID = nodeID
+	block.NodeID = node.ID
 
 	subBlockID, _ := uuid.Parse(body.SubBlockID)
 	block.SubBlockID = subBlockID
 
 	block.UpdatedBy = user
 
-	if err := block.Save(h.Service.Database); err != nil {
+	if err := block.Save(h.Service.Database, &preBlock, &posBlock); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
@@ -134,15 +137,12 @@ func (h *Blocks) PatchBlock(c *gin.Context) {
 		return
 	}
 
-	blockID, _ := uuid.Parse(path.BlockID)
-	block := dao.Block{
-		ID: blockID,
-	}
-	if blockExists, err := block.Exists(h.Service.Database); err != nil {
+	block := dao.Block{}
+	if err := block.Exists(h.Service.Database, path.BlockID); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
-	} else if !blockExists {
-		middleware.Error(c, http.StatusNotFound, err)
+	} else if block.ID == dao.EmptyUUID {
+		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block id"))
 		return
 	}
 
@@ -163,28 +163,44 @@ func (h *Blocks) PatchBlock(c *gin.Context) {
 	}
 
 	if body.NodeID != "" {
-		nodeID, _ := uuid.Parse(body.NodeID)
-		node := dao.Node{
-			ID: nodeID,
-		}
-		if nodeExists, err := node.Exists(h.Service.Database); err != nil {
+		node := dao.Node{}
+		if err := node.Exists(h.Service.Database, body.NodeID); err != nil {
 			middleware.Error(c, http.StatusBadRequest, err)
 			return
-		} else if !nodeExists {
-			middleware.Error(c, http.StatusNotFound, err)
+		} else if node.ID == dao.EmptyUUID {
+			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
 			return
 		}
-		block.NodeID = nodeID
+		block.NodeID = node.ID
 	}
 
 	if body.SubBlockID != "" {
-		subBlockID, _ := uuid.Parse(body.SubBlockID)
+		subBlockID, err := uuid.Parse(body.SubBlockID)
+		if err != nil {
+			middleware.Error(c, http.StatusBadRequest, err)
+			return
+		}
 		block.SubBlockID = subBlockID
 	}
 
-	block.UpdatedBy = user
+	preBlock := dao.Block{}
+	if body.PreBlockID != "" {
+		if err := preBlock.Exists(h.Service.Database, body.PreBlockID); err != nil {
+			middleware.Error(c, http.StatusBadRequest, err)
+			return
+		}
+	}
 
-	if err := block.Save(h.Service.Database); err != nil {
+	posBlock := dao.Block{}
+	if body.PosBlockID != "" {
+		if err := posBlock.Exists(h.Service.Database, body.PosBlockID); err != nil {
+			middleware.Error(c, http.StatusBadRequest, err)
+			return
+		}
+	}
+
+	block.UpdatedBy = user
+	if err := block.Save(h.Service.Database, &preBlock, &posBlock); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
@@ -218,23 +234,37 @@ func (h *Blocks) DeleteBlock(c *gin.Context) {
 		return
 	}
 
-	blockID, _ := uuid.Parse(path.BlockID)
-	block := dao.Block{
-		ID: blockID,
-	}
-	if blockExists, err := block.Exists(h.Service.Database); err != nil {
+	block := dao.Block{}
+	if err := block.Exists(h.Service.Database, path.BlockID); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
-	} else if !blockExists {
-		middleware.Error(c, http.StatusNotFound, err)
+	}
+	preBlock, err := block.FindPreBlock(h.Service.Database)
+	if err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
 		return
+	}
+	posBlock, err := block.FindPosBlock(h.Service.Database)
+	if err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+	if posBlock.ID != dao.EmptyUUID {
+		if preBlock.ID != dao.EmptyUUID {
+			preBlock.PosBlockID = posBlock.ID
+			posBlock.PreBlockID = preBlock.ID
+		} else {
+			posBlock.PreBlockID = dao.EmptyUUID
+		}
+	} else if preBlock.ID != dao.EmptyUUID {
+		preBlock.PosBlockID = dao.EmptyUUID
 	}
 
 	block.Deleted = 1
 	block.UpdatedBy = user
 	block.DeletedBy = user
 
-	if err := block.Save(h.Service.Database); err != nil {
+	if err := block.Save(h.Service.Database, preBlock, posBlock); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}

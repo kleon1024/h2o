@@ -24,9 +24,9 @@ type User struct {
 
 	Teams []Team `gorm:"many2many:team_members"`
 
-	CreatedAt time.Time `gorm:"column:createdAt;not null"`
-	UpdatedAt time.Time `gorm:"column:updatedAt;not null"`
-	DeletedAt time.Time `gorm:"column:deletedAt;not null"`
+	CreatedAt time.Time `gorm:"column:created_at;not null"`
+	UpdatedAt time.Time `gorm:"column:updated_at;not null"`
+	DeletedAt time.Time `gorm:"column:deleted_at;not null"`
 	Deleted   int       `gorm:"column:deleted;not null"`
 }
 

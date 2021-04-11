@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"fmt"
 	"h2o/pkg/util/orm"
 	"time"
 
@@ -26,15 +27,17 @@ var NodeTypeMap = map[string]struct{}{
 }
 
 type Node struct {
-	ID       uuid.UUID `gorm:"type:char(36);primary_key"`
-	Type     string    `gorm:"column:type;not null"`
-	Name     string    `gorm:"name;not null"`
-	Parent   *Node     `gorm:"foreignkey:ParentID"`
-	ParentID uuid.UUID `gorm:"type:char(36)"`
-	Children []Node    `gorm:"foreignkey:ParentID"`
-	TeamID   uuid.UUID `gorm:"type:char(36)"`
-	Team     Team      `gorm:"foreignkey:TeamID"`
-	Blocks   []Block   `gorm:"foreignkey:NodeID"`
+	ID        uuid.UUID `gorm:"type:char(36);primary_key"`
+	Type      string    `gorm:"column:type;not null"`
+	Name      string    `gorm:"name;not null"`
+	Parent    *Node     `gorm:"foreignkey:ParentID"`
+	ParentID  uuid.UUID `gorm:"type:char(36)"`
+	Children  []Node    `gorm:"foreignkey:ParentID"`
+	TeamID    uuid.UUID `gorm:"type:char(36)"`
+	Team      Team      `gorm:"foreignkey:TeamID"`
+	Blocks    []Block   `gorm:"foreignkey:NodeID"`
+	PreNodeID uuid.UUID `gorm:"type:char(36)"`
+	Indent    int       `gorm:"column:indent;not null"`
 
 	CreatedBy     User      `gorm:"foreignkey:CreatedUserID"`
 	CreatedUserID uuid.UUID `gorm:"type:char(36)"`
@@ -43,10 +46,10 @@ type Node struct {
 	DeletedBy     User      `gorm:"foreignkey:DeletedUserID"`
 	DeletedUserID uuid.UUID `gorm:"type:char(36)"`
 
-	CreatedAt time.Time `gorm:"column:createdAt"`
-	UpdatedAt time.Time `gorm:"column:updatedAt"`
-	DeletedAt time.Time `gorm:"column:deletedAt"`
-	Deleted   int       `gorm:"column:deleted"`
+	CreatedAt time.Time `gorm:"column:created_at;not null"`
+	UpdatedAt time.Time `gorm:"column:updated_at;not null"`
+	DeletedAt time.Time `gorm:"column:deleted_at;not null"`
+	Deleted   int       `gorm:"column:deleted;not null"`
 }
 
 func (u *Node) BeforeCreate(tx *gorm.DB) error {
@@ -108,14 +111,27 @@ func (u *Node) FindBlocks(db *gorm.DB, offset int, limit int) (*[]Block, error) 
 	return &s, nil
 }
 
-func (u *Node) Exists(db *gorm.DB) (bool, error) {
+func (u *Node) Exists(db *gorm.DB, uuidString string) error {
+	uuidInstance, err := uuid.Parse(uuidString)
+	if err != nil {
+		return err
+	}
+	emptyUUID := uuid.UUID{}
+	if uuidInstance == emptyUUID {
+		return nil
+	}
+	u.ID = uuidInstance
 	var count int64
-	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
+	err = orm.WithTransaction(db, func(tx *gorm.DB) error {
 		tx = tx.Model(u).Where(u).Where("deleted = 0")
 		return tx.Count(&count).Error
 	})
-	if err != nil {
-		return false, err
+	if count == 0 {
+		if err != nil {
+			err = fmt.Errorf("%v;resource not exist", err)
+		} else {
+			err = fmt.Errorf("resource not exist")
+		}
 	}
-	return count > 0, nil
+	return err
 }

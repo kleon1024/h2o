@@ -18,8 +18,8 @@ type Column struct {
 	TableBlockID uuid.UUID  `gorm:"type:cahr(36);not null"`
 	Table        TableBlock `gorm:"foreignkey:TableBlockID;not null"`
 
-	CreatedAt time.Time `gorm:"column:createdAt;not null"`
-	UpdatedAt time.Time `gorm:"column:updatedAt;not null"`
-	DeletedAt time.Time `gorm:"column:deletedAt;not null"`
+	CreatedAt time.Time `gorm:"column:created_at;not null"`
+	UpdatedAt time.Time `gorm:"column:updated_at;not null"`
+	DeletedAt time.Time `gorm:"column:deleted_at;not null"`
 	Deleted   int       `gorm:"column:deleted;not null"`
 }

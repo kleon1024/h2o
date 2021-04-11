@@ -1,5 +1,9 @@
 package dao
 
+import "github.com/google/uuid"
+
+var EmptyUUID uuid.UUID = uuid.UUID{}
+
 var Models []interface{}
 
 func init() {

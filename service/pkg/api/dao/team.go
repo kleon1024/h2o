@@ -26,10 +26,10 @@ type Team struct {
 	DeletedBy     User      `gorm:"foreignkey:DeletedUserID"`
 	DeletedUserID uuid.UUID `gorm:"type:char(36)"`
 
-	CreatedAt time.Time `gorm:"column:createdAt"`
-	UpdatedAt time.Time `gorm:"column:updatedAt"`
-	DeletedAt time.Time `gorm:"column:deletedAt"`
-	Deleted   int       `gorm:"column:deleted"`
+	CreatedAt time.Time `gorm:"column:created_at;not null"`
+	UpdatedAt time.Time `gorm:"column:updated_at;not null"`
+	DeletedAt time.Time `gorm:"column:deleted_at;not null"`
+	Deleted   int       `gorm:"column:deleted;not null"`
 }
 
 func (u *Team) BeforeCreate(tx *gorm.DB) error {

@@ -11,7 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 )
 
 type Nodes struct {
@@ -45,8 +44,8 @@ func (h *Nodes) ListNodeBlocks(c *gin.Context) {
 	}
 
 	query := &dto.Pagination{
-		// Offset: dto.DefaultOffset,
-		// Limit:  dto.DefaultLimit,
+		Offset: dto.DefaultOffset,
+		Limit:  dto.DefaultLimit,
 	}
 	if err := query.Bind(c); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
@@ -57,17 +56,16 @@ func (h *Nodes) ListNodeBlocks(c *gin.Context) {
 	node := dao.Node{
 		ID: nodeID,
 	}
-	logrus.WithField("nodeID", nodeID).Debug()
 	blocks, err := node.FindBlocks(h.Service.Database, query.Offset, query.Limit)
 	if err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
-	logrus.WithField("good", nodeID).Debug()
 
 	outputs := make([]dto.BlockOutput, len(*blocks))
 	for i, block := range *blocks {
 		outputs[i].ID = block.ID.String()
+		outputs[i].PreBlockID = block.PreBlockID.String()
 		outputs[i].Text = block.Text
 		outputs[i].Type = block.Type
 		outputs[i].Revision = block.Revision
@@ -107,47 +105,52 @@ func (h *Nodes) CreateNodeBlock(c *gin.Context) {
 		return
 	}
 
-	nodeID, err := uuid.Parse(path.NodeID)
-	if err != nil {
+	node := dao.Node{}
+	if err := node.Exists(h.Service.Database, path.NodeID); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
-		return
-	}
-	node := dao.Node{
-		ID: nodeID,
-	}
-	if nodeExists, err := node.Exists(h.Service.Database); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
-		return
-	} else if !nodeExists {
-		middleware.Error(c, http.StatusNotFound, err)
 		return
 	}
 
-	logrus.WithField("type", body.Type).WithField("text", body.Text).Debug()
+	preBlock := dao.Block{}
+	if err := preBlock.Exists(h.Service.Database, body.PreBlockID); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
+	posBlock := dao.Block{}
+	if err := posBlock.Exists(h.Service.Database, body.PosBlockID); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
 	if _, ok := dao.BlockTypeMap[body.Type]; !ok {
 		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block type"))
 		return
 	}
 
 	block := dao.Block{
-		Text:      body.Text,
-		NodeID:    nodeID,
-		Type:      body.Type,
-		Revision:  0,
-		CreatedBy: user,
-		UpdatedBy: user,
+		Text:       body.Text,
+		PreBlockID: preBlock.ID,
+		PosBlockID: posBlock.ID,
+		NodeID:     node.ID,
+		Type:       body.Type,
+		Revision:   0,
+		CreatedBy:  user,
+		UpdatedBy:  user,
 	}
 
-	if err := block.Save(h.Service.Database); err != nil {
+	if err := block.Save(h.Service.Database, &preBlock, &posBlock); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 	}
 
 	middleware.Success(c, &dto.BlockOutput{
-		ID:        block.ID.String(),
-		Text:      block.Text,
-		Type:      block.Type,
-		Revision:  block.Revision,
-		AuthorID:  block.UpdatedUserID.String(),
-		UpdatedAt: block.UpdatedAt.Format(config.DateFormatString),
+		ID:         block.ID.String(),
+		PreBlockID: block.PreBlockID.String(),
+		PosBlockID: block.PosBlockID.String(),
+		Text:       block.Text,
+		Type:       block.Type,
+		Revision:   block.Revision,
+		AuthorID:   block.UpdatedUserID.String(),
+		UpdatedAt:  block.UpdatedAt.Format(config.DateFormatString),
 	})
 }
