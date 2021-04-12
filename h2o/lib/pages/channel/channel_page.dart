@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:h2o/bean/block.dart';
@@ -32,7 +31,7 @@ class ChannelPage extends StatelessWidget {
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(36),
         child: AppBar(
-          title: Text(tr("app.title")),
+          title: Text(channelPageModel.node.name),
           actions: [
             IconButton(onPressed: () {}, icon: Icon(Icons.search)),
             IconButton(onPressed: () {}, icon: Icon(Icons.group)),
@@ -55,6 +54,7 @@ class ChannelPage extends StatelessWidget {
                       child: Block(
                         blocks[index],
                         NodeType.channel,
+                        index,
                         showCreator: true,
                       ));
                 }, childCount: blocks.length),

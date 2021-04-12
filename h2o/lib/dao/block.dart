@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:h2o/api/api.dart';
 import 'package:h2o/bean/block.dart';
 import 'package:h2o/bean/node.dart';
+import 'package:h2o/global/consts.dart';
 import 'package:h2o/model/global.dart';
 
 enum BlockType {
@@ -47,9 +48,41 @@ class BlockDao extends ChangeNotifier {
     );
 
     if (blocks != null) {
-      blockMap[nodeBean.id] = blocks;
+      if (blocks.length == 0) {
+        blockMap[nodeBean.id] = [];
+        return;
+      }
+      Map<String, BlockBean> preBlockMap = {};
+      blocks.forEach((block) {
+        preBlockMap[block.preBlockID] = block;
+      });
+      debugPrint(preBlockMap.toString());
+      BlockBean block = preBlockMap[EMPTY_UUID]!;
+      int cnt = 0;
+      List<BlockBean> orderedBlocks = [];
+      while (block.posBlockID != EMPTY_UUID) {
+        cnt += 1;
+        if (cnt >= blocks.length) {
+          break;
+        }
+        orderedBlocks.add(block);
+        block = preBlockMap[block.id]!;
+      }
+      orderedBlocks.add(block);
+      blockMap[nodeBean.id] = orderedBlocks;
+
       this.globalModel!.triggerCallback(EventType.NODE_BLOCKS_UPDATED);
       notifyListeners();
+    }
+  }
+
+  updateBlock(NodeBean node, BlockBean updatedBlock) {
+    List<BlockBean> blocks = blockMap[node.id]!;
+    for (int i = 0; i < blocks.length; i++) {
+      if (blocks[i].id == updatedBlock.id) {
+        blocks[i] = updatedBlock;
+        break;
+      }
     }
   }
 

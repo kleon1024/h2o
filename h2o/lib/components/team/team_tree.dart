@@ -57,11 +57,17 @@ class TeamTreeState extends State<TeamTree> {
             SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
               return Node(nodes[index], onTapPlus: () {
+                var preNodeID = nodes[index].id;
+                var posNodeID = EMPTY_UUID;
+                if (index < nodes.length - 1) {
+                  posNodeID = nodes[index + 1].id;
+                }
+
                 Navigator.of(context).push(
                   CupertinoPageRoute(builder: (ctx) {
                     return ChangeNotifierProvider(
-                        create: (_) => AddNodePageModel(team!, nodes[index].id,
-                            nodes[index].posNodeID, nodes[index].indent, true),
+                        create: (_) => AddNodePageModel(team!, preNodeID,
+                            posNodeID, nodes[index].indent, true, index),
                         child: AddNodePage());
                   }),
                 );
@@ -81,8 +87,8 @@ class TeamTreeState extends State<TeamTree> {
                   Navigator.of(context).push(
                     CupertinoPageRoute(builder: (ctx) {
                       return ChangeNotifierProvider(
-                          create: (_) => AddNodePageModel(
-                              team!, preNodeID, posNodeID, indent, false),
+                          create: (_) => AddNodePageModel(team!, preNodeID,
+                              posNodeID, indent, false, nodes.length),
                           child: AddNodePage());
                     }),
                   );

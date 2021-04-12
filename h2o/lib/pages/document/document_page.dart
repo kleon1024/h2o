@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:h2o/bean/block.dart';
@@ -15,22 +14,32 @@ class DocumentPage extends StatelessWidget {
     final documentPageModel = Provider.of<DocumentPageModel>(context);
     final blockDao = Provider.of<BlockDao>(context);
 
+    debugPrint("editingNew:" + documentPageModel.editingNew.toString());
+    debugPrint(
+        "editingBlock.id:" + documentPageModel.editingBlock.id.toString());
+    debugPrint(
+        "editingPreBlockID:" + documentPageModel.editingPreBlockID.toString());
+    debugPrint(
+        "editingPosBlockID:" + documentPageModel.editingPosBlockID.toString());
+    debugPrint("editingIndex:" + documentPageModel.editingIndex.toString());
+    debugPrint("---");
+
     List<BlockBean> blocks = [];
     if (blockDao.blockMap.containsKey(documentPageModel.node.id)) {
       blocks = blockDao.blockMap[documentPageModel.node.id]!;
     }
 
-    debugPrint("editingNew:" + documentPageModel.editingNew.toString());
-    debugPrint("editingBlockID:" + documentPageModel.editingBlockID.toString());
-
     return Scaffold(
       backgroundColor: Theme.of(context).cardColor,
-      appBar: AppBar(
-        title: Text(tr("app.title")),
-        actions: [
-          IconButton(onPressed: () {}, icon: Icon(CupertinoIcons.search)),
-          IconButton(onPressed: () {}, icon: Icon(CupertinoIcons.group)),
-        ],
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(36),
+        child: AppBar(
+          title: Text(documentPageModel.node.name),
+          actions: [
+            IconButton(onPressed: () {}, icon: Icon(CupertinoIcons.search)),
+            IconButton(onPressed: () {}, icon: Icon(CupertinoIcons.group)),
+          ],
+        ),
       ),
       body: Column(children: [
         Expanded(
@@ -49,8 +58,9 @@ class DocumentPage extends StatelessWidget {
                         child: Block(
                           blocks[index],
                           NodeType.document,
+                          index,
                           showCreator: false,
-                          editing: documentPageModel.editingBlockID ==
+                          editing: documentPageModel.editingBlock.id ==
                               blocks[index].id,
                         ));
                   }, childCount: blocks.length),
@@ -66,6 +76,7 @@ class DocumentPage extends StatelessWidget {
                           child: Block(
                             documentPageModel.editingBlock,
                             NodeType.document,
+                            index,
                             showCreator: false,
                             editing: documentPageModel.editingNew,
                           ));

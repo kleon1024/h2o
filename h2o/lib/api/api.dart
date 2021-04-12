@@ -5,7 +5,14 @@ import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/response.dart';
 import 'package:h2o/bean/team.dart';
 import 'package:h2o/bean/user.dart';
-import 'package:h2o/global/enum.dart';
+
+enum HttpMethod {
+  GET,
+  POST,
+  PUT,
+  DELETE,
+  PATCH,
+}
 
 class Api {
   static final _client = Dio();
@@ -17,9 +24,9 @@ class Api {
     _client.interceptors.add(LogInterceptor(
       responseBody: true,
       requestHeader: false,
-      requestBody: false,
+      requestBody: true,
       responseHeader: false,
-      request: false,
+      request: true,
     ));
   }
 
@@ -138,6 +145,18 @@ class Api {
       Options? options}) async {
     ResponseBean? response = await request(
         HttpMethod.POST, '/api/v1/nodes/' + nodeID + '/blocks',
+        data: data, cancelToken: cancelToken, options: options);
+    if (response != null && response.errorCode == 0) {
+      return BlockBean.fromJson(response.data);
+    }
+  }
+
+  static Future<BlockBean?> patchBlock(String blockID,
+      {Map<String, dynamic>? data,
+      CancelToken? cancelToken,
+      Options? options}) async {
+    ResponseBean? response = await request(
+        HttpMethod.PATCH, '/api/v1/blocks/' + blockID,
         data: data, cancelToken: cancelToken, options: options);
     if (response != null && response.errorCode == 0) {
       return BlockBean.fromJson(response.data);

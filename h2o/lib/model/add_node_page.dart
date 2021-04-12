@@ -5,6 +5,7 @@ import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/team.dart';
 import 'package:h2o/dao/node.dart';
 import 'package:h2o/model/global.dart';
+import 'package:uuid/uuid.dart';
 
 enum IndentType {
   same,
@@ -20,9 +21,10 @@ class AddNodePageModel extends ChangeNotifier {
   String posNodeID;
   int indent;
   bool showIndentRadio;
+  int insertIndex;
 
   AddNodePageModel(this.team, this.preNodeID, this.posNodeID, this.indent,
-      this.showIndentRadio);
+      this.showIndentRadio, this.insertIndex);
 
   TextEditingController controller = TextEditingController();
   NodeType nodeType = NodeType.directory;
@@ -63,9 +65,22 @@ class AddNodePageModel extends ChangeNotifier {
     if (this.indentType == IndentType.increase) {
       indent += 1;
     }
-    NodeBean? nodeBean = await Api.createTeamNode(
+    String uuidString = Uuid().v4();
+    NodeBean? nodeBean = NodeBean(
+        id: uuidString,
+        type: EnumToString.convertToString(nodeType),
+        name: controller.text,
+        indent: indent,
+        preNodeID: preNodeID,
+        posNodeID: posNodeID);
+    this.globalModel!.nodeDao!.nodeMap[team.id]!.insert(insertIndex, nodeBean);
+    notifyListeners();
+    Navigator.pop(this.context!);
+
+    nodeBean = await Api.createTeamNode(
       team.id,
       data: {
+        "id": uuidString,
         "name": controller.text,
         "type": EnumToString.convertToString(nodeType),
         "indent": indent,
@@ -76,7 +91,6 @@ class AddNodePageModel extends ChangeNotifier {
     );
     if (nodeBean != null) {
       this.globalModel!.triggerCallback(EventType.NODE_CREATED);
-      Navigator.pop(this.context!);
     }
   }
 }

@@ -13,8 +13,6 @@ class TextBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     if (this.editing) {
       final documentPageModel = Provider.of<DocumentPageModel>(context);
-      debugPrint("editing:" + block.id);
-
       return TextField(
         focusNode: documentPageModel.focusMap[block.id]!,
         style: Theme.of(context).textTheme.bodyText1!,

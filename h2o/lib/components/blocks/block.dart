@@ -18,8 +18,9 @@ class Block extends StatelessWidget {
   final bool showCreator;
   final bool editing;
   final NodeType nodeType;
+  final int index;
 
-  const Block(this.blockBean, this.nodeType,
+  const Block(this.blockBean, this.nodeType, this.index,
       {this.showCreator = false, this.editing = false});
 
   @override
@@ -58,7 +59,7 @@ class Block extends StatelessWidget {
     if (nodeType == NodeType.document) {
       final documentPageModel = Provider.of<DocumentPageModel>(context);
       onTap = () {
-        documentPageModel.onTapBlock(blockBean);
+        documentPageModel.onTapBlock(blockBean, this.index);
       };
     }
 

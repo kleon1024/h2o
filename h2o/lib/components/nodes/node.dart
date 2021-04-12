@@ -30,7 +30,7 @@ class Node extends StatelessWidget {
     IconData iconData = IconMap.nodeType[type]!;
 
     switch (type) {
-      case NodeType.document:
+      case NodeType.channel:
         onTapNode = () {
           Navigator.of(context).push(
             CupertinoPageRoute(builder: (ctx) {
