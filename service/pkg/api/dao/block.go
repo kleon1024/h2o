@@ -85,10 +85,6 @@ func (u *Block) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	u.ID = uuid.New()
-	u.Deleted = 0
-	u.CreatedAt = time.Now().UTC()
-	u.UpdatedAt = time.Now().UTC()
-	u.DeletedAt = time.Now().UTC()
 
 	return nil
 }
@@ -116,7 +112,7 @@ func (u *Block) Save(db *gorm.DB, pre *Block, pos *Block) error {
 		}
 		if pos.ID != EmptyUUID {
 			pos.PreBlockID = u.ID
-			err = tx.Save(pre).Error
+			err = tx.Save(pos).Error
 			if err != nil {
 				return err
 			}

@@ -10,9 +10,11 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type Nodes struct {
@@ -110,6 +112,8 @@ func (h *Nodes) CreateNodeBlock(c *gin.Context) {
 		return
 	}
 
+	logrus.WithField("event", "createBlock").WithField("id", body.ID).WithField("posBlockID", body.PosBlockID).WithField("preBlockID", body.PreBlockID).Debug()
+
 	node := dao.Node{}
 	if err := node.Exists(h.Service.Database, path.NodeID); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
@@ -136,16 +140,32 @@ func (h *Nodes) CreateNodeBlock(c *gin.Context) {
 		return
 	}
 
-	block := dao.Block{
-		Text:       body.Text,
-		PreBlockID: preBlock.ID,
-		PosBlockID: posBlock.ID,
-		NodeID:     node.ID,
-		Type:       body.Type,
-		Revision:   0,
-		CreatedBy:  user,
-		UpdatedBy:  user,
+	block := &dao.Block{}
+	if body.ID != "" {
+		blockID, err := uuid.Parse(body.ID)
+		if err != nil {
+			middleware.Error(c, http.StatusBadRequest, err)
+			return
+		}
+		if blockID == dao.EmptyUUID {
+			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block id"))
+			return
+		}
+		block.ID = blockID
 	}
+
+	block.Text = body.Text
+	block.PreBlockID = preBlock.ID
+	block.PosBlockID = posBlock.ID
+	block.NodeID = node.ID
+	block.Type = body.Type
+	block.Revision = 0
+	block.CreatedUserID = user.ID
+	block.UpdatedUserID = user.ID
+	block.Deleted = 0
+	block.CreatedAt = time.Now().UTC()
+	block.UpdatedAt = time.Now().UTC()
+	block.DeletedAt = time.Now().UTC()
 
 	if err := block.Save(h.Service.Database, &preBlock, &posBlock); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)

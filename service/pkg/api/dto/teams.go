@@ -39,6 +39,7 @@ type ListTeamNodesInstance struct {
 }
 
 type CreateTeamNodeInputBody struct {
+	ID        string `json:"id" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
 	Name      string `json:"name" form:"name" validate:"required"`
 	Type      string `json:"type" form:"type" validate:"required"`
 	Indent    int    `json:"indent" example:"0" validate:"min=0"`

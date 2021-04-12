@@ -7,6 +7,7 @@ import (
 	"h2o/pkg/api/dto"
 	"h2o/pkg/api/middleware"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -170,16 +171,33 @@ func (h *Teams) CreateTeamNode(c *gin.Context) {
 		return
 	}
 
-	node := dao.Node{
-		Name:      body.Name,
-		PreNodeID: preNode.ID,
-		PosNodeID: posNode.ID,
-		TeamID:    team.ID,
-		Type:      body.Type,
-		CreatedBy: user,
-		UpdatedBy: user,
-		Indent:    body.Indent,
+	node := &dao.Node{}
+	if body.ID != "" {
+		nodeID, err := uuid.Parse(body.ID)
+		if err != nil {
+			middleware.Error(c, http.StatusBadRequest, err)
+			return
+		}
+		if nodeID == dao.EmptyUUID {
+			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
+			return
+		}
+		node.ID = nodeID
 	}
+
+	node.Name = body.Name
+	node.PreNodeID = preNode.ID
+	node.PosNodeID = posNode.ID
+	node.TeamID = team.ID
+	node.Type = body.Type
+	node.CreatedUserID = user.ID
+	node.UpdatedUserID = user.ID
+	node.Indent = body.Indent
+	node.Deleted = 0
+	node.CreatedAt = time.Now().UTC()
+	node.UpdatedAt = time.Now().UTC()
+	node.DeletedAt = time.Now().UTC()
+
 	if err := node.Save(h.Service.Database, preNode, posNode); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 	}

@@ -20,6 +20,7 @@ type ListNodeBlocksOutput struct {
 }
 
 type CreateNodeBlockInputBody struct {
+	ID         string `json:"id" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
 	Type       string `json:"type" example:"text" validate:"required,min=1"`
 	Text       string `json:"text" example:"text"`
 	PreBlockID string `json:"preBlockID" example:"0f1400e6-bec9-458d-94c6-cfca966710d4" validate:"required,uuid"`

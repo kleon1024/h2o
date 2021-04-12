@@ -56,10 +56,6 @@ func (u *Node) BeforeCreate(tx *gorm.DB) error {
 		return nil
 	}
 	u.ID = uuid.New()
-	u.Deleted = 0
-	u.CreatedAt = time.Now().UTC()
-	u.UpdatedAt = time.Now().UTC()
-	u.DeletedAt = time.Now().UTC()
 
 	return nil
 }
@@ -87,7 +83,7 @@ func (u *Node) Save(db *gorm.DB, pre *Node, pos *Node) error {
 		}
 		if pos.ID != EmptyUUID {
 			pos.PreNodeID = u.ID
-			err = tx.Save(pre).Error
+			err = tx.Save(pos).Error
 			if err != nil {
 				return err
 			}
