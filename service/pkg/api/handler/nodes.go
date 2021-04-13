@@ -405,13 +405,13 @@ func (h *Nodes) DeleteNode(c *gin.Context) {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
-	preNode, err := node.FindPreNode(h.Service.Database)
-	if err != nil {
+	preNode := &dao.Node{}
+	if err := node.Exists(h.Service.Database, node.PreNodeID.String()); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
-	posNode, err := node.FindPosNode(h.Service.Database)
-	if err != nil {
+	posNode := &dao.Node{}
+	if err := node.Exists(h.Service.Database, node.PosNodeID.String()); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}

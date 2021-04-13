@@ -79,7 +79,7 @@ func (u *User) FindTeams(db *gorm.DB, offset int, limit int) (*[]Team, error) {
 	var s []Team
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
 		tx = tx.Model(&Team{})
-		tx = tx.Joins("join team_members on team_members.team_id = teams.id", u.ID)
+		tx = tx.Joins("join team_members on team_members.team_id = teams.id")
 		tx = tx.Where("teams.deleted = ?", 0)
 		tx = tx.Where("team_members.user_id = ?", u.ID)
 		tx = tx.Offset(offset)

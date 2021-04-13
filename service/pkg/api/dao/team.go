@@ -16,11 +16,9 @@ type Team struct {
 	ID   uuid.UUID `gorm:"column:id;type:char(36);primary_key;not null"`
 	Name string    `gorm:"column:name;not null"`
 
-	Nodes []Node `gorm:"foreignkey:TeamID"`
-
-	CreatedUserID uuid.UUID `gorm:"column:created_user_id;type:char(36);index;not null"`
-	UpdatedUserID uuid.UUID `gorm:"column:updated_user_id;type:char(36);index;not null"`
-	DeletedUserID uuid.UUID `gorm:"column:deleted_user_id;type:char(36);index;not null"`
+	CreatedUserID uuid.UUID `gorm:"column:created_user_id;type:char(36);not null"`
+	UpdatedUserID uuid.UUID `gorm:"column:updated_user_id;type:char(36);not null"`
+	DeletedUserID uuid.UUID `gorm:"column:deleted_user_id;type:char(36);not null"`
 
 	CreatedAt time.Time `gorm:"column:created_at;not null"`
 	UpdatedAt time.Time `gorm:"column:updated_at;not null"`
@@ -74,11 +72,13 @@ func (u *Team) Find(db *gorm.DB, offset int, limit int, wheres []orm.WhereCondit
 func (u *Team) FindNodes(db *gorm.DB, offset int, limit int) (*[]Node, error) {
 	var s []Node
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
-		tx = tx.Model(u)
-		tx = tx.Where("deleted = 0")
+		tx = tx.Model(&Node{})
+		tx = tx.Joins("join teams on teams.id = nodes.team_id")
+		tx = tx.Where("nodes.deleted = ?", 0)
+		tx = tx.Where("teams.id = ?", u.ID)
 		tx = tx.Offset(offset)
 		tx = tx.Limit(limit)
-		return tx.Association("Nodes").Find(&s)
+		return tx.Find(&s).Error
 	})
 	if err != nil {
 		return nil, err

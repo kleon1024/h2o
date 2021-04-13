@@ -51,28 +51,20 @@ var BlockTypeMap = map[string]struct{}{
 }
 
 type Block struct {
-	ID         uuid.UUID       `gorm:"type:char(36);primary_key"`
-	Type       string          `gorm:"column:type;not null"`
-	Text       string          `gorm:"column:text;not null"`
-	Revision   int             `gorm:"column:revision;not null"`
-	Node       Node            `gorm:"foreignkey:NodeID"`
-	NodeID     uuid.UUID       `gorm:"type:char(36)"`
-	Revisions  []BlockRevision `gorm:"foreignKey:BlockID"`
-	PreBlockID uuid.UUID       `gorm:"type:char(36)"`
-	PreBlock   *Block          `gorm:"foreignKey:PreBlockID"`
-	PosBlockID uuid.UUID       `gorm:"type:char(36)"`
-	PosBlock   *Block          `gorm:"foreignKey:PosBlockID"`
-	SubBlockID uuid.UUID       `gorm:"type:char(36)"`
+	ID          uuid.UUID `gorm:"column:id;type:char(36);primary_key"`
+	Type        string    `gorm:"column:type;not null"`
+	Text        string    `gorm:"column:text;not null"`
+	Revision    int       `gorm:"column:revision;not null"`
+	NodeID      uuid.UUID `gorm:"column:node_id;type:char(36);index;not null"`
+	PreBlockID  uuid.UUID `gorm:"column:pre_block_id;type:char(36);not null"`
+	PosBlockID  uuid.UUID `gorm:"column:pos_block_id;type:char(36);not null"`
+	SubBlockID  uuid.UUID `gorm:"column:sub_block_id;type:char(36);not null"`
+	ColumnRatio float32   `gorm:"column:ratio;not null"`
+	IndentLevel int       `gorm:"column:indent_level;not null"`
 
-	CreatedBy     User      `gorm:"foreignkey:CreatedUserID"`
-	CreatedUserID uuid.UUID `gorm:"type:char(36)"`
-	UpdatedBy     User      `gorm:"foreignkey:UpdatedUserID"`
-	UpdatedUserID uuid.UUID `gorm:"type:char(36)"`
-	DeletedBy     User      `gorm:"foreignkey:DeletedUserID"`
-	DeletedUserID uuid.UUID `gorm:"type:char(36)"`
-
-	ColumnRatio float32 `gorm:"column:ratio;not null"`
-	IndentLevel int     `gorm:"column:indent_level;not null"`
+	CreatedUserID uuid.UUID `gorm:"column:created_user_id;type:char(36);not null"`
+	UpdatedUserID uuid.UUID `gorm:"column:updated_user_id;type:char(36);not null"`
+	DeletedUserID uuid.UUID `gorm:"column:deleted_user_id;type:char(36);not null"`
 
 	CreatedAt time.Time `gorm:"column:created_at;not null"`
 	UpdatedAt time.Time `gorm:"column:updated_at;not null"`

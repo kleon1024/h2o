@@ -8,7 +8,6 @@ import (
 	"h2o/pkg/api/middleware"
 	"h2o/pkg/config"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -82,10 +81,6 @@ func (h *Blocks) UpdateBlock(c *gin.Context) {
 	}
 	block.Type = body.Type
 
-	if len(strings.TrimSpace(body.Text)) == 0 {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block text"))
-		return
-	}
 	block.Text = body.Text
 
 	node := dao.Node{}
@@ -98,7 +93,7 @@ func (h *Blocks) UpdateBlock(c *gin.Context) {
 	subBlockID, _ := uuid.Parse(body.SubBlockID)
 	block.SubBlockID = subBlockID
 
-	block.UpdatedBy = user
+	block.UpdatedUserID = user.ID
 
 	if err := block.Save(h.Service.Database, &preBlock, &posBlock); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
@@ -158,13 +153,7 @@ func (h *Blocks) PatchBlock(c *gin.Context) {
 		block.Type = body.Type
 	}
 
-	if body.Text != "" {
-		if len(strings.TrimSpace(body.Text)) == 0 {
-			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block text"))
-			return
-		}
-		block.Text = body.Text
-	}
+	block.Text = body.Text
 
 	if body.NodeID != "" {
 		node := dao.Node{}
@@ -205,7 +194,7 @@ func (h *Blocks) PatchBlock(c *gin.Context) {
 		block.PosBlockID = posBlock.ID
 	}
 
-	block.UpdatedBy = user
+	block.UpdatedUserID = user.ID
 	if err := block.Save(h.Service.Database, &preBlock, &posBlock); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
@@ -245,13 +234,13 @@ func (h *Blocks) DeleteBlock(c *gin.Context) {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
-	preBlock, err := block.FindPreBlock(h.Service.Database)
-	if err != nil {
+	preBlock := &dao.Block{}
+	if err := preBlock.Exists(h.Service.Database, block.PreBlockID.String()); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
-	posBlock, err := block.FindPosBlock(h.Service.Database)
-	if err != nil {
+	posBlock := &dao.Block{}
+	if err := posBlock.Exists(h.Service.Database, block.PosBlockID.String()); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}

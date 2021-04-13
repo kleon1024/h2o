@@ -26,24 +26,17 @@ var NodeTypeMap = map[string]struct{}{
 }
 
 type Node struct {
-	ID        uuid.UUID `gorm:"type:char(36);primary_key"`
+	ID        uuid.UUID `gorm:"column:id;type:char(36);primary_key"`
 	Type      string    `gorm:"column:type;not null"`
-	Name      string    `gorm:"name;not null"`
-	TeamID    uuid.UUID `gorm:"type:char(36)"`
-	Team      Team      `gorm:"foreignkey:TeamID"`
-	Blocks    []Block   `gorm:"foreignkey:NodeID"`
-	PreNodeID uuid.UUID `gorm:"type:char(36)"`
-	PreNode   *Node     `gorm:"foreignkey:PreNodeID"`
-	PosNodeID uuid.UUID `gorm:"type:char(36)"`
-	PosNode   *Node     `gorm:"foreignkey:PosNodeID"`
+	Name      string    `gorm:"column:name;not null"`
+	TeamID    uuid.UUID `gorm:"column:team_id;type:char(36);index;not null"`
+	PreNodeID uuid.UUID `gorm:"column:pre_node_id;type:char(36);not null"`
+	PosNodeID uuid.UUID `gorm:"column:pos_node_id;type:char(36);not null"`
 	Indent    int       `gorm:"column:indent;not null"`
 
-	CreatedBy     User      `gorm:"foreignkey:CreatedUserID"`
-	CreatedUserID uuid.UUID `gorm:"type:char(36)"`
-	UpdatedBy     User      `gorm:"foreignkey:UpdatedUserID"`
-	UpdatedUserID uuid.UUID `gorm:"type:char(36)"`
-	DeletedBy     User      `gorm:"foreignkey:DeletedUserID"`
-	DeletedUserID uuid.UUID `gorm:"type:char(36)"`
+	CreatedUserID uuid.UUID `gorm:"column:created_user_id;type:char(36);not null"`
+	UpdatedUserID uuid.UUID `gorm:"column:updated_user_id;type:char(36);not null"`
+	DeletedUserID uuid.UUID `gorm:"column:deleted_user_id;type:char(36);not null"`
 
 	CreatedAt time.Time `gorm:"column:created_at;not null"`
 	UpdatedAt time.Time `gorm:"column:updated_at;not null"`
@@ -135,11 +128,13 @@ func (u *Node) Find(db *gorm.DB, offset int, limit int, wheres []orm.WhereCondit
 func (u *Node) FindBlocks(db *gorm.DB, offset int, limit int) (*[]Block, error) {
 	var s []Block
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
-		tx = tx.Model(u)
-		tx = tx.Where("deleted = ?", 0)
+		tx = tx.Model(&Block{})
+		tx = tx.Joins("join nodes on nodes.id = blocks.node_id")
+		tx = tx.Where("blocks.deleted = ?", 0)
+		tx = tx.Where("nodes.id = ?", u.ID)
 		tx = tx.Offset(offset)
 		tx = tx.Limit(limit)
-		return tx.Association("Blocks").Find(&s)
+		return tx.Find(&s).Error
 	})
 	if err != nil {
 		return nil, err
