@@ -13,21 +13,25 @@ class TextBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     if (this.editing) {
       final documentPageModel = Provider.of<DocumentPageModel>(context);
-      return TextField(
-        focusNode: documentPageModel.focusMap[block.id]!,
-        style: Theme.of(context).textTheme.bodyText1!,
-        onSubmitted: (_) {
-          documentPageModel.onSubmitCreateBlock(block);
-        },
-        controller: documentPageModel.editingController,
-        onChanged: documentPageModel.onTextFieldChanged,
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          isDense: true,
-          hintText: "command",
-          fillColor: Theme.of(context).cardColor,
-          filled: true,
-          contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      return RawKeyboardListener(
+        focusNode: FocusNode(),
+        onKey: documentPageModel.handleRawKeyEvent,
+        child: TextField(
+          focusNode: documentPageModel.focusMap[block.id]!,
+          style: Theme.of(context).textTheme.bodyText1!,
+          onSubmitted: (_) {
+            documentPageModel.onSubmitCreateBlock(block);
+          },
+          controller: documentPageModel.editingController,
+          onChanged: documentPageModel.onTextFieldChanged,
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            isDense: true,
+            hintText: "command",
+            fillColor: Theme.of(context).cardColor,
+            filled: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          ),
         ),
       );
     }
@@ -35,7 +39,13 @@ class TextBlock extends StatelessWidget {
     return Container(
         padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
         child: Text(
-          this.block.text,
+          this.block.text +
+              " " +
+              this.block.preBlockID.substring(0, 3) +
+              " " +
+              this.block.id.substring(0, 3) +
+              " " +
+              this.block.posBlockID.substring(0, 3),
           textAlign: TextAlign.left,
           style: Theme.of(context).textTheme.bodyText1!,
         ));

@@ -26,7 +26,7 @@ class Api {
       requestHeader: false,
       requestBody: true,
       responseHeader: false,
-      request: true,
+      request: false,
     ));
   }
 
@@ -59,7 +59,9 @@ class Api {
     try {
       response = await _client.request(url,
           data: data, queryParameters: queryParameters, options: options);
-    } catch (e) {}
+    } catch (e) {
+      return null;
+    }
     if (response != null) {
       ResponseBean resp = ResponseBean.fromJson(response.data);
       return resp;
@@ -157,6 +159,18 @@ class Api {
       Options? options}) async {
     ResponseBean? response = await request(
         HttpMethod.PATCH, '/api/v1/blocks/' + blockID,
+        data: data, cancelToken: cancelToken, options: options);
+    if (response != null && response.errorCode == 0) {
+      return BlockBean.fromJson(response.data);
+    }
+  }
+
+  static Future<BlockBean?> deleteBlock(String blockID,
+      {Map<String, dynamic>? data,
+      CancelToken? cancelToken,
+      Options? options}) async {
+    ResponseBean? response = await request(
+        HttpMethod.DELETE, '/api/v1/blocks/' + blockID,
         data: data, cancelToken: cancelToken, options: options);
     if (response != null && response.errorCode == 0) {
       return BlockBean.fromJson(response.data);

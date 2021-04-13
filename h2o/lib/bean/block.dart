@@ -25,6 +25,19 @@ class BlockBean {
     this.updatedAt = "",
   });
 
+  factory BlockBean.copyFrom(BlockBean bean) {
+    return BlockBean(
+      id: bean.id,
+      preBlockID: bean.preBlockID,
+      posBlockID: bean.posBlockID,
+      type: bean.type,
+      text: bean.text,
+      revision: bean.revision,
+      authorID: bean.authorID,
+      updatedAt: bean.updatedAt,
+    );
+  }
+
   factory BlockBean.fromJson(Map<String, dynamic> json) =>
       _$BlockBeanFromJson(json);
 

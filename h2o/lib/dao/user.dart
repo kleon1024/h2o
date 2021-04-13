@@ -38,7 +38,11 @@ class UserDao extends ChangeNotifier {
         await this.refreshToken();
       }
 
-      debugPrint("login as " + this.user!.id);
+      if (this.isLogin()) {
+        debugPrint("login as " + this.user!.id);
+      } else {
+        debugPrint("login failed");
+      }
 
       if (this.isLogin()) {
         this.globalModel!.triggerCallback(EventType.FIRST_TIME_LOGIN_SUCCESS);

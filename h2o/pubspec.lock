@@ -92,6 +92,15 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "8.0.4"
+  channel:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "02f71dfa9e5ffbfa789b0a4e806076d7ea0476bb"
+      url: "https://github.com/kleon1024/channel.git"
+    source: git
+    version: "1.0.0"
   characters:
     dependency: transitive
     description:
