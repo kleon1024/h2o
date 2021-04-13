@@ -68,7 +68,7 @@ class BlockDao extends ChangeNotifier {
               if (this.backOffSeconds <= 0) {
                 this.backOffSeconds = 1;
               } else {
-                this.backOffSeconds *= 2;
+                this.backOffSeconds *= 4;
               }
             }
           }

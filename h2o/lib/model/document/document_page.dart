@@ -73,6 +73,17 @@ class DocumentPageModel extends ChangeNotifier {
       }
       editingNew = false;
     } else {
+      if (editingBlock.id != EMPTY_UUID) {
+        List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.id]!;
+        bool patchBlockBean = editingController.text != editingBlock.text;
+        if (patchBlockBean) {
+          BlockBean? blockBean = editingBlock;
+          blockBean.text = editingController.text;
+          blocks[editingIndex] = blockBean;
+          globalModel.blockDao!.sendBlockEvent(
+              BlockBean.copyFrom(blockBean), BlockEventType.patch, node);
+        }
+      }
       editingNew = true;
       this.setEditingNewPrePosBlockID();
       focusMap[EMPTY_UUID]!.requestFocus();
@@ -98,7 +109,9 @@ class DocumentPageModel extends ChangeNotifier {
           .blockDao!
           .blockMap[node.id]!
           .insert(editingIndex, blockBean);
-      blocks[editingIndex - 1].posBlockID = blockBean.id;
+      if (blocks.length > 1) {
+        blocks[editingIndex - 1].posBlockID = blockBean.id;
+      }
       focusMap[blockBean.id] = FocusNode();
       setEditingNewPrePosBlockID();
       editingController.text = "";
@@ -148,7 +161,10 @@ class DocumentPageModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  onTextFieldChanged(String text) {}
+  onTextFieldChanged(String text) {
+    lastLastText = lastText;
+    lastText = text;
+  }
 
   onTapBlock(BlockBean block, index) {
     debugPrint("onTapBlock:");
@@ -172,6 +188,12 @@ class DocumentPageModel extends ChangeNotifier {
 
     if (event.logicalKey == LogicalKeyboardKey.backspace) {
       if (editingController.text.isEmpty) {
+        if (lastText.isEmpty) {
+          if (lastLastText.length == 1) {
+            lastLastText = "";
+            return;
+          }
+        }
         debugPrint("--------------empty backspace detected--------------");
         List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.id]!;
         if (editingNew) {
