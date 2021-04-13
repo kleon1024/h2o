@@ -8,6 +8,7 @@ import (
 	"h2o/pkg/api/middleware"
 	"h2o/pkg/config"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -58,12 +59,25 @@ func (h *Users) CreateUser(c *gin.Context) {
 				return
 			}
 			team := dao.Team{
-				Name:      user.Name,
-				Members:   []dao.User{user},
-				CreatedBy: user,
-				UpdatedBy: user,
+				Name: user.Name,
+				// Members:   []dao.User{user},
+				CreatedUserID: user.ID,
+				UpdatedUserID: user.ID,
+				CreatedAt:     time.Now().UTC(),
+				UpdatedAt:     time.Now().UTC(),
+				DeletedAt:     time.Now().UTC(),
+				Deleted:       0,
 			}
 			if err := team.Save(h.Service.Database); err != nil {
+				middleware.Error(c, http.StatusBadRequest, err)
+				return
+			}
+			teamMember := dao.TeamMember{
+				TeamID:    team.ID,
+				UserID:    user.ID,
+				CreatedAt: time.Now().UTC(),
+			}
+			if err := teamMember.Save(h.Service.Database); err != nil {
 				middleware.Error(c, http.StatusBadRequest, err)
 				return
 			}

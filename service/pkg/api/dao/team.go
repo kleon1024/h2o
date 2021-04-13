@@ -13,18 +13,14 @@ const (
 )
 
 type Team struct {
-	ID   uuid.UUID `gorm:"type:char(36);primary_key"`
-	Name string    `gorm:"name;not null"`
+	ID   uuid.UUID `gorm:"column:id;type:char(36);primary_key;not null"`
+	Name string    `gorm:"column:name;not null"`
 
-	Members []User `gorm:"many2many:team_members"`
-	Nodes   []Node `gorm:"foreignkey:TeamID"`
+	Nodes []Node `gorm:"foreignkey:TeamID"`
 
-	CreatedBy     User      `gorm:"foreignkey:CreatedUserID"`
-	CreatedUserID uuid.UUID `gorm:"type:char(36)"`
-	UpdatedBy     User      `gorm:"foreignkey:UpdatedUserID"`
-	UpdatedUserID uuid.UUID `gorm:"type:char(36)"`
-	DeletedBy     User      `gorm:"foreignkey:DeletedUserID"`
-	DeletedUserID uuid.UUID `gorm:"type:char(36)"`
+	CreatedUserID uuid.UUID `gorm:"column:created_user_id;type:char(36);index;not null"`
+	UpdatedUserID uuid.UUID `gorm:"column:updated_user_id;type:char(36);index;not null"`
+	DeletedUserID uuid.UUID `gorm:"column:deleted_user_id;type:char(36);index;not null"`
 
 	CreatedAt time.Time `gorm:"column:created_at;not null"`
 	UpdatedAt time.Time `gorm:"column:updated_at;not null"`

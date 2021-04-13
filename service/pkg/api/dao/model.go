@@ -20,5 +20,6 @@ func init() {
 		NumberedListBlock{},
 		ImageBlock{},
 		CheckboxBlock{},
+		TeamMember{},
 	)
 }

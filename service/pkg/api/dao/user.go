@@ -16,13 +16,11 @@ const (
 )
 
 type User struct {
-	ID       uuid.UUID `gorm:"type:char(36);primary_key"`
+	ID       uuid.UUID `gorm:"column:id;type:char(36);primary_key;not null"`
 	Type     string    `gorm:"column:type;not null"`
 	Name     string    `gorm:"column:name;not null"`
 	Email    string    `gorm:"column:email;not null"`
 	Password string    `gorm:"column:password;not null"`
-
-	Teams []Team `gorm:"many2many:team_members"`
 
 	CreatedAt time.Time `gorm:"column:created_at;not null"`
 	UpdatedAt time.Time `gorm:"column:updated_at;not null"`
@@ -80,11 +78,13 @@ func (u *User) Find(db *gorm.DB, offset int, limit int, wheres []orm.WhereCondit
 func (u *User) FindTeams(db *gorm.DB, offset int, limit int) (*[]Team, error) {
 	var s []Team
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
-		tx = tx.Model(u)
-		tx = tx.Where("deleted = ?", 0)
+		tx = tx.Model(&Team{})
+		tx = tx.Joins("join team_members on team_members.team_id = teams.id", u.ID)
+		tx = tx.Where("teams.deleted = ?", 0)
+		tx = tx.Where("team_members.user_id = ?", u.ID)
 		tx = tx.Offset(offset)
 		tx = tx.Limit(limit)
-		return tx.Association("Teams").Find(&s)
+		return tx.Find(&s).Error
 	})
 	if err != nil {
 		return nil, err
