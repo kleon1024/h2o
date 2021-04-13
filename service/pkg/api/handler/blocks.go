@@ -9,9 +9,11 @@ import (
 	"h2o/pkg/config"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type Blocks struct {
@@ -253,22 +255,16 @@ func (h *Blocks) DeleteBlock(c *gin.Context) {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
-	if posBlock.ID != dao.EmptyUUID {
-		if preBlock.ID != dao.EmptyUUID {
-			preBlock.PosBlockID = posBlock.ID
-			posBlock.PreBlockID = preBlock.ID
-		} else {
-			posBlock.PreBlockID = dao.EmptyUUID
-		}
-	} else if preBlock.ID != dao.EmptyUUID {
-		preBlock.PosBlockID = dao.EmptyUUID
-	}
+
+	logrus.WithField("event", "deleteBlock").WithField("blockID", block.ID).WithField("preBlockID", preBlock.ID).WithField("posBlock", posBlock.ID).Info()
 
 	block.Deleted = 1
-	block.UpdatedBy = user
-	block.DeletedBy = user
+	block.UpdatedUserID = user.ID
+	block.DeletedUserID = user.ID
+	block.UpdatedAt = time.Now().UTC()
+	block.DeletedAt = time.Now().UTC()
 
-	if err := block.Save(h.Service.Database, preBlock, posBlock); err != nil {
+	if err := block.SaveDelete(h.Service.Database, preBlock, posBlock); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}

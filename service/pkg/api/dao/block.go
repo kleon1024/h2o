@@ -89,14 +89,6 @@ func (u *Block) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-func (u *Block) BeforeSave(tx *gorm.DB) error {
-	u.UpdatedAt = time.Now().UTC()
-	if u.Deleted == 1 {
-		u.DeletedAt = time.Now().UTC()
-	}
-	return nil
-}
-
 func (u *Block) Save(db *gorm.DB, pre *Block, pos *Block) error {
 	return orm.WithTransaction(db, func(tx *gorm.DB) error {
 		err := tx.Save(u).Error
@@ -112,6 +104,30 @@ func (u *Block) Save(db *gorm.DB, pre *Block, pos *Block) error {
 		}
 		if pos.ID != EmptyUUID {
 			pos.PreBlockID = u.ID
+			err = tx.Save(pos).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (u *Block) SaveDelete(db *gorm.DB, pre *Block, pos *Block) error {
+	return orm.WithTransaction(db, func(tx *gorm.DB) error {
+		err := tx.Save(u).Error
+		if err != nil {
+			return err
+		}
+		if pre.ID != EmptyUUID {
+			pre.PosBlockID = u.PosBlockID
+			err = tx.Save(pre).Error
+			if err != nil {
+				return err
+			}
+		}
+		if pos.ID != EmptyUUID {
+			pos.PreBlockID = u.PreBlockID
 			err = tx.Save(pos).Error
 			if err != nil {
 				return err

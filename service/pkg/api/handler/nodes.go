@@ -73,6 +73,7 @@ func (h *Nodes) ListNodeBlocks(c *gin.Context) {
 	for i, block := range *blocks {
 		outputs[i].ID = block.ID.String()
 		outputs[i].PreBlockID = block.PreBlockID.String()
+		outputs[i].PosBlockID = block.PosBlockID.String()
 		outputs[i].Text = block.Text
 		outputs[i].Type = block.Type
 		outputs[i].Revision = block.Revision
@@ -112,7 +113,7 @@ func (h *Nodes) CreateNodeBlock(c *gin.Context) {
 		return
 	}
 
-	logrus.WithField("event", "createBlock").WithField("id", body.ID).WithField("posBlockID", body.PosBlockID).WithField("preBlockID", body.PreBlockID).Debug()
+	logrus.WithField("event", "createBlock").WithField("blockID", body.ID).WithField("posBlockID", body.PosBlockID).WithField("preBlockID", body.PreBlockID).Info()
 
 	node := dao.Node{}
 	if err := node.Exists(h.Service.Database, path.NodeID); err != nil {
@@ -414,22 +415,14 @@ func (h *Nodes) DeleteNode(c *gin.Context) {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
-	if posNode.ID != dao.EmptyUUID {
-		if preNode.ID != dao.EmptyUUID {
-			preNode.PosNodeID = posNode.ID
-			posNode.PreNodeID = preNode.ID
-		} else {
-			posNode.PreNodeID = dao.EmptyUUID
-		}
-	} else if preNode.ID != dao.EmptyUUID {
-		preNode.PosNodeID = dao.EmptyUUID
-	}
 
 	node.Deleted = 1
-	node.UpdatedBy = user
-	node.DeletedBy = user
+	node.UpdatedUserID = user.ID
+	node.DeletedUserID = user.ID
+	node.UpdatedAt = time.Now().UTC()
+	node.DeletedAt = time.Now().UTC()
 
-	if err := node.Save(h.Service.Database, preNode, posNode); err != nil {
+	if err := node.SaveDelete(h.Service.Database, preNode, posNode); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}

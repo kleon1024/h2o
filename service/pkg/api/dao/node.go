@@ -92,6 +92,30 @@ func (u *Node) Save(db *gorm.DB, pre *Node, pos *Node) error {
 	})
 }
 
+func (u *Node) SaveDelete(db *gorm.DB, pre *Node, pos *Node) error {
+	return orm.WithTransaction(db, func(tx *gorm.DB) error {
+		err := tx.Save(u).Error
+		if err != nil {
+			return err
+		}
+		if pre.ID != EmptyUUID {
+			pre.PosNodeID = u.PosNodeID
+			err = tx.Save(pre).Error
+			if err != nil {
+				return err
+			}
+		}
+		if pos.ID != EmptyUUID {
+			pos.PreNodeID = u.PreNodeID
+			err = tx.Save(pos).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 func (u *Node) Find(db *gorm.DB, offset int, limit int, wheres []orm.WhereCondition) (*[]Node, error) {
 	var s []Node
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
