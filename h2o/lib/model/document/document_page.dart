@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:h2o/bean/block.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/dao/block.dart';
-import 'package:h2o/global/consts.dart';
+import 'package:h2o/global/constants.dart';
 import 'package:h2o/model/global.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';

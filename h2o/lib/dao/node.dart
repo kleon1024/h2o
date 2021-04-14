@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:h2o/api/api.dart';
 import 'package:h2o/bean/node.dart';
-import 'package:h2o/global/consts.dart';
+import 'package:h2o/global/constants.dart';
 import 'package:h2o/model/global.dart';
 
 enum NodeType {

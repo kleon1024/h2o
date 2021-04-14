@@ -6,6 +6,7 @@ import 'package:h2o/dao/node.dart';
 import 'package:h2o/global/icons.dart';
 import 'package:h2o/model/channel/channel_page.dart';
 import 'package:h2o/model/document/document_page.dart';
+import 'package:h2o/model/table/table_page.dart';
 import 'package:h2o/pages/channel/channel_page.dart';
 import 'package:h2o/pages/document/document_page.dart';
 import 'package:h2o/pages/table/table_page.dart';
@@ -56,7 +57,9 @@ class Node extends StatelessWidget {
         onTapNode = () {
           Navigator.of(context).push(
             CupertinoPageRoute(builder: (ctx) {
-              return TablePage();
+              return ChangeNotifierProvider(
+                  create: (_) => TablePageModel(context, nodeBean),
+                  child: TablePage());
             }),
           );
         };

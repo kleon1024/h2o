@@ -1,4 +1,4 @@
-import 'package:h2o/global/consts.dart';
+import 'package:h2o/global/constants.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'block.g.dart';

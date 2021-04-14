@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:h2o/bean/block.dart';
+import 'package:h2o/bean/column.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/response.dart';
+import 'package:h2o/bean/table.dart';
 import 'package:h2o/bean/team.dart';
 import 'package:h2o/bean/user.dart';
 
@@ -174,6 +176,54 @@ class Api {
         data: data, cancelToken: cancelToken, options: options);
     if (response != null && response.errorCode == 0) {
       return BlockBean.fromJson(response.data);
+    }
+  }
+
+  static Future<TableBean?> getNodeTable(String nodeID,
+      {Map<String, dynamic>? data,
+      CancelToken? cancelToken,
+      Options? options}) async {
+    ResponseBean? response = await request(
+        HttpMethod.GET, '/api/v1/nodes/' + nodeID + '/table',
+        data: data, cancelToken: cancelToken, options: options);
+    if (response != null && response.errorCode == 0) {
+      return TableBean.fromJson(response.data);
+    }
+  }
+
+  static Future<ColumnBean?> createColumn(String tableID,
+      {Map<String, dynamic>? data,
+      CancelToken? cancelToken,
+      Options? options}) async {
+    ResponseBean? response = await request(
+        HttpMethod.POST, '/api/v1/tables/' + tableID + '/columns',
+        data: data, cancelToken: cancelToken, options: options);
+    if (response != null && response.errorCode == 0) {
+      return ColumnBean.fromJson(response.data);
+    }
+  }
+
+  static Future<ColumnBean?> createRow(String tableID,
+      {Map<String, dynamic>? data,
+      CancelToken? cancelToken,
+      Options? options}) async {
+    ResponseBean? response = await request(
+        HttpMethod.POST, '/api/v1/tables/' + tableID + '/rows',
+        data: data, cancelToken: cancelToken, options: options);
+    if (response != null && response.errorCode == 0) {
+      return ColumnBean.fromJson(response.data);
+    }
+  }
+
+  static Future<List<List<String>>?> getTableRows(String tableID,
+      {Map<String, dynamic>? data,
+      CancelToken? cancelToken,
+      Options? options}) async {
+    ResponseBean? response = await request(
+        HttpMethod.GET, '/api/v1/tables/' + tableID + '/rows',
+        data: data, cancelToken: cancelToken, options: options);
+    if (response != null && response.errorCode == 0) {
+      return List<List<String>>.from(response.data);
     }
   }
 }

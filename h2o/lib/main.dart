@@ -1,8 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:h2o/api/api.dart';
 import 'package:h2o/dao/block.dart';
 import 'package:h2o/dao/node.dart';
+import 'package:h2o/dao/table.dart';
 import 'package:h2o/dao/team.dart';
 import 'package:h2o/dao/user.dart';
 import 'package:h2o/model/global.dart';
@@ -23,6 +25,7 @@ void main() async {
             ChangeNotifierProvider(create: (_) => TeamDao()),
             ChangeNotifierProvider(create: (_) => NodeDao()),
             ChangeNotifierProvider(create: (_) => BlockDao()),
+            ChangeNotifierProvider(create: (_) => TableDao()),
           ],
           child: MyApp(),
         ),
@@ -55,20 +58,29 @@ class MyAppState extends State<MyApp> {
     Provider.of<TeamDao>(context)..setContext(context, globalModel);
     Provider.of<NodeDao>(context)..setContext(context, globalModel);
     Provider.of<BlockDao>(context)..setContext(context, globalModel);
+    Provider.of<TableDao>(context)..setContext(context, globalModel);
 
-    return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        localizationsDelegates: context.localizationDelegates,
-        supportedLocales: context.supportedLocales,
-        locale: context.locale,
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          brightness: Brightness.dark,
-          accentColor: Colors.indigoAccent,
-          toggleableActiveColor: Colors.indigoAccent,
-          textSelectionTheme: TextSelectionThemeData(cursorColor: Colors.white),
-        ),
-        home: ChangeNotifierProvider(
-            create: (_) => NavigationPageModel(), child: NavigationPage()));
+    return ScreenUtilInit(
+        designSize: Size(1080, 1920),
+        builder: () => MaterialApp(
+            debugShowCheckedModeBanner: false,
+            localizationsDelegates: context.localizationDelegates,
+            supportedLocales: context.supportedLocales,
+            locale: context.locale,
+            title: 'Flutter Demo',
+            theme: ThemeData(
+                brightness: Brightness.dark,
+                accentColor: Colors.indigoAccent,
+                toggleableActiveColor: Colors.indigoAccent,
+                textSelectionTheme:
+                    TextSelectionThemeData(cursorColor: Colors.white),
+                elevatedButtonTheme: ElevatedButtonThemeData(
+                    style: ElevatedButton.styleFrom(
+                  primary: Colors.indigoAccent,
+                  elevation: 0,
+                ))),
+            home: ChangeNotifierProvider(
+                create: (_) => NavigationPageModel(),
+                child: NavigationPage())));
   }
 }
