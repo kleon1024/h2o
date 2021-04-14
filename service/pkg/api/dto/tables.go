@@ -71,3 +71,24 @@ type GetTableTableOutput struct {
 	ID      string   `json:"id" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
 	Columns []Column `json:"columns"`
 }
+
+type CreateTableRowInput struct {
+	Row map[string]string `json:"row"`
+}
+
+func (p *CreateTableRowInput) Bind(c *gin.Context) error {
+	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+}
+
+type ListTableRowsInput struct {
+	Pagination
+	Columns []string `json:"columns"`
+}
+
+func (p *ListTableRowsInput) Bind(c *gin.Context) error {
+	return middleware.GetValidParams(c, p, middleware.BindTypeQuery)
+}
+
+type ListTableRowsOutput struct {
+	Rows [][]string `json:"rows"`
+}

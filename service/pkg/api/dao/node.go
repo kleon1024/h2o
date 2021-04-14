@@ -158,11 +158,10 @@ func (u *Node) Exists(db *gorm.DB, uuidString string) error {
 }
 
 func (u *Node) Table(db *gorm.DB) (*Table, error) {
-	table := &Table{}
+	table := Table{}
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
-		tx = tx.Model(table)
 		tx = tx.Where("node_id = ?", u.ID)
-		return tx.First(table).Error
+		return tx.First(&table).Error
 	})
-	return table, err
+	return &table, err
 }

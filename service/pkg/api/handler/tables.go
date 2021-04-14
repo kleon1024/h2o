@@ -1,13 +1,11 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
 	"h2o/cmd/api/app/options"
 	"h2o/pkg/api/dao"
 	"h2o/pkg/api/dto"
 	"h2o/pkg/api/middleware"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,10 +19,11 @@ func RegisterTables(r *gin.RouterGroup, svc *options.ApiService) {
 	h := Tables{svc}
 	r.POST("/:tableID/columns", h.CreateTableColumn)
 	r.POST("/:tableID/rows", h.CreateTableRow)
+	r.GET("/:tableID/rows", h.ListTableRows)
 }
 
 // @id CreateTableColumn
-// @summary 创建
+// @summary CreateTableColumn
 // @tags Table
 // @produce json
 // @param tableID path string true "tableID"
@@ -76,7 +75,7 @@ func (h *Tables) CreateTableColumn(c *gin.Context) {
 }
 
 // @id CreateTableRow
-// @summary 创建
+// @summary CreateTableRow
 // @tags Table
 // @produce json
 // @param tableID path string true "tableID"
@@ -88,32 +87,19 @@ func (h *Tables) CreateTableRow(c *gin.Context) {
 	// userValue, _ := c.Get(middleware.UserKey)
 	// user := userValue.(dao.User)
 	// TODO: RBAC
-
 	path := &dto.TableInputPath{}
 	if err := path.Bind(c); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
-
-	jsonData, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
+	body := &dto.CreateTableRowInput{}
+	if err := body.Bind(c); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
-	rowMap := map[string]string{}
-	if err := json.Unmarshal(jsonData, &rowMap); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+	if len(body.Row) == 0 {
+		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("empty row"))
 		return
-	}
-	for id, _ := range rowMap {
-		column := dao.Column{}
-		if err := column.Exists(h.Service.Database, id); err != nil {
-			middleware.Error(c, http.StatusBadRequest, err)
-			return
-		} else if column.ID == dao.EmptyUUID {
-			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid column id"))
-			return
-		}
 	}
 
 	table := dao.Table{}
@@ -121,10 +107,62 @@ func (h *Tables) CreateTableRow(c *gin.Context) {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
-	if err := table.Insert(h.Service.Database, rowMap); err != nil {
+	if err := table.Insert(h.Service.Database, body.Row); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
-	middleware.Success(c, rowMap)
+	middleware.Success(c, body.Row)
+}
+
+// @id ListTableRows
+// @summary ListTableRows
+// @tags Table
+// @produce json
+// @param tableID path string true "tableID"
+// @success 200 {object} middleware.Response{data=map[string]string} "success"
+// @failure 400 {object} middleware.Response{data=interface{}} "failure"
+// @router /api/v1/tables/:tableID/rows [GET]
+func (h *Tables) ListTableRows(c *gin.Context) {
+	// userValue, _ := c.Get(middleware.UserKey)
+	// user := userValue.(dao.User)
+	// TODO: RBAC
+	path := &dto.TableInputPath{}
+	if err := path.Bind(c); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
+	query := &dto.ListTableRowsInput{
+		Pagination: dto.Pagination{
+			Offset: dto.DefaultOffset,
+			Limit:  dto.DefaultLimit,
+		},
+	}
+	if err := query.Bind(c); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+	if len(query.Columns) == 0 {
+		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("no column is provided"))
+		return
+	}
+
+	table := dao.Table{}
+	if err := table.Exists(h.Service.Database, path.TableID); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+	rows, err := table.Rows(h.Service.Database, &(query.Columns), query.Offset, query.Limit)
+	if err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+	if len(*rows) == 0 {
+		middleware.Success(c, &dto.ListTableRowsOutput{})
+		return
+	}
+	middleware.Success(c, &dto.ListTableRowsOutput{
+		Rows: *rows,
+	})
 }

@@ -13,7 +13,7 @@ type Table struct {
 	ID       uuid.UUID `gorm:"column:id;type:char(36);primary_key;not null"`
 	DSN      string    `gorm:"column:dsn;not null"`
 	External bool      `gorm:"column:external;not null"`
-	NodeID   uuid.UUID `gorm:"column:node;type:char(36);index;not null"`
+	NodeID   uuid.UUID `gorm:"column:node_id;type:char(36);index;not null"`
 }
 
 func (u *Table) BeforeCreate(tx *gorm.DB) error {
@@ -68,6 +68,29 @@ func (u *Table) Exists(db *gorm.DB, uuidString string) error {
 		return tx.First(&u).Error
 	})
 	return err
+}
+
+func (u *Table) Rows(db *gorm.DB, columns *[]string, offset int, limit int) (*[][]string, error) {
+	retRows := [][]string{}
+	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
+		raw := fmt.Sprintf("SELECT %v FROM %v OFFSET %v LIMIT %v", strings.Join(*columns, ","), u.ID, offset, limit)
+		rows, err := tx.Raw(raw).Rows()
+		if err != nil {
+			return err
+		}
+		ptrRow := make([]*string, len(*columns))
+		defer rows.Close()
+		for rows.Next() {
+			rows.Scan(ptrRow)
+			derefRow := make([]string, len(*columns))
+			for i, r := range ptrRow {
+				derefRow[i] = *r
+			}
+			retRows = append(retRows, derefRow)
+		}
+		return nil
+	})
+	return &retRows, err
 }
 
 func (u *Table) AddColumn(db *gorm.DB, column Column) error {
