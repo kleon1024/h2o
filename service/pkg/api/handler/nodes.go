@@ -28,6 +28,7 @@ func RegisterNodes(r *gin.RouterGroup, svc *options.ApiService) {
 	r.PUT("/:nodeID", h.UpdateNode)
 	r.PATCH("/:nodeID", h.PatchNode)
 	r.DELETE("/:nodeID", h.DeleteNode)
+	r.GET("/:nodeID/table", h.GetNodeTable)
 }
 
 // @id ListNodeBlocks
@@ -35,7 +36,7 @@ func RegisterNodes(r *gin.RouterGroup, svc *options.ApiService) {
 // @tags Node
 // @produce json
 // @param nodeID path string true "nodeID"
-// @param body body dto.Pagination true "body"
+// @param query query dto.Pagination true "query"
 // @success 200 {object} middleware.Response{data=dto.BlockOutput} "success"
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/nodes/:nodeID/blocks [GET]
@@ -386,7 +387,7 @@ func (h *Nodes) PatchNode(c *gin.Context) {
 // @tags Node
 // @produce json
 // @param nodeID path string true "nodeID"
-// @success 200 {object} middleware.Response{data=interface{}} "success"
+// @success 200 {object} middleware.Response{data=dto.NodeOutput} "success"
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/nodes/:nodeID [DELETE]
 func (h *Nodes) DeleteNode(c *gin.Context) {
@@ -435,5 +436,51 @@ func (h *Nodes) DeleteNode(c *gin.Context) {
 		TeamID:    node.TeamID.String(),
 		PreNodeID: node.PreNodeID.String(),
 		PosNodeID: node.PosNodeID.String(),
+	})
+}
+
+// @id DeleteNode
+// @summary 删除节点
+// @tags Node
+// @produce json
+// @param nodeID path string true "nodeID"
+// @success 200 {object} middleware.Response{data=dto.GetNodeTableOutput} "success"
+// @failure 400 {object} middleware.Response{data=interface{}} "failure"
+// @router /api/v1/nodes/:nodeID/table [GET]
+func (h *Nodes) GetNodeTable(c *gin.Context) {
+	// userValue, _ := c.Get(middleware.UserKey)
+	// user := userValue.(dao.User)
+	// TODO: RBAC
+
+	path := &dto.NodeInputPath{}
+	if err := path.Bind(c); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+	node := dao.Node{}
+	if err := node.Exists(h.Service.Database, path.NodeID); err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+	table, err := node.Table(h.Service.Database)
+	if err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+	columns, err := table.Columns(h.Service.Database)
+	if err != nil {
+		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+	outputs := make([]dto.Column, 0, len(*columns))
+	for i, c := range *columns {
+		outputs[i].ID = c.ID.String()
+		outputs[i].Name = c.Name
+		outputs[i].Type = c.Type
+	}
+
+	middleware.Success(c, &dto.GetNodeTableOutput{
+		ID:      table.ID.String(),
+		Columns: outputs,
 	})
 }

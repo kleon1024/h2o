@@ -26,7 +26,7 @@ var NodeTypeMap = map[string]struct{}{
 }
 
 type Node struct {
-	ID        uuid.UUID `gorm:"column:id;type:char(36);primary_key"`
+	ID        uuid.UUID `gorm:"column:id;type:char(36);primary_key;not null"`
 	Type      string    `gorm:"column:type;not null"`
 	Name      string    `gorm:"column:name;not null"`
 	TeamID    uuid.UUID `gorm:"column:team_id;type:char(36);index;not null"`
@@ -129,9 +129,8 @@ func (u *Node) FindBlocks(db *gorm.DB, offset int, limit int) (*[]Block, error) 
 	var s []Block
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
 		tx = tx.Model(&Block{})
-		tx = tx.Joins("join nodes on nodes.id = blocks.node_id")
-		tx = tx.Where("blocks.deleted = ?", 0)
-		tx = tx.Where("nodes.id = ?", u.ID)
+		tx = tx.Where("deleted = ?", 0)
+		tx = tx.Where("node_id = ?", u.ID)
 		tx = tx.Offset(offset)
 		tx = tx.Limit(limit)
 		return tx.Find(&s).Error
@@ -140,38 +139,6 @@ func (u *Node) FindBlocks(db *gorm.DB, offset int, limit int) (*[]Block, error) 
 		return nil, err
 	}
 	return &s, nil
-}
-
-func (u *Node) FindPosNode(db *gorm.DB) (*Node, error) {
-	var s []Node
-	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
-		tx = tx.Model(u)
-		tx = tx.Where("deleted = 0")
-		return tx.Association("PosNode").Find(&s)
-	})
-	if err != nil {
-		return nil, err
-	}
-	if len(s) == 0 {
-		return &Node{}, nil
-	}
-	return &s[0], nil
-}
-
-func (u *Node) FindPreNode(db *gorm.DB) (*Node, error) {
-	var s []Node
-	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
-		tx = tx.Model(u)
-		tx = tx.Where("deleted = 0")
-		return tx.Association("PreNode").Find(&s)
-	})
-	if err != nil {
-		return nil, err
-	}
-	if len(s) == 0 {
-		return &Node{}, nil
-	}
-	return &s[0], nil
 }
 
 func (u *Node) Exists(db *gorm.DB, uuidString string) error {
@@ -188,4 +155,14 @@ func (u *Node) Exists(db *gorm.DB, uuidString string) error {
 		return tx.First(&u).Error
 	})
 	return err
+}
+
+func (u *Node) Table(db *gorm.DB) (*Table, error) {
+	table := &Table{}
+	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
+		tx = tx.Model(table)
+		tx = tx.Where("node_id = ?", u.ID)
+		return tx.First(table).Error
+	})
+	return table, err
 }

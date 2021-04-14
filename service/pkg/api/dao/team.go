@@ -73,9 +73,8 @@ func (u *Team) FindNodes(db *gorm.DB, offset int, limit int) (*[]Node, error) {
 	var s []Node
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
 		tx = tx.Model(&Node{})
-		tx = tx.Joins("join teams on teams.id = nodes.team_id")
-		tx = tx.Where("nodes.deleted = ?", 0)
-		tx = tx.Where("teams.id = ?", u.ID)
+		tx = tx.Where("deleted = ?", 0)
+		tx = tx.Where("team_id = ?", u.ID)
 		tx = tx.Offset(offset)
 		tx = tx.Limit(limit)
 		return tx.Find(&s).Error

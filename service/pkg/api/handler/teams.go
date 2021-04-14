@@ -200,6 +200,18 @@ func (h *Teams) CreateTeamNode(c *gin.Context) {
 
 	if err := node.Save(h.Service.Database, preNode, posNode); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
+		return
+	}
+
+	if body.Type == dao.NodeTypeTable {
+		table := dao.Table{
+			NodeID:   node.ID,
+			External: false,
+		}
+		if err := table.Save(h.Service.Database); err != nil {
+			middleware.Error(c, http.StatusBadRequest, err)
+			return
+		}
 	}
 
 	middleware.Success(c, &dto.ListTeamNodesInstance{

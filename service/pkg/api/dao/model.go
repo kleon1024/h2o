@@ -14,7 +14,7 @@ func init() {
 		Node{},
 		User{},
 		Team{},
-		TableBlock{},
+		Table{},
 		TableReferenceBlock{},
 		Column{},
 		NumberedListBlock{},

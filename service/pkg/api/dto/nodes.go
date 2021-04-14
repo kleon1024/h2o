@@ -21,7 +21,7 @@ type ListNodeBlocksOutput struct {
 
 type CreateNodeBlockInputBody struct {
 	ID         string `json:"id" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
-	Type       string `json:"type" example:"text" validate:"required,min=1"`
+	Type       string `json:"type" example:"text" validate:"required"`
 	Text       string `json:"text" example:"text"`
 	PreBlockID string `json:"preBlockID" example:"0f1400e6-bec9-458d-94c6-cfca966710d4" validate:"required,uuid"`
 	PosBlockID string `json:"posBlockID" example:"0f1400e6-bec9-458d-94c6-cfca966710d4" validate:"required,uuid"`
@@ -73,4 +73,15 @@ type PatchNodeInputBody struct {
 
 func (p *PatchNodeInputBody) Bind(c *gin.Context) error {
 	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+}
+
+type GetNodeTableOutput struct {
+	ID      string   `json:"id" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
+	Columns []Column `json:"columns"`
+}
+
+type Column struct {
+	ID   string `json:"id" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
+	Name string `json:"name" example:"name"`
+	Type string `json:"type" example:"type"`
 }

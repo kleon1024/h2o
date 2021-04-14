@@ -95,5 +95,10 @@ func setupRouter(svc *options.ApiService) *gin.Engine {
 	blocks.Use(middleware.JWT(svc, middleware.JWTSubjectAccessToken, true))
 	handler.RegisterBlocks(blocks, svc)
 
+	tables := r.Group(BasePath + "/tables")
+	tables.Use(middleware.Translation())
+	tables.Use(middleware.JWT(svc, middleware.JWTSubjectAccessToken, true))
+	handler.RegisterTables(tables, svc)
+
 	return r
 }
