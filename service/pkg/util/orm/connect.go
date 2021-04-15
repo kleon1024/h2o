@@ -1,7 +1,6 @@
 package orm
 
 import (
-	"fmt"
 	"h2o/cmd/api/app/options"
 
 	"gorm.io/driver/mysql"
@@ -14,11 +13,10 @@ func Connect(cfg *options.ApiServiceConfig) (*gorm.DB, error) {
 	var dialector gorm.Dialector
 	db := cfg.DBConfig
 	switch db.Driver {
-	case "sqlite3":
-		dialector = sqlite.Open(db.Database)
+	case "sqlite":
+		dialector = sqlite.Open(db.DSN)
 	case "mysql":
-		address := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8&parseTime=true&loc=Local", db.User, db.Password, db.Host, db.Port, db.Database)
-		dialector = mysql.Open(address)
+		dialector = mysql.Open(db.DSN)
 	}
 
 	logLevel := logger.Silent

@@ -70,6 +70,7 @@ func (h *Tables) CreateTableColumn(c *gin.Context) {
 	column.Type = body.Type
 	column.Name = body.Name
 	column.TableID = table.ID
+	column.Default = body.Default
 
 	if err := table.AddColumn(h.Service.Database, column); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
@@ -162,19 +163,30 @@ func (h *Tables) ListTableRows(c *gin.Context) {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
-	rows, err := table.Rows(h.Service.Database, &(query.Columns), query.Offset, query.Limit)
+	columns := make([]dao.Column, 0, len(query.Columns))
+	for _, columnID := range query.Columns {
+		column := dao.Column{}
+		if err := column.Exists(h.Service.Database, columnID); err != nil {
+			middleware.Error(c, http.StatusBadRequest, err)
+			return
+		} else if column.ID == dao.EmptyUUID {
+			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid column id"))
+			return
+		}
+		columns = append(columns, column)
+	}
+
+	rows, err := table.Rows(h.Service.Database, &columns, query.Offset, query.Limit)
 	if err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	if len(*rows) == 0 {
 		middleware.Success(c, &dto.ListTableRowsOutput{
-			Rows: [][]string{},
+			Rows: []map[string]string{},
 		})
 		return
 	}
 	logrus.WithField("rows", *rows).Debugf("ListRows")
-	middleware.Success(c, &dto.ListTableRowsOutput{
-		Rows: *rows,
-	})
+	middleware.Success(c, &dto.ListTableRowsOutput{Rows: *rows})
 }

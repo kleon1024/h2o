@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"h2o/pkg/util/orm"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -32,7 +34,7 @@ func (u *Table) Save(db *gorm.DB) error {
 			return err
 		}
 		raw := fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%v` (", u.ID)
-		raw += "`id` INT PRIMARY KEY NOT NULL)"
+		raw += "`id` INT PRIMARY KEY AUTO_INCREMENT NOT NULL)"
 		return tx.Exec(raw).Error
 	})
 }
@@ -46,18 +48,6 @@ func (u *Table) Columns(db *gorm.DB) (*[]Column, error) {
 		return tx.Find(&columns).Error
 	})
 	return &columns, err
-}
-
-func (u *Table) CreateTable(db *gorm.DB, columns *[]Column) error {
-	return orm.WithTransaction(db, func(tx *gorm.DB) error {
-		raw := fmt.Sprintf("CREATE TABLE IF NOT EXIST %v (", u.ID)
-		for _, column := range *columns {
-			typeString := ColumnTypeMap[column.Type]
-			raw += fmt.Sprintf("%v %v NOT NULL", column.Name, typeString)
-		}
-		raw += "id INT PRIMARY KEY NOT NULL)"
-		return tx.Raw(raw).Error
-	})
 }
 
 func (u *Table) Exists(db *gorm.DB, uuidString string) error {
@@ -76,12 +66,13 @@ func (u *Table) Exists(db *gorm.DB, uuidString string) error {
 	return err
 }
 
-func (u *Table) Rows(db *gorm.DB, columns *[]string, offset int, limit int) (*[][]string, error) {
-	retRows := [][]string{}
+func (u *Table) Rows(db *gorm.DB, columns *[]Column, offset int, limit int) (*[]map[string]string, error) {
+	retRows := make([]map[string]string, 0, limit)
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
 		columnNames := make([]string, 0, len(*columns))
+		logrus.Debugf("%v", len(*columns))
 		for _, column := range *columns {
-			columnNames = append(columnNames, fmt.Sprintf("`%v`", column))
+			columnNames = append(columnNames, fmt.Sprintf("`%v`", column.ID))
 		}
 		raw := fmt.Sprintf("SELECT %v FROM `%v`", strings.Join(columnNames, ","), u.ID)
 		if offset > 0 {
@@ -95,13 +86,29 @@ func (u *Table) Rows(db *gorm.DB, columns *[]string, offset int, limit int) (*[]
 		if err != nil {
 			return err
 		}
-		ptrRow := make([]*string, len(*columns))
+		values := make([]interface{}, len(*columns))
+		for i, column := range *columns {
+			switch column.Type {
+			case ColumnTypeString:
+				values[i] = ""
+			case ColumnTypeInteger:
+				values[i] = 0
+			case ColumnTypeDate:
+				values[i] = time.Now().UTC()
+			default:
+				values[i] = ""
+			}
+		}
+		ptrs := make([]interface{}, len(*columns))
+		for i := range *columns {
+			ptrs[i] = &values[i]
+		}
 		defer rows.Close()
 		for rows.Next() {
-			rows.Scan(ptrRow)
-			derefRow := make([]string, len(*columns))
-			for i, r := range ptrRow {
-				derefRow[i] = *r
+			rows.Scan(ptrs)
+			derefRow := make(map[string]string, len(*columns))
+			for i, r := range values {
+				derefRow[(*columns)[i].ID.String()] = fmt.Sprintf("%v", r)
 			}
 			retRows = append(retRows, derefRow)
 		}
@@ -117,7 +124,7 @@ func (u *Table) AddColumn(db *gorm.DB, column Column) error {
 			return err
 		}
 		typeString := ColumnTypeMap[column.Type]
-		raw := fmt.Sprintf("ALTER TABLE `%v` ADD COLUMN `%v` %v", u.ID, column.ID.String(), typeString)
+		raw := fmt.Sprintf("ALTER TABLE `%v` ADD COLUMN `%v` %v NOT NULL", u.ID, column.ID.String(), typeString)
 		return tx.Exec(raw).Error
 	})
 }
@@ -130,7 +137,7 @@ func (u *Table) Insert(db *gorm.DB, rows map[string]string) error {
 			ids = append(ids, fmt.Sprintf("`%v`", id))
 			values = append(values, fmt.Sprintf("'%v'", value))
 		}
-		raw := fmt.Sprintf("INSERT INTO %v (%v) VALUES (%v)", u.ID, strings.Join(ids, ","), strings.Join(values, ","))
+		raw := fmt.Sprintf("INSERT INTO `%v` (%v) VALUES (%v)", u.ID, strings.Join(ids, ","), strings.Join(values, ","))
 		return tx.Exec(raw).Error
 	})
 }

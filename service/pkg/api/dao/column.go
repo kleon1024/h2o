@@ -22,9 +22,10 @@ var ColumnTypeMap = map[string]string{
 
 type Column struct {
 	ID      uuid.UUID `gorm:"column:id;type:char(36);primary_key;not null"`
-	TableID uuid.UUID `gorm:"column:table_id;type:cahr(36);index;not null"`
+	TableID uuid.UUID `gorm:"column:table_id;type:char(36);index;not null"`
 	Name    string    `gorm:"column:name;not null"`
 	Type    string    `gorm:"column:type;not null"`
+	Default string    `gorm:"column:default"`
 
 	CreatedAt time.Time `gorm:"column:created_at;not null"`
 	UpdatedAt time.Time `gorm:"column:updated_at;not null"`

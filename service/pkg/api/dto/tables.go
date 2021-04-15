@@ -15,9 +15,10 @@ func (p *ListTableColumnsInputPath) Bind(c *gin.Context) error {
 }
 
 type CreateTableColumnInputBody struct {
-	ID   string `json:"id" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
-	Type string `json:"type" example:"type" validate:"required"`
-	Name string `json:"name" example:"name" validate:"required"`
+	ID      string `json:"id" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
+	Type    string `json:"type" example:"type" validate:"required"`
+	Name    string `json:"name" example:"name" validate:"required"`
+	Default string `json:"default" example:"default"`
 }
 
 func (p *CreateTableColumnInputBody) Bind(c *gin.Context) error {
@@ -91,5 +92,5 @@ func (p *ListTableRowsInput) Bind(c *gin.Context) error {
 }
 
 type ListTableRowsOutput struct {
-	Rows [][]string `json:"rows"`
+	Rows []map[string]string `json:"rows"`
 }

@@ -18,12 +18,8 @@ type ServiceConfig struct {
 }
 
 type DBConfig struct {
-	Driver   string `mapstructure:"driver"`
-	User     string `mapstructure:"user"`
-	Password string `mapstructure:"password"`
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	Database string `mapstructure:"database"`
+	Driver string `mapstructure:"driver"`
+	DSN    string `mapstructure:"dsn"`
 }
 
 type JWTConfig struct {
