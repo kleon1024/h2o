@@ -71,6 +71,10 @@ class MyAppState extends State<MyApp> {
             theme: ThemeData(
                 brightness: Brightness.dark,
                 accentColor: Colors.indigoAccent,
+                iconTheme: IconThemeData(
+                  color: Colors.white,
+                  size: 16,
+                ),
                 toggleableActiveColor: Colors.indigoAccent,
                 textSelectionTheme:
                     TextSelectionThemeData(cursorColor: Colors.white),

@@ -8,10 +8,11 @@ import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
 import 'package:h2o/dao/node.dart';
 import 'package:h2o/dao/team.dart';
 import 'package:h2o/global/constants.dart';
-import 'package:h2o/model/add_node_page.dart';
 import 'package:h2o/model/navigation_page.dart';
 import 'package:h2o/pages/team/add_node_page.dart';
 import 'package:provider/provider.dart';
+
+import '../../model/team/add_node_page.dart';
 
 class TeamTree extends StatefulWidget {
   @override
@@ -93,7 +94,7 @@ class TeamTreeState extends State<TeamTree> {
                     }),
                   );
                 },
-                icon: Icon(CupertinoIcons.add, size: 16),
+                icon: Icon(CupertinoIcons.plus),
                 label: Text(tr("team.add_node")),
               );
             }, childCount: 1)),

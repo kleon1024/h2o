@@ -35,6 +35,7 @@ class TableDao extends ChangeNotifier {
 
     if (table != null) {
       tableMap[nodeBean.id] = table;
+      notifyListeners();
       if (table.columns.length == 0) return;
 
       List<List<String>>? rows = await Api.getTableRows(
@@ -50,6 +51,7 @@ class TableDao extends ChangeNotifier {
       if (rows != null) {
         tableRowMap[nodeBean.id] = rows;
       }
+      notifyListeners();
     }
   }
 

@@ -4,22 +4,21 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
-import 'package:h2o/dao/node.dart';
+import 'package:h2o/dao/table.dart';
 import 'package:h2o/global/icons.dart';
 import 'package:h2o/model/global.dart';
+import 'package:h2o/model/table/add_column_page.dart';
 import 'package:provider/provider.dart';
 
-import '../../model/team/add_node_page.dart';
-
-class AddNodePage extends StatelessWidget {
+class AddColumnPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final globalModel = Provider.of<GlobalModel>(context);
-    final addNodePageModel = Provider.of<AddNodePageModel>(context)
+    final addColumnPageModel = Provider.of<AddColumnPageModel>(context)
       ..setContext(context, globalModel);
 
     var bodyTestStyle = Theme.of(context).textTheme.bodyText1!;
-    if (!addNodePageModel.isNameValid) {
+    if (!addColumnPageModel.isNameValid) {
       bodyTestStyle =
           bodyTestStyle.merge(TextStyle(color: Theme.of(context).cardColor));
     }
@@ -36,7 +35,7 @@ class AddNodePage extends StatelessWidget {
                 Container(
                     padding: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
                     child: Text(
-                      tr("team.add_node.name"),
+                      tr("table.add_column.name"),
                       style: Theme.of(context).textTheme.bodyText1,
                     )),
                 TextField(
@@ -46,8 +45,8 @@ class AddNodePage extends StatelessWidget {
                         RegExp(r"[/:;$@#%^*+=\|~]")),
                   ],
                   autofocus: true,
-                  onChanged: addNodePageModel.onTextFieldChanged,
-                  controller: addNodePageModel.controller,
+                  onChanged: addColumnPageModel.onTextFieldChanged,
+                  controller: addColumnPageModel.controller,
                   textInputAction: TextInputAction.done,
                   keyboardType: TextInputType.text,
                   decoration: InputDecoration(
@@ -58,7 +57,7 @@ class AddNodePage extends StatelessWidget {
                     border: InputBorder.none,
                     suffix: InkWell(
                       onTap: () {
-                        addNodePageModel.controller.clear();
+                        addColumnPageModel.controller.clear();
                       },
                       child: Container(
                         padding: EdgeInsets.only(right: 8),
@@ -82,7 +81,7 @@ class AddNodePage extends StatelessWidget {
                 Container(
                     padding: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
                     child: Text(
-                      tr("team.add_node.type"),
+                      tr("table.add_column.type"),
                       style: Theme.of(context).textTheme.bodyText1,
                     ))
               ]);
@@ -90,88 +89,35 @@ class AddNodePage extends StatelessWidget {
       ),
       SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
-          NodeType nodeType = NodeType.values[index];
-          return RadioListTile<NodeType>(
+          ColumnType columnType = ColumnType.values[index];
+          return RadioListTile<ColumnType>(
             title: Row(children: [
               Expanded(
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                     Text(
-                      tr("team.add_node.type." +
-                          EnumToString.convertToString(nodeType)),
+                      tr("table.add_column.type." +
+                          EnumToString.convertToString(columnType)),
                       style: Theme.of(context).textTheme.bodyText1,
                     ),
                     Text(
-                      tr("team.add_node.type." +
-                          EnumToString.convertToString(nodeType) +
+                      tr("table.add_column.type." +
+                          EnumToString.convertToString(columnType) +
                           ".description"),
                       style: Theme.of(context).textTheme.caption,
                     ),
                   ])),
-              Icon(IconMap.nodeType[nodeType], size: 16)
+              Icon(IconMap.columnType[columnType], size: 16)
             ]),
             tileColor: Theme.of(context).canvasColor,
-            value: nodeType,
-            groupValue: addNodePageModel.nodeType,
-            onChanged: addNodePageModel.onNodeTypeRadioChanged,
+            value: columnType,
+            groupValue: addColumnPageModel.columnType,
+            onChanged: addColumnPageModel.onColumnTypeRadioChanged,
           );
-        }, childCount: NodeType.values.length),
+        }, childCount: ColumnType.values.length),
       ),
     ];
-
-    if (addNodePageModel.showIndentRadio) {
-      slivers.addAll([
-        SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
-            return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    height: 15,
-                  ),
-                  Container(
-                      padding:
-                          EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                      child: Text(
-                        tr("team.add_node.indent"),
-                        style: Theme.of(context).textTheme.bodyText1,
-                      ))
-                ]);
-          }, childCount: 1),
-        ),
-        SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
-            IndentType nodeType = IndentType.values[index];
-            return RadioListTile<IndentType>(
-              title: Row(children: [
-                Expanded(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                      Text(
-                        tr("team.add_node.indent." +
-                            EnumToString.convertToString(nodeType)),
-                        style: Theme.of(context).textTheme.bodyText1,
-                      ),
-                      Text(
-                        tr("team.add_node.indent." +
-                            EnumToString.convertToString(nodeType) +
-                            ".description"),
-                        style: Theme.of(context).textTheme.caption,
-                      ),
-                    ])),
-                Icon(IconMap.nodeType[nodeType], size: 16)
-              ]),
-              tileColor: Theme.of(context).canvasColor,
-              value: nodeType,
-              groupValue: addNodePageModel.indentType,
-              onChanged: addNodePageModel.onIndentTypeRadioChanged,
-            );
-          }, childCount: IndentType.values.length),
-        )
-      ]);
-    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).cardColor,
@@ -187,11 +133,11 @@ class AddNodePage extends StatelessWidget {
               },
               child: Container(
                 width: 64,
-                child: Text(tr("team.add_node.cancel")),
+                child: Text(tr("table.add_column.cancel")),
                 alignment: Alignment.center,
               )),
           backgroundColor: Theme.of(context).canvasColor,
-          title: Text(tr("team.add_node.title"),
+          title: Text(tr("table.add_column.title"),
               style: Theme.of(context)
                   .textTheme
                   .bodyText1!
@@ -199,13 +145,13 @@ class AddNodePage extends StatelessWidget {
           titleSpacing: 0.0,
           actions: [
             InkWell(
-                onTap: addNodePageModel.isNameValid
-                    ? addNodePageModel.onTapCreateNode
+                onTap: addColumnPageModel.isNameValid
+                    ? addColumnPageModel.onTapCreateColumn
                     : null,
                 child: Container(
                   width: 64,
                   child: Text(
-                    tr("team.add_node.confirm"),
+                    tr("table.add_column.confirm"),
                     style: bodyTestStyle,
                   ),
                   alignment: Alignment.center,

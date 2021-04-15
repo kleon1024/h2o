@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:enum_to_string/enum_to_string.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:h2o/bean/block.dart';
 import 'package:h2o/bean/column.dart';
 import 'package:h2o/bean/node.dart';
@@ -203,7 +204,7 @@ class Api {
     }
   }
 
-  static Future<ColumnBean?> createRow(String tableID,
+  static Future<Map<String, String>?> createRow(String tableID,
       {Map<String, dynamic>? data,
       CancelToken? cancelToken,
       Options? options}) async {
@@ -211,7 +212,7 @@ class Api {
         HttpMethod.POST, '/api/v1/tables/' + tableID + '/rows',
         data: data, cancelToken: cancelToken, options: options);
     if (response != null && response.errorCode == 0) {
-      return ColumnBean.fromJson(response.data);
+      return Map<String, String>.from(response.data);
     }
   }
 
@@ -223,7 +224,8 @@ class Api {
         HttpMethod.GET, '/api/v1/tables/' + tableID + '/rows',
         data: data, cancelToken: cancelToken, options: options);
     if (response != null && response.errorCode == 0) {
-      return List<List<String>>.from(response.data);
+      debugPrint(response.data.toString());
+      return response.data as List<List<String>>;
     }
   }
 }
