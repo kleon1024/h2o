@@ -8,23 +8,19 @@ import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
 import 'package:h2o/dao/node.dart';
 import 'package:h2o/dao/team.dart';
 import 'package:h2o/global/constants.dart';
+import 'package:h2o/model/global.dart';
 import 'package:h2o/model/navigation_page.dart';
+import 'package:h2o/model/team/add_node_page.dart';
 import 'package:h2o/pages/team/add_node_page.dart';
 import 'package:provider/provider.dart';
 
-import '../../model/team/add_node_page.dart';
-
-class TeamTree extends StatefulWidget {
-  @override
-  createState() => TeamTreeState();
-}
-
-class TeamTreeState extends State<TeamTree> {
+class TeamTree extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final teamDao = Provider.of<TeamDao>(context);
     final nodeDao = Provider.of<NodeDao>(context);
     final navigationPageModel = Provider.of<NavigationPageModel>(context);
+    final globalModel = Provider.of<GlobalModel>(context);
 
     TeamBean? team;
     if (teamDao.teams.length > 0) {
@@ -35,7 +31,6 @@ class TeamTreeState extends State<TeamTree> {
     if (team != null && nodeDao.nodeMap.containsKey(team.id)) {
       nodes = nodeDao.nodeMap[team.id]!;
     }
-
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       margin: EdgeInsets.symmetric(vertical: 18, horizontal: 8),
@@ -67,8 +62,15 @@ class TeamTreeState extends State<TeamTree> {
                 Navigator.of(context).push(
                   CupertinoPageRoute(builder: (ctx) {
                     return ChangeNotifierProvider(
-                        create: (_) => AddNodePageModel(team!, preNodeID,
-                            posNodeID, nodes[index].indent, true, index),
+                        create: (_) => AddNodePageModel(
+                            team!,
+                            preNodeID,
+                            posNodeID,
+                            nodes[index].indent,
+                            true,
+                            index,
+                            context,
+                            globalModel),
                         child: AddNodePage());
                   }),
                 );
@@ -88,8 +90,15 @@ class TeamTreeState extends State<TeamTree> {
                   Navigator.of(context).push(
                     CupertinoPageRoute(builder: (ctx) {
                       return ChangeNotifierProvider(
-                          create: (_) => AddNodePageModel(team!, preNodeID,
-                              posNodeID, indent, false, nodes.length),
+                          create: (_) => AddNodePageModel(
+                              team!,
+                              preNodeID,
+                              posNodeID,
+                              indent,
+                              false,
+                              nodes.length,
+                              context,
+                              globalModel),
                           child: AddNodePage());
                     }),
                   );

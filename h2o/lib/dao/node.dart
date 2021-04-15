@@ -27,7 +27,6 @@ class NodeDao extends ChangeNotifier {
       globalModel.registerCallback(EventType.TEAM_LIST_UPDATED, updateNodes);
       globalModel.registerCallback(
           EventType.TEAM_SIDEBAR_INDEX_CHANGED, updateNodes);
-      globalModel.registerCallback(EventType.NODE_CREATED, updateNodes);
     }
   }
 

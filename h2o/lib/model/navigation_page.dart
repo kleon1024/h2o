@@ -12,7 +12,12 @@ class NavigationPageModel extends ChangeNotifier {
       this.context = context;
       this.globalModel = globalModel;
       globalModel.navigationPageModel = this;
+      this.globalModel!.registerCallback(EventType.NODE_CREATED, refresh);
     }
+  }
+
+  Future refresh() async {
+    notifyListeners();
   }
 
   onTapTeamIcon(int index) {

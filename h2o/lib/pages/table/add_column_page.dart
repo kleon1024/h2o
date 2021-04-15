@@ -14,8 +14,7 @@ class AddColumnPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final globalModel = Provider.of<GlobalModel>(context);
-    final addColumnPageModel = Provider.of<AddColumnPageModel>(context)
-      ..setContext(context, globalModel);
+    final addColumnPageModel = Provider.of<AddColumnPageModel>(context);
 
     var bodyTestStyle = Theme.of(context).textTheme.bodyText1!;
     if (!addColumnPageModel.isNameValid) {

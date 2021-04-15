@@ -9,27 +9,35 @@ import 'package:h2o/model/global.dart';
 import 'package:uuid/uuid.dart';
 
 class AddColumnPageModel extends ChangeNotifier {
-  BuildContext? context;
-  GlobalModel? globalModel;
+  BuildContext context;
+  GlobalModel globalModel;
 
   TableBean table;
   NodeBean node;
 
-  AddColumnPageModel(this.table, this.node);
+  AddColumnPageModel(this.context, this.globalModel, this.table, this.node);
 
   TextEditingController controller = TextEditingController();
   ColumnType columnType = ColumnType.string;
   bool isNameValid = false;
-
-  setContext(BuildContext context, globalModel) {
-    if (this.context == null) {
-      this.context = context;
-      this.globalModel = globalModel;
-    }
-  }
+  String defaultValue = "";
 
   onColumnTypeRadioChanged(ColumnType? value) {
     this.columnType = value!;
+    switch (this.columnType) {
+      case ColumnType.string:
+        defaultValue = "";
+        break;
+      case ColumnType.integer:
+        defaultValue = "0";
+        break;
+      case ColumnType.date:
+        defaultValue = DateTime.now().toString();
+        break;
+      default:
+        defaultValue = "";
+    }
+    debugPrint("defaultValue:" + defaultValue.toString());
     notifyListeners();
   }
 
@@ -52,11 +60,18 @@ class AddColumnPageModel extends ChangeNotifier {
         id: uuidString,
         type: EnumToString.convertToString(columnType),
         name: controller.text);
-    this.globalModel!.tableDao!.tableMap[node.id]!.columns.add(columnBean);
-    debugPrint(
-        this.globalModel!.tableDao!.tableMap[node.id]!.columns.toString());
-    notifyListeners();
-    Navigator.pop(this.context!);
+    this.globalModel.tableDao!.tableMap[node.id]!.columns.add(columnBean);
+    debugPrint("column:" + columnBean.id);
+    var rows = this.globalModel.tableDao!.tableRowMap[node.id];
+    if (rows == null) {
+      rows = [];
+    }
+    rows.forEach((row) {
+      row[columnBean!.id] = defaultValue;
+    });
+
+    this.globalModel.triggerCallback(EventType.COLUMN_CREATED);
+    Navigator.pop(this.context);
 
     columnBean = await Api.createColumn(
       table.id,
@@ -64,8 +79,9 @@ class AddColumnPageModel extends ChangeNotifier {
         "id": uuidString,
         "name": controller.text,
         "type": EnumToString.convertToString(columnType),
+        "default": defaultValue,
       },
-      options: this.globalModel!.userDao!.accessTokenOptions(),
+      options: this.globalModel.userDao!.accessTokenOptions(),
     );
     if (columnBean != null) {}
   }

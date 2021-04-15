@@ -13,6 +13,7 @@ enum EventType {
   TEAM_LIST_UPDATED,
   NODE_CREATED,
   NODE_BLOCKS_UPDATED,
+  COLUMN_CREATED,
 }
 
 class GlobalModel extends ChangeNotifier {
@@ -31,6 +32,10 @@ class GlobalModel extends ChangeNotifier {
     if (this.context == null) {
       this.context = context;
     }
+  }
+
+  Future refresh() async {
+    notifyListeners();
   }
 
   void registerCallback(EventType type, Future Function() func) {

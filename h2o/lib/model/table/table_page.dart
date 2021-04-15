@@ -16,36 +16,45 @@ class TablePageModel extends ChangeNotifier {
   TablePageModel(this.context, this.node)
       : globalModel = Provider.of<GlobalModel>(context) {
     this.globalModel.tableDao!.updateTables(node);
+    this.globalModel.registerCallback(EventType.COLUMN_CREATED, refresh);
   }
 
   final controller = TextEditingController();
   final Map<String, Map<String, FocusNode>> focusMap = {};
 
+  Future refresh() async {
+    notifyListeners();
+  }
+
   onTapCreateRow() async {
     TableBean table = this.globalModel.tableDao!.tableMap[node.id]!;
-    Map<String, String> rows = {};
-    List<String> row = [];
+    Map<String, String> row = {};
     this.globalModel.tableDao!.tableMap[node.id]!.columns.forEach((c) {
       switch (EnumToString.fromString(ColumnType.values, c.type)!) {
         case ColumnType.string:
-          rows[c.id] = "";
+          row[c.id] = "";
           break;
         case ColumnType.integer:
-          rows[c.id] = 0.toString();
+          row[c.id] = 0.toString();
           break;
         case ColumnType.date:
-          rows[c.id] = DateTime.now().toString();
+          row[c.id] = DateTime.now().toString();
           break;
       }
-      row.add(rows[c.id]!);
     });
 
-    this.globalModel.tableDao!.tableRowMap[node.id]!.add(row);
+    List<Map<String, String>>? rows =
+        this.globalModel.tableDao!.tableRowMap[node.id];
+    if (rows == null) {
+      rows = [];
+    }
+    rows.add(row);
+
     notifyListeners();
 
     Map<String, String>? retRow = await Api.createRow(
       table.id,
-      data: rows,
+      data: {'row': row},
       options: this.globalModel.userDao!.accessTokenOptions(),
     );
     if (retRow != null) {}

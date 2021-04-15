@@ -1,10 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:h2o/bean/column.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/table.dart';
 import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
 import 'package:h2o/dao/table.dart';
+import 'package:h2o/model/global.dart';
 import 'package:h2o/model/table/add_column_page.dart';
 import 'package:h2o/model/table/table_page.dart';
 import 'package:h2o/pages/table/add_column_page.dart';
@@ -16,17 +18,21 @@ class TablePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final tablePageModel = Provider.of<TablePageModel>(context);
     final tableDao = Provider.of<TableDao>(context);
-    List<List<String>> rows = [];
+    final globalModel = Provider.of<GlobalModel>(context);
+
+    List<Map<String, String>> rows = [];
     List headers = [];
+    List<ColumnBean> columns = [];
     NodeBean node = tablePageModel.node;
     TableBean? tableBean;
     debugPrint("buildTablePage");
     if (tableDao.tableMap.containsKey(node.id)) {
-      headers.addAll(tableDao.tableMap[node.id]!.columns.map((c) => c.name));
+      columns = tableDao.tableMap[node.id]!.columns;
+      headers.addAll(columns.map((c) => c.name));
       tableBean = tableDao.tableMap[node.id];
     }
     if (tableDao.tableRowMap.containsKey(node.id)) {
-      rows.addAll(tableDao.tableRowMap[node.id]!);
+      rows = tableDao.tableRowMap[node.id]!;
     }
     List indexColumns =
         List<String>.generate(rows.length, (index) => index.toString());
@@ -35,7 +41,6 @@ class TablePage extends StatelessWidget {
     debugPrint("indexColumns:" + indexColumns.toString());
 
     var table;
-
     if (headers.length == 0) {
       table = Container(
           height: MediaQuery.of(context).size.height * 0.65,
@@ -47,7 +52,8 @@ class TablePage extends StatelessWidget {
                     Navigator.of(context).push(
                       CupertinoPageRoute(builder: (ctx) {
                         return ChangeNotifierProvider(
-                            create: (_) => AddColumnPageModel(tableBean!, node),
+                            create: (_) => AddColumnPageModel(
+                                context, globalModel, tableBean!, node),
                             child: AddColumnPage());
                       }),
                     );
@@ -58,25 +64,26 @@ class TablePage extends StatelessWidget {
     } else {
       headers.insert(0, "#");
 
+      var width = 60.0;
+      var height = 20.0;
+
       table = Container(
         // width: 700,
-        height: (rows.length + 1) * 15 + 10,
+        height: (rows.length + 1) * height + 10,
         child: HorizontalDataTable(
           leftHandSideColBackgroundColor: Colors.transparent,
           rightHandSideColBackgroundColor: Colors.transparent,
           isFixedHeader: true,
           leftHandSideColumnWidth: 20,
-          rightHandSideColumnWidth: 150,
+          rightHandSideColumnWidth: columns.length * width,
           itemCount: rows.length,
           headerWidgets: headers
               .map((h) => InkWell(
                   hoverColor: Theme.of(context).hoverColor,
                   onTap: () {},
                   child: Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 3,
-                      horizontal: 3,
-                    ),
+                    width: width,
+                    height: height,
                     alignment: Alignment.centerLeft,
                     child: Text(h),
                   )))
@@ -86,7 +93,8 @@ class TablePage extends StatelessWidget {
               onTap: () {},
               hoverColor: Theme.of(context).hoverColor,
               child: Container(
-                height: 30,
+                height: height,
+                width: 10,
                 alignment: Alignment.centerLeft,
                 child: Text(indexColumns[index]),
               ),
@@ -94,15 +102,21 @@ class TablePage extends StatelessWidget {
           },
           rightSideItemBuilder: (context, index) {
             var row = rows[index];
+            debugPrint(row.toString());
+            debugPrint(index.toString());
             return Row(
-                children: rows[index]
-                    .map((v) => InkWell(
+                children: columns
+                    .map((c) => InkWell(
                         onTap: () {},
                         hoverColor: Theme.of(context).hoverColor,
                         child: Container(
-                            height: 30,
+                            height: height,
+                            width: width,
                             alignment: Alignment.centerLeft,
-                            child: Text(v))))
+                            child: Text(
+                              row[c.id]!,
+                              overflow: TextOverflow.ellipsis,
+                            ))))
                     .toList());
           },
         ),
@@ -119,10 +133,23 @@ class TablePage extends StatelessWidget {
     if (headers.length > 1) {
       slivers.add(SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
-          return ElevatedButton.icon(
-            onPressed: () {},
-            icon: Icon(CupertinoIcons.plus),
-            label: Text(tr("table.add_row.button")),
+          return ElevatedButton(
+            onPressed: () {
+              tablePageModel.onTapCreateRow();
+            },
+            child: Container(
+                child: Row(
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Icon(CupertinoIcons.plus),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: Text(tr("table.add_row.button")),
+                ),
+              ],
+            )),
           );
         }, childCount: 1),
       ));
@@ -139,7 +166,8 @@ class TablePage extends StatelessWidget {
                   Navigator.of(context).push(
                     CupertinoPageRoute(builder: (ctx) {
                       return ChangeNotifierProvider(
-                          create: (_) => AddColumnPageModel(tableBean!, node),
+                          create: (_) => AddColumnPageModel(
+                              context, globalModel, tableBean!, node),
                           child: AddColumnPage());
                     }),
                   );

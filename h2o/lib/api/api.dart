@@ -216,7 +216,7 @@ class Api {
     }
   }
 
-  static Future<List<List<String>>?> getTableRows(String tableID,
+  static Future<List<Map<String, String>>?> getTableRows(String tableID,
       {Map<String, dynamic>? data,
       CancelToken? cancelToken,
       Options? options}) async {
@@ -225,7 +225,15 @@ class Api {
         data: data, cancelToken: cancelToken, options: options);
     if (response != null && response.errorCode == 0) {
       debugPrint(response.data.toString());
-      return response.data as List<List<String>>;
+      List items = response.data["rows"];
+      return items.map((item) {
+        item = item as Map<String, dynamic>;
+        Map<String, String> row = {};
+        item.forEach((key, value) {
+          row[key] = value as String;
+        });
+        return row;
+      }).toList();
     }
   }
 }

@@ -15,8 +15,7 @@ class AddNodePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final globalModel = Provider.of<GlobalModel>(context);
-    final addNodePageModel = Provider.of<AddNodePageModel>(context)
-      ..setContext(context, globalModel);
+    final addNodePageModel = Provider.of<AddNodePageModel>(context);
 
     var bodyTestStyle = Theme.of(context).textTheme.bodyText1!;
     if (!addNodePageModel.isNameValid) {

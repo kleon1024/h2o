@@ -14,7 +14,7 @@ enum ColumnType {
 class TableDao extends ChangeNotifier {
   BuildContext? context;
   Map<String, TableBean> tableMap = {};
-  Map<String, List<List<String>>> tableRowMap = {};
+  Map<String, List<Map<String, String>>> tableRowMap = {};
   CancelToken cancelToken = CancelToken();
   GlobalModel? globalModel;
 
@@ -38,7 +38,7 @@ class TableDao extends ChangeNotifier {
       notifyListeners();
       if (table.columns.length == 0) return;
 
-      List<List<String>>? rows = await Api.getTableRows(
+      List<Map<String, String>>? rows = await Api.getTableRows(
         table.id,
         data: {
           'columns': table.columns.map((c) => c.id).toList(),

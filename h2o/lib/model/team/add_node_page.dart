@@ -13,8 +13,8 @@ enum IndentType {
 }
 
 class AddNodePageModel extends ChangeNotifier {
-  BuildContext? context;
-  GlobalModel? globalModel;
+  BuildContext context;
+  GlobalModel globalModel;
 
   TeamBean team;
   String preNodeID;
@@ -24,19 +24,12 @@ class AddNodePageModel extends ChangeNotifier {
   int insertIndex;
 
   AddNodePageModel(this.team, this.preNodeID, this.posNodeID, this.indent,
-      this.showIndentRadio, this.insertIndex);
+      this.showIndentRadio, this.insertIndex, this.context, this.globalModel);
 
   TextEditingController controller = TextEditingController();
   NodeType nodeType = NodeType.directory;
   bool isNameValid = false;
   IndentType indentType = IndentType.same;
-
-  setContext(BuildContext context, globalModel) {
-    if (this.context == null) {
-      this.context = context;
-      this.globalModel = globalModel;
-    }
-  }
 
   onNodeTypeRadioChanged(NodeType? value) {
     this.nodeType = value!;
@@ -73,9 +66,9 @@ class AddNodePageModel extends ChangeNotifier {
         indent: indent,
         preNodeID: preNodeID,
         posNodeID: posNodeID);
-    this.globalModel!.nodeDao!.nodeMap[team.id]!.insert(insertIndex, nodeBean);
+    this.globalModel.nodeDao!.nodeMap[team.id]!.insert(insertIndex, nodeBean);
     notifyListeners();
-    Navigator.pop(this.context!);
+    Navigator.pop(this.context);
 
     nodeBean = await Api.createTeamNode(
       team.id,
@@ -87,10 +80,10 @@ class AddNodePageModel extends ChangeNotifier {
         "preNodeID": preNodeID,
         "posNodeID": posNodeID,
       },
-      options: this.globalModel!.userDao!.accessTokenOptions(),
+      options: this.globalModel.userDao!.accessTokenOptions(),
     );
     if (nodeBean != null) {
-      this.globalModel!.triggerCallback(EventType.NODE_CREATED);
+      this.globalModel.triggerCallback(EventType.NODE_CREATED);
     }
   }
 }
