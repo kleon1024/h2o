@@ -15,8 +15,9 @@ func (p *ListTableColumnsInputPath) Bind(c *gin.Context) error {
 }
 
 type CreateTableColumnInputBody struct {
-	Type string `json:"type" example:"text" validate:"required"`
-	Name string `json:"text" example:"name" validate:"required"`
+	ID   string `json:"id" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
+	Type string `json:"type" example:"type" validate:"required"`
+	Name string `json:"name" example:"name" validate:"required"`
 }
 
 func (p *CreateTableColumnInputBody) Bind(c *gin.Context) error {
@@ -82,7 +83,7 @@ func (p *CreateTableRowInput) Bind(c *gin.Context) error {
 
 type ListTableRowsInput struct {
 	Pagination
-	Columns []string `json:"columns"`
+	Columns []string `json:"columns" form:"columns"`
 }
 
 func (p *ListTableRowsInput) Bind(c *gin.Context) error {

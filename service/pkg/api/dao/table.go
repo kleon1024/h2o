@@ -27,7 +27,13 @@ func (u *Table) BeforeCreate(tx *gorm.DB) error {
 
 func (u *Table) Save(db *gorm.DB) error {
 	return orm.WithTransaction(db, func(tx *gorm.DB) error {
-		return tx.Save(u).Error
+		err := tx.Save(u).Error
+		if err != nil {
+			return err
+		}
+		raw := fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%v` (", u.ID)
+		raw += "`id` INT PRIMARY KEY NOT NULL)"
+		return tx.Exec(raw).Error
 	})
 }
 
@@ -64,7 +70,7 @@ func (u *Table) Exists(db *gorm.DB, uuidString string) error {
 	}
 	u.ID = uuidInstance
 	err = orm.WithTransaction(db, func(tx *gorm.DB) error {
-		tx = tx.Model(u).Where(u).Where("deleted = 0")
+		tx = tx.Model(u).Where(u)
 		return tx.First(&u).Error
 	})
 	return err
@@ -73,7 +79,18 @@ func (u *Table) Exists(db *gorm.DB, uuidString string) error {
 func (u *Table) Rows(db *gorm.DB, columns *[]string, offset int, limit int) (*[][]string, error) {
 	retRows := [][]string{}
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
-		raw := fmt.Sprintf("SELECT %v FROM %v OFFSET %v LIMIT %v", strings.Join(*columns, ","), u.ID, offset, limit)
+		columnNames := make([]string, 0, len(*columns))
+		for _, column := range *columns {
+			columnNames = append(columnNames, fmt.Sprintf("`%v`", column))
+		}
+		raw := fmt.Sprintf("SELECT %v FROM `%v`", strings.Join(columnNames, ","), u.ID)
+		if offset > 0 {
+			raw += fmt.Sprintf(" OFFSET %v ", offset)
+		}
+		if limit <= 0 {
+			limit = 1
+		}
+		raw += fmt.Sprintf(" LIMIT %v ", limit)
 		rows, err := tx.Raw(raw).Rows()
 		if err != nil {
 			return err
@@ -100,8 +117,8 @@ func (u *Table) AddColumn(db *gorm.DB, column Column) error {
 			return err
 		}
 		typeString := ColumnTypeMap[column.Type]
-		raw := fmt.Sprintf("ALTER TABLE %v ADD COLUMN %v %v", u.ID, column.ID.String(), typeString)
-		return tx.Raw(raw).Error
+		raw := fmt.Sprintf("ALTER TABLE `%v` ADD COLUMN `%v` %v", u.ID, column.ID.String(), typeString)
+		return tx.Exec(raw).Error
 	})
 }
 
@@ -114,7 +131,7 @@ func (u *Table) Insert(db *gorm.DB, rows map[string]string) error {
 			values = append(values, fmt.Sprintf("'%v'", value))
 		}
 		raw := fmt.Sprintf("INSERT INTO %v (%v) VALUES (%v)", u.ID, strings.Join(ids, ","), strings.Join(values, ","))
-		return tx.Raw(raw).Error
+		return tx.Exec(raw).Error
 	})
 }
 

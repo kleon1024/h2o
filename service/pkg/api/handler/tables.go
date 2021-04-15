@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 type Tables struct {
@@ -58,10 +59,18 @@ func (h *Tables) CreateTableColumn(c *gin.Context) {
 		return
 	}
 
-	column := dao.Column{
-		Name: body.Name,
-		Type: body.Type,
+	column := dao.Column{}
+	if err := column.Exists(h.Service.Database, body.ID); err == nil {
+		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("column already exists"))
+		return
+	} else if column.ID == dao.EmptyUUID {
+		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid column id"))
+		return
 	}
+	column.Type = body.Type
+	column.Name = body.Name
+	column.TableID = table.ID
+
 	if err := table.AddColumn(h.Service.Database, column); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
@@ -159,9 +168,12 @@ func (h *Tables) ListTableRows(c *gin.Context) {
 		return
 	}
 	if len(*rows) == 0 {
-		middleware.Success(c, &dto.ListTableRowsOutput{})
+		middleware.Success(c, &dto.ListTableRowsOutput{
+			Rows: [][]string{},
+		})
 		return
 	}
+	logrus.WithField("rows", *rows).Debugf("ListRows")
 	middleware.Success(c, &dto.ListTableRowsOutput{
 		Rows: *rows,
 	})

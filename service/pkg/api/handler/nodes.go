@@ -472,7 +472,7 @@ func (h *Nodes) GetNodeTable(c *gin.Context) {
 		middleware.Error(c, http.StatusBadRequest, err)
 		return
 	}
-	outputs := make([]dto.Column, 0, len(*columns))
+	outputs := make([]dto.Column, len(*columns))
 	for i, c := range *columns {
 		outputs[i].ID = c.ID.String()
 		outputs[i].Name = c.Name
