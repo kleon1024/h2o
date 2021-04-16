@@ -81,7 +81,8 @@ type GetNodeTableOutput struct {
 }
 
 type Column struct {
-	ID   string `json:"id" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
-	Name string `json:"name" example:"name"`
-	Type string `json:"type" example:"type"`
+	ID           string `json:"id" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
+	Name         string `json:"name" example:"name"`
+	Type         string `json:"type" example:"type"`
+	DefaultValue string `json:"defaultValue" example:"defaultValue"`
 }

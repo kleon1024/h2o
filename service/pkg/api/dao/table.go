@@ -34,7 +34,7 @@ func (u *Table) Save(db *gorm.DB) error {
 			return err
 		}
 		raw := fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%v` (", u.ID)
-		raw += "`id` INT PRIMARY KEY AUTO_INCREMENT NOT NULL)"
+		raw += "`id` INT PRIMARY KEY AUTO_INCREMENT NOT NULL) DEFAULT CHARACTER SET = utf8mb4 COLLATE utf8mb4_0900_ai_ci"
 		return tx.Exec(raw).Error
 	})
 }
@@ -105,10 +105,10 @@ func (u *Table) Rows(db *gorm.DB, columns *[]Column, offset int, limit int) (*[]
 		}
 		defer rows.Close()
 		for rows.Next() {
-			rows.Scan(ptrs)
+			rows.Scan(ptrs...)
 			derefRow := make(map[string]string, len(*columns))
 			for i, r := range values {
-				derefRow[(*columns)[i].ID.String()] = fmt.Sprintf("%v", r)
+				derefRow[(*columns)[i].ID.String()] = fmt.Sprintf("%v", string(r.([]uint8)))
 			}
 			retRows = append(retRows, derefRow)
 		}
@@ -124,7 +124,11 @@ func (u *Table) AddColumn(db *gorm.DB, column Column) error {
 			return err
 		}
 		typeString := ColumnTypeMap[column.Type]
-		raw := fmt.Sprintf("ALTER TABLE `%v` ADD COLUMN `%v` %v NOT NULL", u.ID, column.ID.String(), typeString)
+		defaultString := ""
+		if column.Type != ColumnTypeString {
+			defaultString = fmt.Sprintf(" DEFAULT '%v' ", column.DefaultValue)
+		}
+		raw := fmt.Sprintf("ALTER TABLE `%v` ADD COLUMN `%v` %v %v NOT NULL", u.ID, column.ID.String(), typeString, defaultString)
 		return tx.Exec(raw).Error
 	})
 }

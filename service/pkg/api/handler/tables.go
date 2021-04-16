@@ -70,7 +70,7 @@ func (h *Tables) CreateTableColumn(c *gin.Context) {
 	column.Type = body.Type
 	column.Name = body.Name
 	column.TableID = table.ID
-	column.Default = body.Default
+	column.DefaultValue = body.DefaultValue
 
 	if err := table.AddColumn(h.Service.Database, column); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)

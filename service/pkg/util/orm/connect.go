@@ -30,7 +30,7 @@ func Connect(cfg *options.ApiServiceConfig) (*gorm.DB, error) {
 		return nil, err
 	}
 	if db.Driver == "mysql" {
-		database = database.Set("gorm:table_options", " CHARSET=utf8")
+		database = database.Set("gorm:table_options", " DEFAULT CHARACTER SET = utf8mb4 COLLATE utf8mb4_0900_ai_ci")
 	}
 	return database, nil
 }

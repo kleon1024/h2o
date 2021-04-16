@@ -439,8 +439,8 @@ func (h *Nodes) DeleteNode(c *gin.Context) {
 	})
 }
 
-// @id DeleteNode
-// @summary 删除节点
+// @id GetNodeTable
+// @summary GetNodeTable
 // @tags Node
 // @produce json
 // @param nodeID path string true "nodeID"
@@ -477,6 +477,7 @@ func (h *Nodes) GetNodeTable(c *gin.Context) {
 		outputs[i].ID = c.ID.String()
 		outputs[i].Name = c.Name
 		outputs[i].Type = c.Type
+		outputs[i].DefaultValue = c.DefaultValue
 	}
 
 	middleware.Success(c, &dto.GetNodeTableOutput{
