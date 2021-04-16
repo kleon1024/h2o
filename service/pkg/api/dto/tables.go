@@ -6,14 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ListTableColumnsInputPath struct {
-	TableID string `json:"tableID" uri:"tableID" example:"0f1400e6-bec9-458d-94c6-cfca966710d4" validate:"required,uuid"`
-}
-
-func (p *ListTableColumnsInputPath) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypePath)
-}
-
 type CreateTableColumnInputBody struct {
 	ID           string `json:"id" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
 	Type         string `json:"type" example:"type" validate:"required"`
@@ -25,22 +17,56 @@ func (p *CreateTableColumnInputBody) Bind(c *gin.Context) error {
 	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
 }
 
+type TableColumnInputPath struct {
+	TableInputPath
+	ColumnInputPath
+}
+
+func (p *TableColumnInputPath) Bind(c *gin.Context) error {
+	return middleware.GetValidParams(c, p, middleware.BindTypePath)
+}
+
+type TableRowInputPath struct {
+	TableInputPath
+	RowInputPath
+}
+
+func (p *TableRowInputPath) Bind(c *gin.Context) error {
+	return middleware.GetValidParams(c, p, middleware.BindTypePath)
+}
+
+type UpdateTableColumnInputBody struct {
+	Type         string `json:"type" example:"type" validate:"required"`
+	Name         string `json:"name" example:"name" validate:"required"`
+	DefaultValue string `json:"defaultValue" example:"defaultValue"`
+}
+
+func (p *UpdateTableColumnInputBody) Bind(c *gin.Context) error {
+	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+}
+
+type ColumnInputPath struct {
+	ColumnID string `json:"columnID" uri:"columnID" example:"0f1400e6-bec9-458d-94c6-cfca966710d4" validate:"required,uuid"`
+}
+
+func (p *ColumnInputPath) Bind(c *gin.Context) error {
+	return middleware.GetValidParams(c, p, middleware.BindTypePath)
+}
+
+type RowInputPath struct {
+	RowID int `json:"rowID" uri:"rowID" example:"0f1400e6-bec9-458d-94c6-cfca966710d4" validate:"required"`
+}
+
+func (p *RowInputPath) Bind(c *gin.Context) error {
+	return middleware.GetValidParams(c, p, middleware.BindTypePath)
+}
+
 type TableInputPath struct {
 	TableID string `json:"tableID" uri:"tableID" example:"0f1400e6-bec9-458d-94c6-cfca966710d4" validate:"required,uuid"`
 }
 
 func (p *TableInputPath) Bind(c *gin.Context) error {
 	return middleware.GetValidParams(c, p, middleware.BindTypePath)
-}
-
-type TableOutput struct {
-	ID         string `json:"id" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
-	Type       string `json:"type" example:"directory"`
-	Name       string `json:"name" example:"This is an example"`
-	Indent     int    `json:"indent" example:"0" validate:"required"`
-	TeamID     string `json:"teamID" example:"0f1400e6-bec9-458d-94c6-cfca966710d4" validate:"required,uuid"`
-	PreTableID string `json:"preTableID" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
-	PosTableID string `json:"posTableID" example:"0f1400e6-bec9-458d-94c6-cfca966710d4"`
 }
 
 type UpdateTableInputBody struct {
@@ -74,11 +100,11 @@ type GetTableTableOutput struct {
 	Columns []Column `json:"columns"`
 }
 
-type CreateTableRowInput struct {
+type TableRowInput struct {
 	Row map[string]string `json:"row"`
 }
 
-func (p *CreateTableRowInput) Bind(c *gin.Context) error {
+func (p *TableRowInput) Bind(c *gin.Context) error {
 	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
 }
 

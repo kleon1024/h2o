@@ -69,11 +69,12 @@ func (u *Table) Exists(db *gorm.DB, uuidString string) error {
 func (u *Table) Rows(db *gorm.DB, columns *[]Column, offset int, limit int) (*[]map[string]string, error) {
 	retRows := make([]map[string]string, 0, limit)
 	err := orm.WithTransaction(db, func(tx *gorm.DB) error {
-		columnNames := make([]string, 0, len(*columns))
+		columnNames := make([]string, 0, len(*columns)+1)
 		logrus.Debugf("%v", len(*columns))
 		for _, column := range *columns {
 			columnNames = append(columnNames, fmt.Sprintf("`%v`", column.ID))
 		}
+		columnNames = append(columnNames, "`id`")
 		raw := fmt.Sprintf("SELECT %v FROM `%v`", strings.Join(columnNames, ","), u.ID)
 		if offset > 0 {
 			raw += fmt.Sprintf(" OFFSET %v ", offset)
@@ -86,7 +87,7 @@ func (u *Table) Rows(db *gorm.DB, columns *[]Column, offset int, limit int) (*[]
 		if err != nil {
 			return err
 		}
-		values := make([]interface{}, len(*columns))
+		values := make([]interface{}, len(*columns)+1)
 		for i, column := range *columns {
 			switch column.Type {
 			case ColumnTypeString:
@@ -99,16 +100,25 @@ func (u *Table) Rows(db *gorm.DB, columns *[]Column, offset int, limit int) (*[]
 				values[i] = ""
 			}
 		}
-		ptrs := make([]interface{}, len(*columns))
+		values[len(values)-1] = 0
+		ptrs := make([]interface{}, len(*columns)+1)
 		for i := range *columns {
 			ptrs[i] = &values[i]
 		}
+		ptrs[len(ptrs)-1] = &values[len(values)-1]
+
 		defer rows.Close()
 		for rows.Next() {
 			rows.Scan(ptrs...)
-			derefRow := make(map[string]string, len(*columns))
+			derefRow := make(map[string]string, len(*columns)+1)
 			for i, r := range values {
-				derefRow[(*columns)[i].ID.String()] = fmt.Sprintf("%v", string(r.([]uint8)))
+				key := ""
+				if i == len(values)-1 {
+					key = "id"
+				} else {
+					key = (*columns)[i].ID.String()
+				}
+				derefRow[key] = fmt.Sprintf("%v", string(r.([]uint8)))
 			}
 			retRows = append(retRows, derefRow)
 		}
@@ -133,7 +143,34 @@ func (u *Table) AddColumn(db *gorm.DB, column Column) error {
 	})
 }
 
-func (u *Table) Insert(db *gorm.DB, rows map[string]string) error {
+func (u *Table) UpdateColumn(db *gorm.DB, column Column) error {
+	return orm.WithTransaction(db, func(tx *gorm.DB) error {
+		err := tx.Save(&column).Error
+		if err != nil {
+			return err
+		}
+		typeString := ColumnTypeMap[column.Type]
+		defaultString := ""
+		if column.Type != ColumnTypeString {
+			defaultString = fmt.Sprintf(" DEFAULT '%v' ", column.DefaultValue)
+		}
+		raw := fmt.Sprintf("ALTER TABLE `%v` MODIFY COLUMN `%v` %v %v NOT NULL", u.ID, column.ID.String(), typeString, defaultString)
+		return tx.Exec(raw).Error
+	})
+}
+
+func (u *Table) DropColumn(db *gorm.DB, column Column) error {
+	return orm.WithTransaction(db, func(tx *gorm.DB) error {
+		err := tx.Delete(&column).Error
+		if err != nil {
+			return err
+		}
+		raw := fmt.Sprintf("ALTER TABLE `%v` DROP COLUMN `%v`", u.ID, column.ID.String())
+		return tx.Raw(raw).Error
+	})
+}
+
+func (u *Table) InsertRow(db *gorm.DB, rows map[string]string) error {
 	return orm.WithTransaction(db, func(tx *gorm.DB) error {
 		ids := make([]string, 0, len(rows))
 		values := make([]string, 0, len(rows))
@@ -146,13 +183,20 @@ func (u *Table) Insert(db *gorm.DB, rows map[string]string) error {
 	})
 }
 
-func (u *Table) DropColumn(db *gorm.DB, column Column) error {
+func (u *Table) UpdateRow(db *gorm.DB, rowID int, rows map[string]string) error {
 	return orm.WithTransaction(db, func(tx *gorm.DB) error {
-		err := tx.Delete(&column).Error
-		if err != nil {
-			return err
+		values := make([]string, 0, len(rows))
+		for id, value := range rows {
+			values = append(values, fmt.Sprintf("`%v` = '%v'", id, value))
 		}
-		raw := fmt.Sprintf("ALTER TABLE %v DROP COLUMN %v", u.ID, column.ID.String())
-		return tx.Raw(raw).Error
+		raw := fmt.Sprintf("UPDATE `%v` SET %v WHERE `id` = '%v' ", u.ID, strings.Join(values, ","), rowID)
+		return tx.Exec(raw).Error
+	})
+}
+
+func (u *Table) DeleteRow(db *gorm.DB, rowID int) error {
+	return orm.WithTransaction(db, func(tx *gorm.DB) error {
+		raw := fmt.Sprintf("DELETE FROM `%v` WHERE `id` = '%v' ", u.ID, rowID)
+		return tx.Exec(raw).Error
 	})
 }
