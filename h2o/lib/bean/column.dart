@@ -8,11 +8,13 @@ class ColumnBean {
   String id;
   String name;
   String type;
+  String defaultValue;
 
   ColumnBean({
     this.id = EMPTY_UUID,
     this.name = "column",
     this.type = "string",
+    this.defaultValue = "",
   });
 
   factory ColumnBean.fromJson(Map<String, dynamic> json) =>

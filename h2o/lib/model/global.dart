@@ -14,6 +14,7 @@ enum EventType {
   NODE_CREATED,
   NODE_BLOCKS_UPDATED,
   COLUMN_CREATED,
+  TABLE_UPDATED,
 }
 
 class GlobalModel extends ChangeNotifier {

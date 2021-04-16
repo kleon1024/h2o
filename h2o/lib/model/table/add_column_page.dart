@@ -21,6 +21,7 @@ class AddColumnPageModel extends ChangeNotifier {
   ColumnType columnType = ColumnType.string;
   bool isNameValid = false;
   String defaultValue = "";
+  TextEditingController defaultValueController = TextEditingController();
 
   onColumnTypeRadioChanged(ColumnType? value) {
     this.columnType = value!;
@@ -37,6 +38,7 @@ class AddColumnPageModel extends ChangeNotifier {
       default:
         defaultValue = "";
     }
+    defaultValueController.text = defaultValue;
     debugPrint("defaultValue:" + defaultValue.toString());
     notifyListeners();
   }
@@ -57,11 +59,12 @@ class AddColumnPageModel extends ChangeNotifier {
   onTapCreateColumn() async {
     String uuidString = Uuid().v4();
     ColumnBean? columnBean = ColumnBean(
-        id: uuidString,
-        type: EnumToString.convertToString(columnType),
-        name: controller.text);
+      id: uuidString,
+      type: EnumToString.convertToString(columnType),
+      name: controller.text,
+      defaultValue: defaultValue,
+    );
     this.globalModel.tableDao!.tableMap[node.id]!.columns.add(columnBean);
-    debugPrint("column:" + columnBean.id);
     var rows = this.globalModel.tableDao!.tableRowMap[node.id];
     if (rows == null) {
       rows = [];
@@ -79,10 +82,28 @@ class AddColumnPageModel extends ChangeNotifier {
         "id": uuidString,
         "name": controller.text,
         "type": EnumToString.convertToString(columnType),
-        "default": defaultValue,
+        "defaultValue": defaultValue,
       },
       options: this.globalModel.userDao!.accessTokenOptions(),
     );
     if (columnBean != null) {}
+  }
+
+  onDefaultIntegerValueTextFieldChanged(String text) {
+    if (text.isEmpty) {
+      text = "0";
+    }
+    while (text.length > 1 && text.startsWith("0")) {
+      text = text.substring(1);
+    }
+    defaultValueController.text = text;
+    defaultValueController.selection = TextSelection.fromPosition(
+        TextPosition(offset: defaultValueController.text.length));
+    defaultValue = text;
+    notifyListeners();
+  }
+
+  onDefaultStringValueTextFieldChanged(String text) {
+    defaultValue = text;
   }
 }

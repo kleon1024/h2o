@@ -35,8 +35,15 @@ class TableDao extends ChangeNotifier {
 
     if (table != null) {
       tableMap[nodeBean.id] = table;
+
+      if (table.columns.length == 0) {
+        if (tableRowMap[nodeBean.id] == null) {
+          tableRowMap[nodeBean.id] = [];
+        }
+        this.globalModel!.triggerCallback(EventType.TABLE_UPDATED);
+        return;
+      }
       notifyListeners();
-      if (table.columns.length == 0) return;
 
       List<Map<String, String>>? rows = await Api.getTableRows(
         table.id,
@@ -50,6 +57,7 @@ class TableDao extends ChangeNotifier {
       );
       if (rows != null) {
         tableRowMap[nodeBean.id] = rows;
+        this.globalModel!.triggerCallback(EventType.TABLE_UPDATED);
       }
       notifyListeners();
     }

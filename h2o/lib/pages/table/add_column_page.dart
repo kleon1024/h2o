@@ -118,6 +118,92 @@ class AddColumnPage extends StatelessWidget {
       ),
     ];
 
+    Widget defaultWidget;
+    switch (addColumnPageModel.columnType) {
+      case ColumnType.string:
+        defaultWidget = TextField(
+          style: Theme.of(context).textTheme.bodyText1,
+          onChanged: addColumnPageModel.onDefaultStringValueTextFieldChanged,
+          controller: addColumnPageModel.defaultValueController,
+          textInputAction: TextInputAction.done,
+          keyboardType: TextInputType.text,
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+            fillColor: Theme.of(context).canvasColor,
+            filled: true,
+            border: InputBorder.none,
+            suffix: InkWell(
+              onTap: () {
+                addColumnPageModel.controller.clear();
+              },
+              child: Container(
+                padding: EdgeInsets.only(right: 8),
+                child: Icon(CupertinoIcons.clear_circled,
+                    size: 16, color: Colors.white),
+              ),
+            ),
+          ),
+        );
+        break;
+      case ColumnType.integer:
+        defaultWidget = TextField(
+          style: Theme.of(context).textTheme.bodyText1,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r"[0-9]")),
+          ],
+          onChanged: addColumnPageModel.onDefaultIntegerValueTextFieldChanged,
+          controller: addColumnPageModel.defaultValueController,
+          textInputAction: TextInputAction.done,
+          keyboardType: TextInputType.text,
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+            fillColor: Theme.of(context).canvasColor,
+            filled: true,
+            border: InputBorder.none,
+            suffix: InkWell(
+              onTap: () {
+                addColumnPageModel.controller.clear();
+              },
+              child: Container(
+                padding: EdgeInsets.only(right: 8),
+                child: Icon(CupertinoIcons.clear_circled,
+                    size: 16, color: Colors.white),
+              ),
+            ),
+          ),
+        );
+        break;
+      default:
+        defaultWidget = Container();
+    }
+
+    slivers.add(
+      SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 15,
+                ),
+                Container(
+                    padding: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                    child: Text(
+                      tr("table.add_column.default"),
+                      style: Theme.of(context).textTheme.bodyText1,
+                    ))
+              ]);
+        }, childCount: 1),
+      ),
+    );
+    slivers.add(
+      SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          return defaultWidget;
+        }, childCount: 1),
+      ),
+    );
+
     return Scaffold(
       backgroundColor: Theme.of(context).cardColor,
       appBar: PreferredSize(

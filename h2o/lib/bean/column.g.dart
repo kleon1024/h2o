@@ -11,6 +11,7 @@ ColumnBean _$ColumnBeanFromJson(Map<String, dynamic> json) {
     id: json['id'] as String,
     name: json['name'] as String,
     type: json['type'] as String,
+    defaultValue: json['defaultValue'] as String,
   );
 }
 
@@ -19,4 +20,5 @@ Map<String, dynamic> _$ColumnBeanToJson(ColumnBean instance) =>
       'id': instance.id,
       'name': instance.name,
       'type': instance.type,
+      'defaultValue': instance.defaultValue,
     };

@@ -35,7 +35,8 @@ class TablePage extends StatelessWidget {
       rows = tableDao.tableRowMap[node.id]!;
     }
     List indexColumns =
-        List<String>.generate(rows.length, (index) => index.toString());
+        List<String>.generate(rows.length, (index) => (index + 1).toString());
+    debugPrint(tableDao.tableRowMap.keys.toString());
     debugPrint("rows:" + rows.toString());
     debugPrint("headers:" + headers.toString());
     debugPrint("indexColumns:" + indexColumns.toString());
@@ -65,7 +66,7 @@ class TablePage extends StatelessWidget {
       headers.insert(0, "#");
 
       var width = 60.0;
-      var height = 20.0;
+      var height = 25.0;
 
       table = Container(
         // width: 700,
@@ -74,7 +75,7 @@ class TablePage extends StatelessWidget {
           leftHandSideColBackgroundColor: Colors.transparent,
           rightHandSideColBackgroundColor: Colors.transparent,
           isFixedHeader: true,
-          leftHandSideColumnWidth: 20,
+          leftHandSideColumnWidth: 30,
           rightHandSideColumnWidth: columns.length * width,
           itemCount: rows.length,
           headerWidgets: headers
@@ -94,7 +95,7 @@ class TablePage extends StatelessWidget {
               hoverColor: Theme.of(context).hoverColor,
               child: Container(
                 height: height,
-                width: 10,
+                width: 20,
                 alignment: Alignment.centerLeft,
                 child: Text(indexColumns[index]),
               ),
@@ -105,19 +106,46 @@ class TablePage extends StatelessWidget {
             debugPrint(row.toString());
             debugPrint(index.toString());
             return Row(
-                children: columns
-                    .map((c) => InkWell(
-                        onTap: () {},
-                        hoverColor: Theme.of(context).hoverColor,
-                        child: Container(
-                            height: height,
-                            width: width,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              row[c.id]!,
-                              overflow: TextOverflow.ellipsis,
-                            ))))
-                    .toList());
+                children: columns.map((c) {
+              if (tablePageModel.editingRowIndex == index &&
+                  tablePageModel.editingColumn.id == c.id) {
+                return Container(
+                  height: height,
+                  width: width,
+                  child: RawKeyboardListener(
+                    focusNode: FocusNode(),
+                    child: TextField(
+                      focusNode: tablePageModel.focusMap[index]![c.id]!,
+                      controller: tablePageModel.editingController,
+                      style: Theme.of(context).textTheme.bodyText1!,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                        hintText: "",
+                        fillColor: Theme.of(context).cardColor,
+                        filled: true,
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return InkWell(
+                  onTap: () {
+                    debugPrint("tap cel");
+                    tablePageModel.onTapCell(index, c, row[c.id]!);
+                  },
+                  hoverColor: Theme.of(context).hoverColor,
+                  child: Container(
+                      height: height,
+                      width: width,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        row[c.id]!,
+                        overflow: TextOverflow.ellipsis,
+                      )));
+            }).toList());
           },
         ),
       );
@@ -178,14 +206,17 @@ class TablePage extends StatelessWidget {
           ],
         ),
       ),
-      body: Container(
-        padding: EdgeInsets.symmetric(
-          vertical: 3,
-          horizontal: 10,
-        ),
-        child: BouncingScrollView(
-          scrollBar: true,
-          slivers: slivers,
+      body: GestureDetector(
+        onTap: tablePageModel.onTapEmptyArea,
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            vertical: 3,
+            horizontal: 10,
+          ),
+          child: BouncingScrollView(
+            scrollBar: true,
+            slivers: slivers,
+          ),
         ),
       ),
     );
