@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:h2o/bean/column.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/table.dart';
@@ -108,7 +110,22 @@ class TablePage extends StatelessWidget {
             return Row(
                 children: columns.map((c) {
               if (tablePageModel.editingRowIndex == index &&
-                  tablePageModel.editingColumn.id == c.id) {
+                  tablePageModel.editingColumn.id == c.id &&
+                  (EnumToString.fromString(ColumnType.values, c.type) ==
+                          ColumnType.string ||
+                      EnumToString.fromString(ColumnType.values, c.type) ==
+                          ColumnType.integer)) {
+                Function(String) onTextFieldChanged = (String text) {};
+                List<TextInputFormatter> inputFormatters = [];
+
+                if (EnumToString.fromString(ColumnType.values, c.type) ==
+                    ColumnType.integer) {
+                  onTextFieldChanged =
+                      tablePageModel.onIntegerValueTextFieldChanged;
+                  inputFormatters
+                      .add(FilteringTextInputFormatter.allow(RegExp(r"[0-9]")));
+                }
+
                 return Container(
                   height: height,
                   width: width,
@@ -117,6 +134,8 @@ class TablePage extends StatelessWidget {
                     child: TextField(
                       focusNode: tablePageModel.focusMap[index]![c.id]!,
                       controller: tablePageModel.editingController,
+                      onChanged: onTextFieldChanged,
+                      inputFormatters: inputFormatters,
                       style: Theme.of(context).textTheme.bodyText1!,
                       decoration: InputDecoration(
                         border: InputBorder.none,

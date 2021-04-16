@@ -3,6 +3,7 @@ import 'package:h2o/api/api.dart';
 import 'package:h2o/bean/column.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/table.dart';
+import 'package:h2o/global/constants.dart';
 import 'package:h2o/model/global.dart';
 import 'package:provider/provider.dart';
 
@@ -79,9 +80,39 @@ class TablePageModel extends ChangeNotifier {
   }
 
   onTapEmptyArea() async {
+    if (editingRowIndex >= 0 && editingColumn.id != EMPTY_UUID) {
+      TableBean table = this.globalModel.tableDao!.tableMap[node.id]!;
+      Map<String, String> row =
+          this.globalModel.tableDao!.tableRowMap[node.id]![editingRowIndex];
+      Map<String, String> patchRow = {
+        editingColumn.id: editingController.text,
+      };
+      row[editingColumn.id] = editingController.text;
+      // TODO Guarantee Success
+      Api.patchRow(
+        table.id,
+        row["id"]!,
+        data: {"row": patchRow},
+        options: this.globalModel.userDao!.accessTokenOptions(),
+      );
+    }
+
     editingRowIndex = -1;
     editingColumn = ColumnBean();
     editingController.text = "";
+    notifyListeners();
+  }
+
+  onIntegerValueTextFieldChanged(String text) {
+    if (text.isEmpty) {
+      text = "0";
+    }
+    while (text.length > 1 && text.startsWith("0")) {
+      text = text.substring(1);
+    }
+    editingController.text = text;
+    editingController.selection = TextSelection.fromPosition(
+        TextPosition(offset: editingController.text.length));
     notifyListeners();
   }
 }

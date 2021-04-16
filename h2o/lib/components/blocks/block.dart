@@ -2,9 +2,6 @@ import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
 import 'package:h2o/bean/block.dart';
 import 'package:h2o/components/blocks/bulleted_list_block.dart';
-import 'package:h2o/components/blocks/heading_one_block.dart';
-import 'package:h2o/components/blocks/heading_three_block.dart';
-import 'package:h2o/components/blocks/heading_two_block.dart';
 import 'package:h2o/components/blocks/numbered_list_block.dart';
 import 'package:h2o/components/blocks/text_block.dart';
 import 'package:h2o/dao/block.dart';
@@ -30,19 +27,14 @@ class Block extends StatelessWidget {
         EnumToString.fromString(BlockType.values, blockBean.type)!;
     switch (blockType) {
       case BlockType.text:
+      case BlockType.heading1:
+      case BlockType.heading2:
+      case BlockType.heading3:
+      case BlockType.heading4:
         block = TextBlock(blockBean, editing: editing);
         break;
-      case BlockType.heading1:
-        block = HeadingOneBlock(text: "Heading 1");
-        break;
-      case BlockType.heading2:
-        block = HeadingTwoBlock(text: "Heading 2");
-        break;
-      case BlockType.heading3:
-        block = HeadingThreeBlock(text: "Heading 3");
-        break;
       case BlockType.bulletedList:
-        block = BulletedListBlock(text: "Hello");
+        block = BulletedListBlock(blockBean, editing: editing);
         break;
       case BlockType.numberedList:
         block = NumberedListBlock(text: "Numbered List");

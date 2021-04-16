@@ -1,36 +1,57 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:h2o/bean/block.dart';
+import 'package:h2o/model/document/document_page.dart';
+import 'package:provider/provider.dart';
 
-class BulletedListBlock extends StatefulWidget {
-  final String text;
-  final bool hoverEffect;
+class BulletedListBlock extends StatelessWidget {
+  final BlockBean block;
+  final bool editing;
 
-  const BulletedListBlock({this.text = "", this.hoverEffect = false});
+  const BulletedListBlock(this.block, {this.editing = false});
 
-  @override
-  State<StatefulWidget> createState() => BulletedListBlockState();
-}
-
-class BulletedListBlockState extends State<BulletedListBlock> {
   @override
   Widget build(BuildContext context) {
-    Widget row = Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(" \u2022   ",
-          style: TextStyle(fontWeight: FontWeight.bold, height: 1.5)),
-      Expanded(
+    TextStyle textStyle = Theme.of(context).textTheme.bodyText1!;
+    Widget widget = Container(
+        padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
         child: Text(
-          widget.text,
-          style: TextStyle(fontSize: 14, height: 1.5),
+          this.block.text,
+          textAlign: TextAlign.left,
+          style: textStyle,
+        ));
+    if (this.editing) {
+      final documentPageModel = Provider.of<DocumentPageModel>(context);
+      widget = RawKeyboardListener(
+        focusNode: FocusNode(),
+        onKey: documentPageModel.handleRawKeyEvent,
+        child: TextField(
+          focusNode: documentPageModel.focusMap[block.id]![block.type],
+          style: textStyle,
+          onSubmitted: (_) {
+            documentPageModel.onSubmitCreateBlock(block);
+          },
+          controller: documentPageModel.editingController,
+          onChanged: documentPageModel.onTextFieldChanged,
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            isDense: true,
+            hintText: tr("doc.block." + block.type + ".hint"),
+            fillColor: Theme.of(context).cardColor,
+            filled: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          ),
         ),
-      ),
-    ]);
-
-    if (widget.hoverEffect) {
-      return InkWell(
-        hoverColor: Theme.of(context).hoverColor,
-        onTap: () {},
-        child: row,
       );
     }
-    return Container(child: row);
+
+    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Container(
+          padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+          child: Text("\u2022  ",
+              textAlign: TextAlign.center,
+              style: textStyle.merge(TextStyle(fontWeight: FontWeight.bold)))),
+      Expanded(child: widget),
+    ]);
   }
 }
