@@ -101,12 +101,14 @@ func (h *Blocks) UpdateBlock(c *gin.Context) {
 	}
 
 	middleware.Success(c, &dto.BlockOutput{
-		ID:        block.ID.String(),
-		Text:      block.Text,
-		Type:      block.Type,
-		Revision:  block.Revision,
-		AuthorID:  block.UpdatedUserID.String(),
-		UpdatedAt: block.UpdatedAt.Format(config.DateFormatString),
+		ID:         block.ID.String(),
+		Text:       block.Text,
+		Type:       block.Type,
+		Revision:   block.Revision,
+		PreBlockID: block.PreBlockID.String(),
+		PosBlockID: block.PosBlockID.String(),
+		AuthorID:   block.UpdatedUserID.String(),
+		UpdatedAt:  block.UpdatedAt.Format(config.DateFormatString),
 	})
 }
 
@@ -201,12 +203,14 @@ func (h *Blocks) PatchBlock(c *gin.Context) {
 	}
 
 	middleware.Success(c, &dto.BlockOutput{
-		ID:        block.ID.String(),
-		Text:      block.Text,
-		Type:      block.Type,
-		Revision:  block.Revision,
-		AuthorID:  block.UpdatedUserID.String(),
-		UpdatedAt: block.UpdatedAt.Format(config.DateFormatString),
+		ID:         block.ID.String(),
+		Text:       block.Text,
+		Type:       block.Type,
+		Revision:   block.Revision,
+		PreBlockID: block.PreBlockID.String(),
+		PosBlockID: block.PosBlockID.String(),
+		AuthorID:   block.UpdatedUserID.String(),
+		UpdatedAt:  block.UpdatedAt.Format(config.DateFormatString),
 	})
 }
 
@@ -259,11 +263,13 @@ func (h *Blocks) DeleteBlock(c *gin.Context) {
 	}
 
 	middleware.Success(c, &dto.BlockOutput{
-		ID:        block.ID.String(),
-		Text:      block.Text,
-		Type:      block.Type,
-		Revision:  block.Revision,
-		AuthorID:  block.UpdatedUserID.String(),
-		UpdatedAt: block.UpdatedAt.Format(config.DateFormatString),
+		ID:         block.ID.String(),
+		Text:       block.Text,
+		Type:       block.Type,
+		Revision:   block.Revision,
+		PreBlockID: block.PreBlockID.String(),
+		PosBlockID: block.PosBlockID.String(),
+		AuthorID:   block.UpdatedUserID.String(),
+		UpdatedAt:  block.UpdatedAt.Format(config.DateFormatString),
 	})
 }
