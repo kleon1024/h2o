@@ -7,6 +7,7 @@ import 'package:h2o/dao/block.dart';
 import 'package:h2o/dao/node.dart';
 import 'package:h2o/model/document/document_page.dart';
 import 'package:provider/provider.dart';
+import 'package:reorderables/reorderables.dart';
 
 class DocumentPage extends StatelessWidget {
   @override
@@ -22,13 +23,15 @@ class DocumentPage extends StatelessWidget {
     debugPrint(
         "editingPosBlockID:" + documentPageModel.editingPosBlockID.toString());
     debugPrint("editingIndex:" + documentPageModel.editingIndex.toString());
-    debugPrint("---");
+    debugPrint("editState:" + documentPageModel.editState.toString());
+    debugPrint("editBlock.type:" + documentPageModel.editingBlock.type);
 
     List<BlockBean> blocks = [];
     if (blockDao.blockMap.containsKey(documentPageModel.node.id)) {
       blocks = blockDao.blockMap[documentPageModel.node.id]!;
     }
-
+    debugPrint("blocks:" + blocks.toString());
+    debugPrint("---");
     return Scaffold(
       backgroundColor: Theme.of(context).cardColor,
       appBar: PreferredSize(
@@ -36,8 +39,13 @@ class DocumentPage extends StatelessWidget {
         child: AppBar(
           title: Text(documentPageModel.node.name),
           actions: [
-            IconButton(onPressed: () {}, icon: Icon(CupertinoIcons.search)),
-            IconButton(onPressed: () {}, icon: Icon(CupertinoIcons.group)),
+            IconButton(
+                onPressed: () {
+                  documentPageModel.onChangeToChannel();
+                },
+                icon: Icon(CupertinoIcons.number, size: 18)),
+            IconButton(
+                onPressed: () {}, icon: Icon(CupertinoIcons.group, size: 18)),
           ],
         ),
       ),
@@ -47,9 +55,18 @@ class DocumentPage extends StatelessWidget {
             onTap: documentPageModel.onTapEmptyArea,
             child: BouncingScrollView(
               scrollBar: true,
+              controller: ScrollController(),
               slivers: [
-                SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
+                ReorderableSliverList(
+                  onReorder: documentPageModel.onReorder,
+                  delegate:
+                      ReorderableSliverChildBuilderDelegate((context, index) {
+                    FocusNode? focusNode;
+                    if (documentPageModel.focusMap[blocks[index].id] != null) {
+                      focusNode = documentPageModel
+                          .focusMap[blocks[index].id]![blocks[index].type]!;
+                    }
+
                     return Container(
                         padding: EdgeInsets.symmetric(
                           vertical: 3,
@@ -62,6 +79,18 @@ class DocumentPage extends StatelessWidget {
                           showCreator: false,
                           editing: documentPageModel.editingBlock.id ==
                               blocks[index].id,
+                          handleRawKeyEvent:
+                              documentPageModel.handleRawKeyEvent,
+                          focusNode: focusNode,
+                          onTextFieldChanged:
+                              documentPageModel.onTextFieldChanged,
+                          onSubmitCreateBlock:
+                              documentPageModel.onSubmitCreateBlock,
+                          editingController:
+                              documentPageModel.editingController,
+                          onTap: () {
+                            documentPageModel.onTapBlock(blocks[index], index);
+                          },
                         ));
                   }, childCount: blocks.length),
                 ),
@@ -79,6 +108,21 @@ class DocumentPage extends StatelessWidget {
                             index,
                             showCreator: false,
                             editing: documentPageModel.editingNew,
+                            handleRawKeyEvent:
+                                documentPageModel.handleRawKeyEvent,
+                            focusNode: documentPageModel.focusMap[
+                                documentPageModel.editingBlock
+                                    .id]![documentPageModel.editingBlock.type],
+                            onTextFieldChanged:
+                                documentPageModel.onTextFieldChanged,
+                            onSubmitCreateBlock:
+                                documentPageModel.onSubmitCreateBlock,
+                            editingController:
+                                documentPageModel.editingController,
+                            onTap: () {
+                              documentPageModel.onTapBlock(
+                                  blocks[index], index);
+                            },
                           ));
                     } else {
                       return Container();

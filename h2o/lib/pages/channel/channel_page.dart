@@ -33,8 +33,12 @@ class ChannelPage extends StatelessWidget {
         child: AppBar(
           title: Text(channelPageModel.node.name),
           actions: [
-            IconButton(onPressed: () {}, icon: Icon(Icons.search)),
-            IconButton(onPressed: () {}, icon: Icon(Icons.group)),
+            IconButton(
+                onPressed: () {
+                  channelPageModel.onChangeToDocument();
+                },
+                icon: Icon(CupertinoIcons.doc_text, size: 18)),
+            IconButton(onPressed: () {}, icon: Icon(Icons.group, size: 18)),
           ],
         ),
       ),
@@ -46,16 +50,23 @@ class ChannelPage extends StatelessWidget {
             slivers: [
               SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
+                  bool showCreator = true;
+                  if (index < blocks.length - 1) {
+                    if (blocks[index + 1].authorID == blocks[index].authorID) {
+                      showCreator = false;
+                    }
+                  }
+
                   return Container(
                       padding: EdgeInsets.symmetric(
-                        vertical: 5,
+                        vertical: 2,
                         horizontal: 20,
                       ),
                       child: Block(
                         blocks[index],
                         NodeType.channel,
                         index,
-                        showCreator: true,
+                        showCreator: showCreator,
                       ));
                 }, childCount: blocks.length),
               ),
@@ -63,10 +74,13 @@ class ChannelPage extends StatelessWidget {
           ),
         ),
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 10),
+          padding: EdgeInsets.symmetric(horizontal: 20),
           height: 80,
           child: Row(
             children: [
+              Container(
+                width: 42,
+              ),
               Expanded(
                 child: TextField(
                   focusNode: channelPageModel.focusNode,

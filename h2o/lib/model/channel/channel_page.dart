@@ -4,8 +4,13 @@ import 'package:h2o/api/api.dart';
 import 'package:h2o/bean/block.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/dao/block.dart';
+import 'package:h2o/dao/node.dart';
+import 'package:h2o/global/constants.dart';
+import 'package:h2o/model/document/document_page.dart';
 import 'package:h2o/model/global.dart';
+import 'package:h2o/pages/document/document_page.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 
 class ChannelPageModel extends ChangeNotifier {
   BuildContext context;
@@ -13,9 +18,11 @@ class ChannelPageModel extends ChangeNotifier {
 
   NodeBean node;
 
-  ChannelPageModel(this.context, this.node)
+  ChannelPageModel(this.context, this.node, {bool update = true})
       : globalModel = Provider.of<GlobalModel>(context) {
-    this.globalModel.blockDao!.updateBlocks(node);
+    if (update) {
+      this.globalModel.blockDao!.updateBlocks(node);
+    }
   }
 
   final controller = TextEditingController();
@@ -24,19 +31,45 @@ class ChannelPageModel extends ChangeNotifier {
   onTapCreateBlock(String text) async {
     controller.text = "";
     if (text.trim().isNotEmpty) {
-      BlockBean? blockBean = await Api.createNodeBlock(
-        node.id,
-        data: {
-          "text": text,
-          "type": EnumToString.convertToString(BlockType.text),
-        },
-        options: this.globalModel.userDao!.accessTokenOptions(),
-      );
-      if (blockBean != null) {
-        this.globalModel.blockDao!.updateBlocks(node);
+      List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.id]!;
+
+      String uuidString = Uuid().v4();
+      String preBlockID = EMPTY_UUID;
+      if (blocks.length > 0) {
+        blocks.last.posBlockID = uuidString;
+        preBlockID = blocks.last.id;
       }
-    } else {
-      focusNode.requestFocus();
+      BlockBean blockBean = BlockBean(
+        id: uuidString,
+        text: text,
+        type: EnumToString.convertToString(BlockType.text),
+        preBlockID: preBlockID,
+        posBlockID: EMPTY_UUID,
+        authorID: this.globalModel.userDao!.user!.id,
+        updatedAt: DateTime.now().toUtc().toString(),
+      );
+      blocks.add(blockBean);
+      notifyListeners();
+      this.globalModel.blockDao!.sendBlockEvent(
+          BlockBean.copyFrom(blockBean), BlockEventType.create, node);
     }
+    focusNode.requestFocus();
+  }
+
+  onChangeToDocument() async {
+    node.type = EnumToString.convertToString(NodeType.document);
+    // TODO Guarantee
+    Api.patchNode(node.id,
+        data: {"type": node.type},
+        options: this.globalModel.userDao!.accessTokenOptions());
+
+    Navigator.pop(context);
+    Navigator.of(context).push(
+      CupertinoPageRoute(builder: (ctx) {
+        return ChangeNotifierProvider(
+            create: (_) => DocumentPageModel(context, node, update: false),
+            child: DocumentPage());
+      }),
+    );
   }
 }

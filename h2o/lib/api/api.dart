@@ -131,6 +131,18 @@ class Api {
     }
   }
 
+  static Future<NodeBean?> patchNode(String nodeID,
+      {Map<String, dynamic>? data,
+      CancelToken? cancelToken,
+      Options? options}) async {
+    ResponseBean? response = await request(
+        HttpMethod.PATCH, '/api/v1/nodes/' + nodeID,
+        data: data, cancelToken: cancelToken, options: options);
+    if (response != null && response.errorCode == 0) {
+      return NodeBean.fromJson(response.data);
+    }
+  }
+
   static Future<List<BlockBean>?> listNodeBlocks(String nodeID,
       {Map<String, dynamic>? data,
       CancelToken? cancelToken,

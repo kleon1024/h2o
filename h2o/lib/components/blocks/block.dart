@@ -6,8 +6,6 @@ import 'package:h2o/components/blocks/numbered_list_block.dart';
 import 'package:h2o/components/blocks/text_block.dart';
 import 'package:h2o/dao/block.dart';
 import 'package:h2o/dao/node.dart';
-import 'package:h2o/model/document/document_page.dart';
-import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class Block extends StatelessWidget {
@@ -16,9 +14,22 @@ class Block extends StatelessWidget {
   final bool editing;
   final NodeType nodeType;
   final int index;
+  final Function(RawKeyEvent event)? handleRawKeyEvent;
+  final FocusNode? focusNode;
+  final Function(BlockBean block)? onSubmitCreateBlock;
+  final TextEditingController? editingController;
+  final Function(String text)? onTextFieldChanged;
+  final Function()? onTap;
 
   const Block(this.blockBean, this.nodeType, this.index,
-      {this.showCreator = false, this.editing = false});
+      {this.showCreator = false,
+      this.editing = false,
+      this.handleRawKeyEvent,
+      this.focusNode,
+      this.onTextFieldChanged,
+      this.onSubmitCreateBlock,
+      this.editingController,
+      this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +42,13 @@ class Block extends StatelessWidget {
       case BlockType.heading2:
       case BlockType.heading3:
       case BlockType.heading4:
-        block = TextBlock(blockBean, editing: editing);
+        block = TextBlock(blockBean,
+            editing: editing,
+            handleRawKeyEvent: handleRawKeyEvent,
+            focusNode: focusNode,
+            onTextFieldChanged: onTextFieldChanged,
+            onSubmitCreateBlock: onSubmitCreateBlock,
+            editingController: editingController);
         break;
       case BlockType.bulletedList:
         block = BulletedListBlock(blockBean, editing: editing);
@@ -45,49 +62,47 @@ class Block extends StatelessWidget {
         );
     }
 
-    Function()? onTap;
-    Function(bool)? onHover;
-
-    if (nodeType == NodeType.document) {
-      final documentPageModel = Provider.of<DocumentPageModel>(context);
-      onTap = () {
-        documentPageModel.onTapBlock(blockBean, this.index);
-      };
-    }
-
     block = InkWell(
       onTap: onTap,
       focusColor: Theme.of(context).cardColor,
       child: block,
     );
 
+    if (nodeType == NodeType.document) {
+      return Container(width: double.infinity, child: block);
+    }
+
     if (this.showCreator) {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 10),
             child: CircleAvatar(),
           ),
           Expanded(
             child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 10),
+                padding: EdgeInsets.symmetric(horizontal: 6),
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            "Author ",
-                            style: TextStyle(
-                                height: 1.5, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            timeago.format(DateTime.parse(blockBean.updatedAt)),
-                            style: TextStyle(
-                                height: 1.5, fontWeight: FontWeight.bold),
-                          ),
-                        ],
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 4),
+                        child: Row(
+                          children: [
+                            Text(
+                              "Author ",
+                              style: TextStyle(
+                                  height: 1, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              timeago
+                                  .format(DateTime.parse(blockBean.updatedAt)),
+                              style: TextStyle(
+                                  height: 1, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
                       ),
                       block,
                     ])),
@@ -95,7 +110,20 @@ class Block extends StatelessWidget {
         ],
       );
     } else {
-      return block;
+      return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          width: 38,
+        ),
+        Expanded(
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 4),
+              child: block,
+            ),
+          ),
+        ),
+      ]);
     }
   }
 }

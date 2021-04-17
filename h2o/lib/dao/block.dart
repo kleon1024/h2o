@@ -116,6 +116,8 @@ class BlockDao extends ChangeNotifier {
         data: {
           "text": blockBean.text,
           "type": blockBean.type,
+          "preBlockID": blockBean.preBlockID,
+          "posBlockID": blockBean.posBlockID,
         },
         options: this.globalModel!.userDao!.accessTokenOptions(),
       );

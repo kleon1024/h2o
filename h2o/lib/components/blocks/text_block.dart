@@ -3,14 +3,23 @@ import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
 import 'package:h2o/bean/block.dart';
 import 'package:h2o/dao/block.dart';
-import 'package:h2o/model/document/document_page.dart';
-import 'package:provider/provider.dart';
 
 class TextBlock extends StatelessWidget {
   final BlockBean block;
   final bool editing;
+  final Function(RawKeyEvent event)? handleRawKeyEvent;
+  final FocusNode? focusNode;
+  final Function(BlockBean block)? onSubmitCreateBlock;
+  final TextEditingController? editingController;
+  final Function(String text)? onTextFieldChanged;
 
-  const TextBlock(this.block, {this.editing = false});
+  const TextBlock(this.block,
+      {this.editing = false,
+      this.handleRawKeyEvent,
+      this.focusNode,
+      this.onTextFieldChanged,
+      this.onSubmitCreateBlock,
+      this.editingController});
 
   @override
   Widget build(BuildContext context) {
@@ -40,18 +49,17 @@ class TextBlock extends StatelessWidget {
     }
 
     if (this.editing) {
-      final documentPageModel = Provider.of<DocumentPageModel>(context);
       return RawKeyboardListener(
         focusNode: FocusNode(),
-        onKey: documentPageModel.handleRawKeyEvent,
+        onKey: handleRawKeyEvent,
         child: TextField(
-          focusNode: documentPageModel.focusMap[block.id]![block.type],
+          focusNode: focusNode,
           style: textStyle,
           onSubmitted: (_) {
-            documentPageModel.onSubmitCreateBlock(block);
+            onSubmitCreateBlock!(block);
           },
-          controller: documentPageModel.editingController,
-          onChanged: documentPageModel.onTextFieldChanged,
+          controller: editingController,
+          onChanged: onTextFieldChanged,
           decoration: InputDecoration(
             border: InputBorder.none,
             isDense: true,
@@ -67,7 +75,15 @@ class TextBlock extends StatelessWidget {
     return Container(
         padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
         child: Text(
-          this.block.text,
+          this.block.text
+          // +
+          // " " +
+          // block.preBlockID.substring(0, 3) +
+          // " " +
+          // block.id.substring(0, 3) +
+          // " " +
+          // block.posBlockID.substring(0, 3)
+          ,
           textAlign: TextAlign.left,
           style: textStyle,
         ));
