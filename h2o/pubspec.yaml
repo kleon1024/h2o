@@ -35,6 +35,7 @@ dependencies:
   uuid: ^3.0.4
   flutter_screenutil: ^5.0.0
   reorderables: ^0.4.1
+  web_socket_channel: ^2.1.0
   channel:
     git: https://github.com/kleon1024/channel.git
 

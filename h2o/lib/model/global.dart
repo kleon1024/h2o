@@ -24,7 +24,6 @@ class GlobalModel extends ChangeNotifier {
   NodeDao? nodeDao;
   BlockDao? blockDao;
   TableDao? tableDao;
-
   Map<EventType, List<Future Function()>> callbackRegistry = {};
 
   NavigationPageModel? navigationPageModel;
