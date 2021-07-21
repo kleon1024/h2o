@@ -2,11 +2,12 @@ package handler
 
 import (
 	"fmt"
-	"h2o/cmd/api/app/options"
 	"h2o/pkg/api/dao"
 	"h2o/pkg/api/dto"
 	"h2o/pkg/api/middleware"
+	"h2o/pkg/app"
 	"h2o/pkg/config"
+	"h2o/pkg/model"
 	"net/http"
 	"regexp"
 	"strings"
@@ -18,10 +19,10 @@ import (
 )
 
 type Nodes struct {
-	Service *options.ApiService
+	Service *app.Server
 }
 
-func RegisterNodes(r *gin.RouterGroup, svc *options.ApiService) {
+func RegisterNodes(r *gin.RouterGroup, svc *app.Server) {
 	h := Nodes{svc}
 	r.GET("/:nodeID/blocks", h.ListNodeBlocks)
 	r.POST("/:nodeID/blocks", h.CreateNodeBlock)
@@ -114,7 +115,10 @@ func (h *Nodes) CreateNodeBlock(c *gin.Context) {
 		return
 	}
 
-	logrus.WithField("event", "createBlock").WithField("blockID", body.ID).WithField("posBlockID", body.PosBlockID).WithField("preBlockID", body.PreBlockID).Info()
+	logrus.WithField("event", "create_block").
+		WithField("block_id", body.ID).
+		WithField("pos_block_id", body.PosBlockID).
+		WithField("pre_block_id", body.PreBlockID).Info()
 
 	node := dao.Node{}
 	if err := node.Exists(h.Service.Database, path.NodeID); err != nil {
@@ -172,6 +176,16 @@ func (h *Nodes) CreateNodeBlock(c *gin.Context) {
 	if err := block.Save(h.Service.Database, &preBlock, &posBlock); err != nil {
 		middleware.Error(c, http.StatusBadRequest, err)
 	}
+
+	message := model.NewWebSocketEvent(
+		model.WEBSOCKET_EVENT_BLOCK_CREATED,
+		node.TeamID.String(),
+		block.NodeID.String(),
+		block.ID.String(),
+	)
+
+	message.Add("block", block.ToJson())
+	h.Service.Publish(message)
 
 	middleware.Success(c, &dto.BlockOutput{
 		ID:         block.ID.String(),

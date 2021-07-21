@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"fmt"
-	"h2o/cmd/api/app/options"
 	"h2o/pkg/api/dao"
+	"h2o/pkg/app"
 	"h2o/pkg/config"
 	"h2o/pkg/util/orm"
 	"net/http"
@@ -57,7 +57,7 @@ func GenerateTokens(user *dao.User, config *config.JWTConfig) (accessToken strin
 	return
 }
 
-func JWT(svc *options.ApiService, subject string, required bool) gin.HandlerFunc {
+func JWT(svc *app.Server, subject string, required bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		jwtConfig := svc.Config.JWTConfig
 		authorization := c.Request.Header.Get("Authorization")

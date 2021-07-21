@@ -2,10 +2,10 @@ package handler
 
 import (
 	"fmt"
-	"h2o/cmd/api/app/options"
 	"h2o/pkg/api/dao"
 	"h2o/pkg/api/dto"
 	"h2o/pkg/api/middleware"
+	"h2o/pkg/app"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,10 +13,10 @@ import (
 )
 
 type Tables struct {
-	Service *options.ApiService
+	Service *app.Server
 }
 
-func RegisterTables(r *gin.RouterGroup, svc *options.ApiService) {
+func RegisterTables(r *gin.RouterGroup, svc *app.Server) {
 	h := Tables{svc}
 	r.POST("/:tableID/columns", h.CreateTableColumn)
 	r.PUT("/:tableID/columns/:columnID", h.UpdateTableColumn)

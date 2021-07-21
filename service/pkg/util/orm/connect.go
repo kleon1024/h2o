@@ -1,7 +1,7 @@
 package orm
 
 import (
-	"h2o/cmd/api/app/options"
+	"h2o/pkg/config"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func Connect(cfg *options.ApiServiceConfig) (*gorm.DB, error) {
+func Connect(cfg *config.ServiceConfig) (*gorm.DB, error) {
 	var dialector gorm.Dialector
 	db := cfg.DBConfig
 	switch db.Driver {

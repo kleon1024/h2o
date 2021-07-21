@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"encoding/json"
 	"h2o/pkg/util/orm"
 	"time"
 
@@ -70,6 +71,11 @@ type Block struct {
 	UpdatedAt time.Time `gorm:"column:updated_at;not null"`
 	DeletedAt time.Time `gorm:"column:deleted_at;not null"`
 	Deleted   int       `gorm:"column:deleted;not null"`
+}
+
+func (o *Block) ToJson() string {
+	b, _ := json.Marshal(o)
+	return string(b)
 }
 
 func (u *Block) BeforeCreate(tx *gorm.DB) error {

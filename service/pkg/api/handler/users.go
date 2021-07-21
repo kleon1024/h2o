@@ -2,10 +2,10 @@ package handler
 
 import (
 	"fmt"
-	"h2o/cmd/api/app/options"
 	"h2o/pkg/api/dao"
 	"h2o/pkg/api/dto"
 	"h2o/pkg/api/middleware"
+	"h2o/pkg/app"
 	"h2o/pkg/config"
 	"net/http"
 	"time"
@@ -14,12 +14,12 @@ import (
 )
 
 type Users struct {
-	Service *options.ApiService
+	Service *app.Server
 }
 
-func RegisterUsers(r *gin.RouterGroup, svc *options.ApiService) {
+func RegisterUsers(r *gin.RouterGroup, svc *app.Server) {
 	h := Users{svc}
-	r.POST("", h.CreateUser)
+	r.POST("", middleware.Translation(), h.CreateUser)
 }
 
 // @id CreateUser

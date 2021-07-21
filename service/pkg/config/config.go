@@ -9,6 +9,8 @@ import (
 type ServiceConfig struct {
 	// The config file
 	ConfigFile string `mapstructure:"configFile"`
+	// Debug
+	Debug bool `mapstructure:"debug"`
 
 	// The listening port of api
 	ListeningPort int `mapstructure:"listeningPort"`
@@ -35,7 +37,11 @@ func (cfg *ServiceConfig) Init(conf string) error {
 	v := viper.New()
 	v.SetConfigFile(cfg.ConfigFile)
 
-	cfg.load(v)
+	err := cfg.load(v)
+	if err != nil {
+		logrus.WithField("configFile", conf).Warn("Cannot load config from file")
+	}
+
 	v.WatchConfig()
 	v.OnConfigChange(func(fsnotify.Event) {
 		cfg.load(v)

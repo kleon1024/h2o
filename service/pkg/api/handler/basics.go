@@ -1,17 +1,17 @@
 package handler
 
 import (
-	"h2o/cmd/api/app/options"
 	"h2o/pkg/api/middleware"
+	"h2o/pkg/app"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Basics struct {
-	Service *options.ApiService
+	Service *app.Server
 }
 
-func RegisterBasics(r *gin.RouterGroup, svc *options.ApiService) {
+func RegisterBasics(r *gin.RouterGroup, svc *app.Server) {
 	h := Basics{svc}
 	r.GET("", h.GetHello)
 }

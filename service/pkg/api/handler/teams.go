@@ -2,10 +2,10 @@ package handler
 
 import (
 	"fmt"
-	"h2o/cmd/api/app/options"
 	"h2o/pkg/api/dao"
 	"h2o/pkg/api/dto"
 	"h2o/pkg/api/middleware"
+	"h2o/pkg/app"
 	"net/http"
 	"time"
 
@@ -15,10 +15,10 @@ import (
 )
 
 type Teams struct {
-	Service *options.ApiService
+	Service *app.Server
 }
 
-func RegisterTeams(r *gin.RouterGroup, svc *options.ApiService) {
+func RegisterTeams(r *gin.RouterGroup, svc *app.Server) {
 	h := Teams{svc}
 	r.GET("", h.ListTeams)
 	r.GET("/:teamID/nodes", h.ListTeamNodes)
