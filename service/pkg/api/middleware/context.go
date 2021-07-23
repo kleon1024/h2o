@@ -4,7 +4,6 @@ import (
 	"h2o/pkg/app"
 	"h2o/pkg/app/request"
 	"h2o/pkg/model"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -12,12 +11,12 @@ import (
 
 type Context struct {
 	AppContext *request.Context
-	App *app.App
+	App        *app.App
 }
 
 func ContextHandler(a *app.App, requiredSession bool) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		now := time.Now()
+		// now := time.Now()
 		requestId := model.NewId()
 		var statusCode string
 		defer func() {
@@ -36,7 +35,7 @@ func ContextHandler(a *app.App, requiredSession bool) gin.HandlerFunc {
 
 		c := &Context{
 			AppContext: &request.Context{},
-			App: a,
+			App:        a,
 		}
 
 		c.AppContext.SetRequestId(requestId)
@@ -45,10 +44,10 @@ func ContextHandler(a *app.App, requiredSession bool) gin.HandlerFunc {
 		c.AppContext.SetAcceptLanguage(ctx.Request.Header.Get("Accept-Language"))
 		c.AppContext.SetPath(ctx.Request.URL.Path)
 
-		token, tokenLocation := app.ParseAuthTokenFromRequest(ctx)
+		// token, tokenLocation := app.ParseAuthTokenFromRequest(ctx)
 
-		if token != "" {
-			session, err := c.App.
-		}
+		// if token != "" {
+		// 	session, err := c.App.GetSession(token)
+		// }
 	}
 }
