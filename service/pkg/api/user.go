@@ -2,6 +2,7 @@ package api
 
 import (
 	"h2o/pkg/app"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -43,6 +44,18 @@ func (u *Users) createUser(c *gin.Context) {
 	Success(c, "")
 }
 
+type LoginRequest struct {
+	Id string `json:"id" form:"id" example:"123456"`
+	// Username or email
+	LoginId  string `json:"login_id" form:"login_id" example:"username"`
+	Password string `json:"password" form:"password" example:""`
+	DeviceId string `json:"device_id" form:"device_id" example:""`
+}
+
+func (p *LoginRequest) Bind(c *gin.Context) error {
+	return GetValidParams(c, p, BindTypeQuery)
+}
+
 // @id Login
 // @summary 登录
 // @tags USERS
@@ -53,6 +66,10 @@ func (u *Users) createUser(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/users/login [POST]
 func (u *Users) login(c *gin.Context) {
+	body := LoginRequest{}
+	if err := body.Bind(c); err != nil {
+		Error(c, http.StatusBadRequest, err)
+	}
 
 	Success(c, "")
 }

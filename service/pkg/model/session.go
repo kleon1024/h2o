@@ -36,7 +36,7 @@ type Session struct {
 	UserId         string    `json:"user_id"`
 	DeviceId       string    `json:"device_id"`
 	Props          StringMap `json:"props"`
-	Local          bool      `json:"local" db:"-" gorm:"-"`
+	Local          bool      `gorm:"-" json:"local"`
 }
 
 // Returns true if the session is unrestricted, which should grant it
