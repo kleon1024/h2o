@@ -1,9 +1,9 @@
 package handler
 
 import (
+	"h2o/pkg/api"
 	"h2o/pkg/api/dao"
 	"h2o/pkg/api/dto"
-	"h2o/pkg/api/middleware"
 	"h2o/pkg/app"
 	"h2o/pkg/config"
 	"net/http"
@@ -29,15 +29,15 @@ func RegisterTokens(r *gin.RouterGroup, svc *app.Server) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/users/tokens [Get]
 func (h *Tokens) GetTokens(c *gin.Context) {
-	userValue, _ := c.Get(middleware.UserKey)
+	userValue, _ := c.Get(api.UserKey)
 	user := userValue.(dao.User)
 
-	accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, err := middleware.GenerateTokens(&user, &h.Service.Config.JWTConfig)
+	accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, err := api.GenerateTokens(&user, &h.Service.Config.JWTConfig)
 	if err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 	}
 
-	middleware.Success(c, &dto.CreateUserOutput{
+	api.Success(c, &dto.CreateUserOutput{
 		ID:   user.ID.String(),
 		Name: user.Name,
 		AccessToken: dto.Token{

@@ -2,9 +2,9 @@ package handler
 
 import (
 	"fmt"
+	"h2o/pkg/api"
 	"h2o/pkg/api/dao"
 	"h2o/pkg/api/dto"
-	"h2o/pkg/api/middleware"
 	"h2o/pkg/app"
 	"h2o/pkg/config"
 	"net/http"
@@ -19,7 +19,7 @@ type Users struct {
 
 func RegisterUsers(r *gin.RouterGroup, svc *app.Server) {
 	h := Users{svc}
-	r.POST("", middleware.Translation(), h.CreateUser)
+	r.POST("", h.CreateUser)
 }
 
 // @id CreateUser
@@ -38,14 +38,14 @@ func RegisterUsers(r *gin.RouterGroup, svc *app.Server) {
 // @router /api/v1/users [POST]
 func (h *Users) CreateUser(c *gin.Context) {
 	var user dao.User
-	userValue, _ := c.Get(middleware.UserKey)
+	userValue, _ := c.Get(api.UserKey)
 	if userValue != nil {
 		user = userValue.(dao.User)
 	}
 
 	p := &dto.CreateUserInputBodyType{}
 	if err := p.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -55,7 +55,7 @@ func (h *Users) CreateUser(c *gin.Context) {
 				Type: dao.UserTypeAnonymous,
 			}
 			if err := user.Save(h.Service.Database); err != nil {
-				middleware.Error(c, http.StatusBadRequest, err)
+				api.Error(c, http.StatusBadRequest, err)
 				return
 			}
 			team := dao.Team{
@@ -69,7 +69,7 @@ func (h *Users) CreateUser(c *gin.Context) {
 				Deleted:       0,
 			}
 			if err := team.Save(h.Service.Database); err != nil {
-				middleware.Error(c, http.StatusBadRequest, err)
+				api.Error(c, http.StatusBadRequest, err)
 				return
 			}
 			teamMember := dao.TeamMember{
@@ -78,22 +78,22 @@ func (h *Users) CreateUser(c *gin.Context) {
 				CreatedAt: time.Now().UTC(),
 			}
 			if err := teamMember.Save(h.Service.Database); err != nil {
-				middleware.Error(c, http.StatusBadRequest, err)
+				api.Error(c, http.StatusBadRequest, err)
 				return
 			}
 		} else {
-			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("user exists and token usable"))
+			api.Error(c, http.StatusBadRequest, fmt.Errorf("user exists and token usable"))
 		}
 	} else {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("unsupported user type"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("unsupported user type"))
 	}
 
-	accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, err := middleware.GenerateTokens(&user, &h.Service.Config.JWTConfig)
+	accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, err := api.GenerateTokens(&user, &h.Service.Config.JWTConfig)
 	if err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 	}
 
-	middleware.Success(c, &dto.CreateUserOutput{
+	api.Success(c, &dto.CreateUserOutput{
 		ID:   user.ID.String(),
 		Name: user.Name,
 		AccessToken: dto.Token{

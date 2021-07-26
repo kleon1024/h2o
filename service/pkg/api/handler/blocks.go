@@ -2,9 +2,9 @@ package handler
 
 import (
 	"fmt"
+	"h2o/pkg/api"
 	"h2o/pkg/api/dao"
 	"h2o/pkg/api/dto"
-	"h2o/pkg/api/middleware"
 	"h2o/pkg/app"
 	"h2o/pkg/config"
 	"net/http"
@@ -36,47 +36,47 @@ func RegisterBlocks(r *gin.RouterGroup, svc *app.Server) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/blocks/:blockID [PUT]
 func (h *Blocks) UpdateBlock(c *gin.Context) {
-	userValue, _ := c.Get(middleware.UserKey)
+	userValue, _ := c.Get(api.UserKey)
 	user := userValue.(dao.User)
 	// TODO: RBAC
 
 	path := &dto.BlockInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	body := &dto.UpdateBlockInputBody{}
 	if err := body.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	block := dao.Block{}
 	if err := block.Exists(h.Service.Database, path.BlockID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	} else if block.ID == dao.EmptyUUID {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block id"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block id"))
 		return
 	}
 
 	preBlock := dao.Block{}
 	if err := preBlock.Exists(h.Service.Database, body.PreBlockID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	block.PreBlockID = preBlock.ID
 
 	posBlock := dao.Block{}
 	if err := posBlock.Exists(h.Service.Database, body.PosBlockID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	block.PosBlockID = posBlock.ID
 
 	if _, ok := dao.BlockTypeMap[body.Type]; !ok {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block type"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block type"))
 		return
 	}
 	block.Type = body.Type
@@ -85,7 +85,7 @@ func (h *Blocks) UpdateBlock(c *gin.Context) {
 
 	node := dao.Node{}
 	if err := node.Exists(h.Service.Database, body.NodeID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	block.NodeID = node.ID
@@ -96,11 +96,11 @@ func (h *Blocks) UpdateBlock(c *gin.Context) {
 	block.UpdatedUserID = user.ID
 
 	if err := block.Save(h.Service.Database, &preBlock, &posBlock); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
-	middleware.Success(c, &dto.BlockOutput{
+	api.Success(c, &dto.BlockOutput{
 		ID:         block.ID.String(),
 		Text:       block.Text,
 		Type:       block.Type,
@@ -122,34 +122,34 @@ func (h *Blocks) UpdateBlock(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/blocks/:blockID [PATCH]
 func (h *Blocks) PatchBlock(c *gin.Context) {
-	userValue, _ := c.Get(middleware.UserKey)
+	userValue, _ := c.Get(api.UserKey)
 	user := userValue.(dao.User)
 	// TODO: RBAC
 
 	path := &dto.BlockInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	body := &dto.PatchBlockInputBody{}
 	if err := body.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	block := dao.Block{}
 	if err := block.Exists(h.Service.Database, path.BlockID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	} else if block.ID == dao.EmptyUUID {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block id"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block id"))
 		return
 	}
 
 	if body.Type != "" {
 		if _, ok := dao.BlockTypeMap[body.Type]; !ok {
-			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block type"))
+			api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block type"))
 			return
 		}
 		block.Type = body.Type
@@ -160,10 +160,10 @@ func (h *Blocks) PatchBlock(c *gin.Context) {
 	if body.NodeID != "" {
 		node := dao.Node{}
 		if err := node.Exists(h.Service.Database, body.NodeID); err != nil {
-			middleware.Error(c, http.StatusBadRequest, err)
+			api.Error(c, http.StatusBadRequest, err)
 			return
 		} else if node.ID == dao.EmptyUUID {
-			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
+			api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
 			return
 		}
 		block.NodeID = node.ID
@@ -172,7 +172,7 @@ func (h *Blocks) PatchBlock(c *gin.Context) {
 	if body.SubBlockID != "" {
 		subBlockID, err := uuid.Parse(body.SubBlockID)
 		if err != nil {
-			middleware.Error(c, http.StatusBadRequest, err)
+			api.Error(c, http.StatusBadRequest, err)
 			return
 		}
 		block.SubBlockID = subBlockID
@@ -181,7 +181,7 @@ func (h *Blocks) PatchBlock(c *gin.Context) {
 	preBlock := dao.Block{}
 	if body.PreBlockID != "" {
 		if err := preBlock.Exists(h.Service.Database, body.PreBlockID); err != nil {
-			middleware.Error(c, http.StatusBadRequest, err)
+			api.Error(c, http.StatusBadRequest, err)
 			return
 		}
 		block.PreBlockID = preBlock.ID
@@ -190,7 +190,7 @@ func (h *Blocks) PatchBlock(c *gin.Context) {
 	posBlock := dao.Block{}
 	if body.PosBlockID != "" {
 		if err := posBlock.Exists(h.Service.Database, body.PosBlockID); err != nil {
-			middleware.Error(c, http.StatusBadRequest, err)
+			api.Error(c, http.StatusBadRequest, err)
 			return
 		}
 		block.PosBlockID = posBlock.ID
@@ -198,11 +198,11 @@ func (h *Blocks) PatchBlock(c *gin.Context) {
 
 	block.UpdatedUserID = user.ID
 	if err := block.Save(h.Service.Database, &preBlock, &posBlock); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
-	middleware.Success(c, &dto.BlockOutput{
+	api.Success(c, &dto.BlockOutput{
 		ID:         block.ID.String(),
 		Text:       block.Text,
 		Type:       block.Type,
@@ -223,29 +223,29 @@ func (h *Blocks) PatchBlock(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/blocks/:blockID [DELETE]
 func (h *Blocks) DeleteBlock(c *gin.Context) {
-	userValue, _ := c.Get(middleware.UserKey)
+	userValue, _ := c.Get(api.UserKey)
 	user := userValue.(dao.User)
 	// TODO: RBAC
 
 	path := &dto.BlockInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	block := dao.Block{}
 	if err := block.Exists(h.Service.Database, path.BlockID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	preBlock := &dao.Block{}
 	if err := preBlock.Exists(h.Service.Database, block.PreBlockID.String()); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	posBlock := &dao.Block{}
 	if err := posBlock.Exists(h.Service.Database, block.PosBlockID.String()); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -258,11 +258,11 @@ func (h *Blocks) DeleteBlock(c *gin.Context) {
 	block.DeletedAt = time.Now().UTC()
 
 	if err := block.SaveDelete(h.Service.Database, preBlock, posBlock); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
-	middleware.Success(c, &dto.BlockOutput{
+	api.Success(c, &dto.BlockOutput{
 		ID:         block.ID.String(),
 		Text:       block.Text,
 		Type:       block.Type,

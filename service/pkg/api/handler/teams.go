@@ -2,9 +2,9 @@ package handler
 
 import (
 	"fmt"
+	"h2o/pkg/api"
 	"h2o/pkg/api/dao"
 	"h2o/pkg/api/dto"
-	"h2o/pkg/api/middleware"
 	"h2o/pkg/app"
 	"net/http"
 	"time"
@@ -34,7 +34,7 @@ func RegisterTeams(r *gin.RouterGroup, svc *app.Server) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/teams [GET]
 func (h *Teams) ListTeams(c *gin.Context) {
-	userValue, _ := c.Get(middleware.UserKey)
+	userValue, _ := c.Get(api.UserKey)
 	user := userValue.(dao.User)
 
 	p := &dto.Pagination{
@@ -42,12 +42,12 @@ func (h *Teams) ListTeams(c *gin.Context) {
 		Limit:  dto.DefaultLimit,
 	}
 	if err := p.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	teams, err := user.FindTeams(h.Service.Database, p.Offset, p.Limit)
 	if err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 	}
 
 	outputs := make([]dto.ListTeamsInstance, len(*teams))
@@ -56,7 +56,7 @@ func (h *Teams) ListTeams(c *gin.Context) {
 		outputs[i].Name = team.Name
 	}
 
-	middleware.Success(c, dto.ListTeamsOutput{
+	api.Success(c, dto.ListTeamsOutput{
 		Pagination: *p,
 		Teams:      outputs,
 	})
@@ -72,13 +72,13 @@ func (h *Teams) ListTeams(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/teams/:teamID/nodes [GET]
 func (h *Teams) ListTeamNodes(c *gin.Context) {
-	// userValue, _ := c.Get(middleware.UserKey)
+	// userValue, _ := c.Get(api.UserKey)
 	// user := userValue.(dao.User)
 	// TODO: RBAC
 
 	path := &dto.ListTeamNodesInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -87,7 +87,7 @@ func (h *Teams) ListTeamNodes(c *gin.Context) {
 		Limit:  dto.DefaultLimit,
 	}
 	if err := query.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -98,7 +98,7 @@ func (h *Teams) ListTeamNodes(c *gin.Context) {
 	logrus.WithField("teamID", teamID).Debug()
 	nodes, err := team.FindNodes(h.Service.Database, query.Offset, query.Limit)
 	if err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	logrus.WithField("good", teamID).Debug()
@@ -113,7 +113,7 @@ func (h *Teams) ListTeamNodes(c *gin.Context) {
 		outputs[i].Indent = node.Indent
 	}
 
-	middleware.Success(c, dto.ListTeamNodesOutput{
+	api.Success(c, dto.ListTeamNodesOutput{
 		Pagination: *query,
 		Nodes:      outputs,
 	})
@@ -129,45 +129,45 @@ func (h *Teams) ListTeamNodes(c *gin.Context) {
 // @failure 404 {object} middleware.Response{data=interface{}} "not found"
 // @router /api/v1/teams/:teamID/nodes [POST]
 func (h *Teams) CreateTeamNode(c *gin.Context) {
-	userValue, _ := c.Get(middleware.UserKey)
+	userValue, _ := c.Get(api.UserKey)
 	user := userValue.(dao.User)
 	// TODO: RABC
 
 	path := &dto.ListTeamNodesInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	body := &dto.CreateTeamNodeInputBody{}
 	if err := body.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	team := dao.Team{}
 	if err := team.Exists(h.Service.Database, path.TeamID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	} else if team.ID == dao.EmptyUUID {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid team id"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid team id"))
 		return
 	}
 
 	if _, ok := dao.NodeTypeMap[body.Type]; !ok {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node type"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node type"))
 		return
 	}
 
 	preNode := &dao.Node{}
 	if err := preNode.Exists(h.Service.Database, body.PreNodeID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	posNode := &dao.Node{}
 	if err := posNode.Exists(h.Service.Database, body.PosNodeID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -175,11 +175,11 @@ func (h *Teams) CreateTeamNode(c *gin.Context) {
 	if body.ID != "" {
 		nodeID, err := uuid.Parse(body.ID)
 		if err != nil {
-			middleware.Error(c, http.StatusBadRequest, err)
+			api.Error(c, http.StatusBadRequest, err)
 			return
 		}
 		if nodeID == dao.EmptyUUID {
-			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
+			api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
 			return
 		}
 		node.ID = nodeID
@@ -199,7 +199,7 @@ func (h *Teams) CreateTeamNode(c *gin.Context) {
 	node.DeletedAt = time.Now().UTC()
 
 	if err := node.Save(h.Service.Database, preNode, posNode); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -209,12 +209,12 @@ func (h *Teams) CreateTeamNode(c *gin.Context) {
 			External: false,
 		}
 		if err := table.Save(h.Service.Database); err != nil {
-			middleware.Error(c, http.StatusBadRequest, err)
+			api.Error(c, http.StatusBadRequest, err)
 			return
 		}
 	}
 
-	middleware.Success(c, &dto.ListTeamNodesInstance{
+	api.Success(c, &dto.ListTeamNodesInstance{
 		ID:        node.ID.String(),
 		Name:      node.Name,
 		Type:      node.Type,

@@ -50,8 +50,9 @@ func SetupDatabase() Option {
 }
 
 type AppOption func(a *App)
+type AppOptionCreator func() []AppOption
 
-func ServiceConnector(s *Server) AppOption {
+func ServerConnector(s *Server) AppOption {
 	return func(a *App) {
 		a.srv = s
 	}

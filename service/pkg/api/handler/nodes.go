@@ -2,9 +2,9 @@ package handler
 
 import (
 	"fmt"
+	"h2o/pkg/api"
 	"h2o/pkg/api/dao"
 	"h2o/pkg/api/dto"
-	"h2o/pkg/api/middleware"
 	"h2o/pkg/app"
 	"h2o/pkg/config"
 	"h2o/pkg/model"
@@ -42,13 +42,13 @@ func RegisterNodes(r *gin.RouterGroup, svc *app.Server) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/nodes/:nodeID/blocks [GET]
 func (h *Nodes) ListNodeBlocks(c *gin.Context) {
-	// userValue, _ := c.Get(middleware.UserKey)
+	// userValue, _ := c.Get(api.UserKey)
 	// user := userValue.(dao.User)
 	// TODO: RBAC
 
 	path := &dto.ListNodeBlocksInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -57,7 +57,7 @@ func (h *Nodes) ListNodeBlocks(c *gin.Context) {
 		Limit:  dto.DefaultLimit,
 	}
 	if err := query.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -67,7 +67,7 @@ func (h *Nodes) ListNodeBlocks(c *gin.Context) {
 	}
 	blocks, err := node.FindBlocks(h.Service.Database, query.Offset, query.Limit)
 	if err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -83,7 +83,7 @@ func (h *Nodes) ListNodeBlocks(c *gin.Context) {
 		outputs[i].UpdatedAt = block.UpdatedAt.Format(config.DateFormatString)
 	}
 
-	middleware.Success(c, dto.ListNodeBlocksOutput{
+	api.Success(c, dto.ListNodeBlocksOutput{
 		Pagination: *query,
 		Blocks:     outputs,
 	})
@@ -99,19 +99,19 @@ func (h *Nodes) ListNodeBlocks(c *gin.Context) {
 // @failure 404 {object} middleware.Response{data=interface{}} "not found"
 // @router /api/v1/nodes/:nodeID/blocks [POST]
 func (h *Nodes) CreateNodeBlock(c *gin.Context) {
-	userValue, _ := c.Get(middleware.UserKey)
+	userValue, _ := c.Get(api.UserKey)
 	user := userValue.(dao.User)
 	// TODO: RABC
 
 	path := &dto.ListNodeBlocksInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	body := &dto.CreateNodeBlockInputBody{}
 	if err := body.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -122,27 +122,27 @@ func (h *Nodes) CreateNodeBlock(c *gin.Context) {
 
 	node := dao.Node{}
 	if err := node.Exists(h.Service.Database, path.NodeID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	} else if node.ID == dao.EmptyUUID {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
 		return
 	}
 
 	preBlock := dao.Block{}
 	if err := preBlock.Exists(h.Service.Database, body.PreBlockID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	posBlock := dao.Block{}
 	if err := posBlock.Exists(h.Service.Database, body.PosBlockID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	if _, ok := dao.BlockTypeMap[body.Type]; !ok {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block type"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block type"))
 		return
 	}
 
@@ -150,11 +150,11 @@ func (h *Nodes) CreateNodeBlock(c *gin.Context) {
 	if body.ID != "" {
 		blockID, err := uuid.Parse(body.ID)
 		if err != nil {
-			middleware.Error(c, http.StatusBadRequest, err)
+			api.Error(c, http.StatusBadRequest, err)
 			return
 		}
 		if blockID == dao.EmptyUUID {
-			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block id"))
+			api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid block id"))
 			return
 		}
 		block.ID = blockID
@@ -174,7 +174,7 @@ func (h *Nodes) CreateNodeBlock(c *gin.Context) {
 	block.DeletedAt = time.Now().UTC()
 
 	if err := block.Save(h.Service.Database, &preBlock, &posBlock); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 	}
 
 	message := model.NewWebSocketEvent(
@@ -187,7 +187,7 @@ func (h *Nodes) CreateNodeBlock(c *gin.Context) {
 	message.Add("block", block.ToJson())
 	h.Service.Publish(message)
 
-	middleware.Success(c, &dto.BlockOutput{
+	api.Success(c, &dto.BlockOutput{
 		ID:         block.ID.String(),
 		PreBlockID: block.PreBlockID.String(),
 		PosBlockID: block.PosBlockID.String(),
@@ -209,47 +209,47 @@ func (h *Nodes) CreateNodeBlock(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/nodes/:nodeID [PUT]
 func (h *Nodes) UpdateNode(c *gin.Context) {
-	userValue, _ := c.Get(middleware.UserKey)
+	userValue, _ := c.Get(api.UserKey)
 	user := userValue.(dao.User)
 	// TODO: RBAC
 
 	path := &dto.NodeInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	body := &dto.UpdateNodeInputBody{}
 	if err := body.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	node := dao.Node{}
 	if err := node.Exists(h.Service.Database, path.NodeID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	} else if node.ID == dao.EmptyUUID {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
 		return
 	}
 
 	preNode := dao.Node{}
 	if err := preNode.Exists(h.Service.Database, body.PreNodeID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	node.PreNodeID = preNode.ID
 
 	posNode := dao.Node{}
 	if err := posNode.Exists(h.Service.Database, body.PosNodeID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	node.PosNodeID = posNode.ID
 
 	if _, ok := dao.NodeTypeMap[body.Type]; !ok {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node type"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node type"))
 		return
 	}
 	node.Type = body.Type
@@ -258,21 +258,21 @@ func (h *Nodes) UpdateNode(c *gin.Context) {
 
 	team := dao.Team{}
 	if err := team.Exists(h.Service.Database, body.TeamID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	} else if team.ID == dao.EmptyUUID {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid team id"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid team id"))
 		return
 	}
 	node.TeamID = team.ID
 
 	node.UpdatedUserID = user.ID
 	if err := node.Save(h.Service.Database, &preNode, &posNode); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
-	middleware.Success(c, &dto.NodeOutput{
+	api.Success(c, &dto.NodeOutput{
 		ID:        node.ID.String(),
 		Name:      node.Name,
 		Type:      node.Type,
@@ -293,13 +293,13 @@ func (h *Nodes) UpdateNode(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/nodes/:nodeID [PATCH]
 func (h *Nodes) PatchNode(c *gin.Context) {
-	userValue, _ := c.Get(middleware.UserKey)
+	userValue, _ := c.Get(api.UserKey)
 	user := userValue.(dao.User)
 	// TODO: RBAC
 
 	path := &dto.NodeInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -307,22 +307,22 @@ func (h *Nodes) PatchNode(c *gin.Context) {
 		Indent: -1,
 	}
 	if err := body.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	node := dao.Node{}
 	if err := node.Exists(h.Service.Database, path.NodeID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	} else if node.ID == dao.EmptyUUID {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node id"))
 		return
 	}
 
 	if body.Type != "" {
 		if _, ok := dao.NodeTypeMap[body.Type]; !ok {
-			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node type"))
+			api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node type"))
 			return
 		}
 		node.Type = body.Type
@@ -336,7 +336,7 @@ func (h *Nodes) PatchNode(c *gin.Context) {
 		name = illegalChar.ReplaceAllString(name, "")
 		name = spaceChar.ReplaceAllString(name, "-")
 		if len(name) == 0 {
-			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node name"))
+			api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid node name"))
 			return
 		}
 		node.Name = name
@@ -344,7 +344,7 @@ func (h *Nodes) PatchNode(c *gin.Context) {
 
 	if body.Indent != -1 {
 		if body.Indent < 0 {
-			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid indent level"))
+			api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid indent level"))
 			return
 		}
 	}
@@ -352,10 +352,10 @@ func (h *Nodes) PatchNode(c *gin.Context) {
 	if body.TeamID != "" {
 		team := dao.Team{}
 		if err := team.Exists(h.Service.Database, body.TeamID); err != nil {
-			middleware.Error(c, http.StatusBadRequest, err)
+			api.Error(c, http.StatusBadRequest, err)
 			return
 		} else if team.ID == dao.EmptyUUID {
-			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid team id"))
+			api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid team id"))
 			return
 		}
 		node.TeamID = team.ID
@@ -364,7 +364,7 @@ func (h *Nodes) PatchNode(c *gin.Context) {
 	preNode := &dao.Node{}
 	if body.PreNodeID != "" {
 		if err := preNode.Exists(h.Service.Database, body.PreNodeID); err != nil {
-			middleware.Error(c, http.StatusBadRequest, err)
+			api.Error(c, http.StatusBadRequest, err)
 			return
 		}
 		node.PreNodeID = preNode.ID
@@ -373,7 +373,7 @@ func (h *Nodes) PatchNode(c *gin.Context) {
 	posNode := &dao.Node{}
 	if body.PosNodeID != "" {
 		if err := posNode.Exists(h.Service.Database, body.PosNodeID); err != nil {
-			middleware.Error(c, http.StatusBadRequest, err)
+			api.Error(c, http.StatusBadRequest, err)
 			return
 		}
 		node.PosNodeID = posNode.ID
@@ -381,11 +381,11 @@ func (h *Nodes) PatchNode(c *gin.Context) {
 
 	node.UpdatedUserID = user.ID
 	if err := node.Save(h.Service.Database, preNode, posNode); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
-	middleware.Success(c, &dto.NodeOutput{
+	api.Success(c, &dto.NodeOutput{
 		ID:        node.ID.String(),
 		Name:      node.Name,
 		Type:      node.Type,
@@ -405,29 +405,29 @@ func (h *Nodes) PatchNode(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/nodes/:nodeID [DELETE]
 func (h *Nodes) DeleteNode(c *gin.Context) {
-	userValue, _ := c.Get(middleware.UserKey)
+	userValue, _ := c.Get(api.UserKey)
 	user := userValue.(dao.User)
 	// TODO: RBAC
 
 	path := &dto.NodeInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	node := dao.Node{}
 	if err := node.Exists(h.Service.Database, path.NodeID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	preNode := &dao.Node{}
 	if err := node.Exists(h.Service.Database, node.PreNodeID.String()); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	posNode := &dao.Node{}
 	if err := node.Exists(h.Service.Database, node.PosNodeID.String()); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -438,11 +438,11 @@ func (h *Nodes) DeleteNode(c *gin.Context) {
 	node.DeletedAt = time.Now().UTC()
 
 	if err := node.SaveDelete(h.Service.Database, preNode, posNode); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
-	middleware.Success(c, &dto.NodeOutput{
+	api.Success(c, &dto.NodeOutput{
 		ID:        node.ID.String(),
 		Name:      node.Name,
 		Type:      node.Type,
@@ -462,28 +462,28 @@ func (h *Nodes) DeleteNode(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/nodes/:nodeID/table [GET]
 func (h *Nodes) GetNodeTable(c *gin.Context) {
-	// userValue, _ := c.Get(middleware.UserKey)
+	// userValue, _ := c.Get(api.UserKey)
 	// user := userValue.(dao.User)
 	// TODO: RBAC
 
 	path := &dto.NodeInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	node := dao.Node{}
 	if err := node.Exists(h.Service.Database, path.NodeID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	table, err := node.Table(h.Service.Database)
 	if err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	columns, err := table.Columns(h.Service.Database)
 	if err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	outputs := make([]dto.Column, len(*columns))
@@ -494,7 +494,7 @@ func (h *Nodes) GetNodeTable(c *gin.Context) {
 		outputs[i].DefaultValue = c.DefaultValue
 	}
 
-	middleware.Success(c, &dto.GetNodeTableOutput{
+	api.Success(c, &dto.GetNodeTableOutput{
 		ID:      table.ID.String(),
 		Columns: outputs,
 	})

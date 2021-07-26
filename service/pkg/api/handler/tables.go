@@ -2,9 +2,9 @@ package handler
 
 import (
 	"fmt"
+	"h2o/pkg/api"
 	"h2o/pkg/api/dao"
 	"h2o/pkg/api/dto"
-	"h2o/pkg/api/middleware"
 	"h2o/pkg/app"
 	"net/http"
 
@@ -38,38 +38,38 @@ func RegisterTables(r *gin.RouterGroup, svc *app.Server) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/tables/:tableID/columns [POST]
 func (h *Tables) CreateTableColumn(c *gin.Context) {
-	// userValue, _ := c.Get(middleware.UserKey)
+	// userValue, _ := c.Get(api.UserKey)
 	// user := userValue.(dao.User)
 	// TODO: RBAC
 
 	path := &dto.TableInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	body := &dto.CreateTableColumnInputBody{}
 	if err := body.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	table := dao.Table{}
 	if err := table.Exists(h.Service.Database, path.TableID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	if _, ok := dao.ColumnTypeMap[body.Type]; !ok {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid column type"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid column type"))
 		return
 	}
 
 	column := dao.Column{}
 	if err := column.Exists(h.Service.Database, body.ID); err == nil {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("column already exists"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("column already exists"))
 		return
 	} else if column.ID == dao.EmptyUUID {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid column id"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid column id"))
 		return
 	}
 	column.Type = body.Type
@@ -78,11 +78,11 @@ func (h *Tables) CreateTableColumn(c *gin.Context) {
 	column.DefaultValue = body.DefaultValue
 
 	if err := table.AddColumn(h.Service.Database, column); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
-	middleware.Success(c, &dto.Column{
+	api.Success(c, &dto.Column{
 		ID:           column.ID.String(),
 		Type:         column.Type,
 		Name:         column.Name,
@@ -100,39 +100,39 @@ func (h *Tables) CreateTableColumn(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/tables/:tableID/columns/:columnID [PUT]
 func (h *Tables) UpdateTableColumn(c *gin.Context) {
-	// userValue, _ := c.Get(middleware.UserKey)
+	// userValue, _ := c.Get(api.UserKey)
 	// user := userValue.(dao.User)
 	// TODO: RBAC
 
 	path := &dto.TableColumnInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	body := &dto.UpdateTableColumnInputBody{}
 	if err := body.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	table := dao.Table{}
 	if err := table.Exists(h.Service.Database, path.TableID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	if _, ok := dao.ColumnTypeMap[body.Type]; !ok {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid column type"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid column type"))
 		return
 	}
 
 	column := dao.Column{}
 	if err := column.Exists(h.Service.Database, path.ColumnID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("column not exists"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("column not exists"))
 		return
 	}
 	if column.TableID != table.ID {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("column not in table"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("column not in table"))
 		return
 	}
 	column.Type = body.Type
@@ -140,11 +140,11 @@ func (h *Tables) UpdateTableColumn(c *gin.Context) {
 	column.DefaultValue = body.DefaultValue
 
 	if err := table.UpdateColumn(h.Service.Database, column); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
-	middleware.Success(c, &dto.Column{
+	api.Success(c, &dto.Column{
 		ID:           column.ID.String(),
 		Type:         column.Type,
 		Name:         column.Name,
@@ -161,38 +161,38 @@ func (h *Tables) UpdateTableColumn(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/tables/:tableID/columns/:columnID [DELETE]
 func (h *Tables) DeleteTableColumn(c *gin.Context) {
-	// userValue, _ := c.Get(middleware.UserKey)
+	// userValue, _ := c.Get(api.UserKey)
 	// user := userValue.(dao.User)
 	// TODO: RBAC
 
 	path := &dto.TableColumnInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	table := dao.Table{}
 	if err := table.Exists(h.Service.Database, path.TableID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	column := dao.Column{}
 	if err := column.Exists(h.Service.Database, path.ColumnID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("column not exists"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("column not exists"))
 		return
 	}
 	if column.TableID != table.ID {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("column not in table"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("column not in table"))
 		return
 	}
 
 	if err := table.DropColumn(h.Service.Database, column); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
-	middleware.Success(c, &dto.Column{
+	api.Success(c, &dto.Column{
 		ID:           column.ID.String(),
 		Type:         column.Type,
 		Name:         column.Name,
@@ -210,35 +210,35 @@ func (h *Tables) DeleteTableColumn(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/tables/:tableID/rows [POST]
 func (h *Tables) CreateTableRow(c *gin.Context) {
-	// userValue, _ := c.Get(middleware.UserKey)
+	// userValue, _ := c.Get(api.UserKey)
 	// user := userValue.(dao.User)
 	// TODO: RBAC
 	path := &dto.TableInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	body := &dto.TableRowInput{}
 	if err := body.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	if len(body.Row) == 0 {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("empty row"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("empty row"))
 		return
 	}
 
 	table := dao.Table{}
 	if err := table.Exists(h.Service.Database, path.TableID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	if err := table.InsertRow(h.Service.Database, body.Row); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
-	middleware.Success(c, body.Row)
+	api.Success(c, body.Row)
 }
 
 // @id PatchTableRow
@@ -251,37 +251,37 @@ func (h *Tables) CreateTableRow(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/tables/:tableID/rows/:rowID [PATCH]
 func (h *Tables) PatchTableRow(c *gin.Context) {
-	// userValue, _ := c.Get(middleware.UserKey)
+	// userValue, _ := c.Get(api.UserKey)
 	// user := userValue.(dao.User)
 	// TODO: RBAC
 	path := &dto.TableRowInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	body := &dto.TableRowInput{}
 	if err := body.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	if len(body.Row) == 0 {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("empty row"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("empty row"))
 		return
 	}
 
 	table := dao.Table{}
 	if err := table.Exists(h.Service.Database, path.TableID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	if err := table.UpdateRow(h.Service.Database, path.RowID, body.Row); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	body.Row["id"] = fmt.Sprintf("%v", path.RowID)
 
-	middleware.Success(c, body.Row)
+	api.Success(c, body.Row)
 }
 
 // @id UpdateTableRow
@@ -294,37 +294,37 @@ func (h *Tables) PatchTableRow(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/tables/:tableID/rows/:rowID [PATCH]
 func (h *Tables) UpdateTableRow(c *gin.Context) {
-	// userValue, _ := c.Get(middleware.UserKey)
+	// userValue, _ := c.Get(api.UserKey)
 	// user := userValue.(dao.User)
 	// TODO: RBAC
 	path := &dto.TableRowInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	body := &dto.TableRowInput{}
 	if err := body.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	if len(body.Row) == 0 {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("empty row"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("empty row"))
 		return
 	}
 
 	table := dao.Table{}
 	if err := table.Exists(h.Service.Database, path.TableID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	if err := table.UpdateRow(h.Service.Database, path.RowID, body.Row); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	body.Row["id"] = fmt.Sprintf("%v", path.RowID)
 
-	middleware.Success(c, body.Row)
+	api.Success(c, body.Row)
 }
 
 // @id DeleteTableRow
@@ -336,26 +336,26 @@ func (h *Tables) UpdateTableRow(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/tables/:tableID/rows/:rowID [DELETE]
 func (h *Tables) DeleteTableRow(c *gin.Context) {
-	// userValue, _ := c.Get(middleware.UserKey)
+	// userValue, _ := c.Get(api.UserKey)
 	// user := userValue.(dao.User)
 	// TODO: RBAC
 	path := &dto.TableRowInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
 	table := dao.Table{}
 	if err := table.Exists(h.Service.Database, path.TableID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	if err := table.DeleteRow(h.Service.Database, path.RowID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
-	middleware.Success(c, "success")
+	api.Success(c, "success")
 }
 
 // @id ListTableRows
@@ -367,12 +367,12 @@ func (h *Tables) DeleteTableRow(c *gin.Context) {
 // @failure 400 {object} middleware.Response{data=interface{}} "failure"
 // @router /api/v1/tables/:tableID/rows [GET]
 func (h *Tables) ListTableRows(c *gin.Context) {
-	// userValue, _ := c.Get(middleware.UserKey)
+	// userValue, _ := c.Get(api.UserKey)
 	// user := userValue.(dao.User)
 	// TODO: RBAC
 	path := &dto.TableInputPath{}
 	if err := path.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -383,27 +383,27 @@ func (h *Tables) ListTableRows(c *gin.Context) {
 		},
 	}
 	if err := query.Bind(c); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	if len(query.Columns) == 0 {
-		middleware.Error(c, http.StatusBadRequest, fmt.Errorf("no column is provided"))
+		api.Error(c, http.StatusBadRequest, fmt.Errorf("no column is provided"))
 		return
 	}
 
 	table := dao.Table{}
 	if err := table.Exists(h.Service.Database, path.TableID); err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	columns := make([]dao.Column, 0, len(query.Columns))
 	for _, columnID := range query.Columns {
 		column := dao.Column{}
 		if err := column.Exists(h.Service.Database, columnID); err != nil {
-			middleware.Error(c, http.StatusBadRequest, err)
+			api.Error(c, http.StatusBadRequest, err)
 			return
 		} else if column.ID == dao.EmptyUUID {
-			middleware.Error(c, http.StatusBadRequest, fmt.Errorf("invalid column id"))
+			api.Error(c, http.StatusBadRequest, fmt.Errorf("invalid column id"))
 			return
 		}
 		columns = append(columns, column)
@@ -411,15 +411,15 @@ func (h *Tables) ListTableRows(c *gin.Context) {
 
 	rows, err := table.Rows(h.Service.Database, &columns, query.Offset, query.Limit)
 	if err != nil {
-		middleware.Error(c, http.StatusBadRequest, err)
+		api.Error(c, http.StatusBadRequest, err)
 		return
 	}
 	if len(*rows) == 0 {
-		middleware.Success(c, &dto.ListTableRowsOutput{
+		api.Success(c, &dto.ListTableRowsOutput{
 			Rows: []map[string]string{},
 		})
 		return
 	}
 	logrus.WithField("rows", *rows).Debugf("ListRows")
-	middleware.Success(c, &dto.ListTableRowsOutput{Rows: *rows})
+	api.Success(c, &dto.ListTableRowsOutput{Rows: *rows})
 }

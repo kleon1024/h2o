@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"h2o/pkg/api/middleware"
+	"h2o/pkg/api"
 	"h2o/pkg/app"
 
 	"github.com/gin-gonic/gin"
@@ -17,5 +17,5 @@ func RegisterBasics(r *gin.RouterGroup, svc *app.Server) {
 }
 
 func (h *Basics) GetHello(c *gin.Context) {
-	middleware.Success(c, "H2O Service")
+	api.Success(c, "H2O Service")
 }

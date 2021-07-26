@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"h2o/pkg/api"
 	"h2o/pkg/api/dao"
-	"h2o/pkg/api/middleware"
 	"h2o/pkg/app"
 	"h2o/pkg/model"
 	"net/http"
@@ -29,7 +29,7 @@ func RegisterWebSocket(r *gin.RouterGroup, svc *app.Server) {
 // @router /api/v1/ws [POST]
 func (h *WebSocket) ConnectWebSocket(c *gin.Context) {
 	var user dao.User
-	userValue, _ := c.Get(middleware.UserKey)
+	userValue, _ := c.Get(api.UserKey)
 	if userValue != nil {
 		user = userValue.(dao.User)
 	}

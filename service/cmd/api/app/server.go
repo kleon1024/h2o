@@ -3,8 +3,7 @@ package app
 import (
 	"flag"
 	"fmt"
-	"h2o/pkg/api/handler"
-	"h2o/pkg/api/middleware"
+	"h2o/pkg/api"
 	"h2o/pkg/app"
 	"h2o/pkg/config"
 	"os"
@@ -49,7 +48,7 @@ func (app *ApiServiceConfig) AddFlags(flags *pflag.FlagSet) {
 }
 
 func run(cmd *cobra.Command, args []string, cfg *ApiServiceConfig) error {
-	svc, err := app.NewServer(
+	server, err := app.NewServer(
 		app.SetupLogging(cfg.Debug),
 		app.Config(&cfg.ServiceConfig),
 		app.ConfigLoadFile(cfg.ConfigFile),
@@ -59,59 +58,60 @@ func run(cmd *cobra.Command, args []string, cfg *ApiServiceConfig) error {
 		return err
 	}
 
-	app := app.New(app.ServiceConnector(svc))
-	app.CreateHubs()
+	a := app.New(app.ServerConnector(server))
+
+	a.CreateHubs()
 
 	logrus.Debug("Api service is running in debug mode")
 
-	r := setupRouter(svc)
+	r := setupRouter(a)
 	r.Run(fmt.Sprintf("0.0.0.0:%v", cfg.ListeningPort))
 	return nil
 }
 
-func setupRouter(svc *app.Server) *gin.Engine {
+func setupRouter(a *app.App) *gin.Engine {
 	r := gin.Default()
+
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
 	config.AllowHeaders = append(config.AllowHeaders, "authorization")
 	r.Use(cors.New(config))
 
-	basics := r.Group(BasePath + "")
-	basics.Use(middleware.Translation())
-	handler.RegisterBasics(basics, svc)
-
-	tokens := r.Group(BasePath + "/tokens")
-	tokens.Use(middleware.Translation())
-	tokens.Use(middleware.JWT(svc, middleware.JWTSubjectRefreshToken, true))
-	handler.RegisterTokens(tokens, svc)
-
 	users := r.Group(BasePath + "/users")
-	users.Use(middleware.Translation())
-	users.Use(middleware.JWT(svc, middleware.JWTSubjectAccessToken, false))
-	handler.RegisterUsers(users, svc)
+	users.Use(api.Translation())
+	api.RegisterUsers(users, a)
 
-	teams := r.Group(BasePath + "/teams")
-	teams.Use(middleware.Translation())
-	teams.Use(middleware.JWT(svc, middleware.JWTSubjectAccessToken, true))
-	handler.RegisterTeams(teams, svc)
+	// basics := r.Group(BasePath + "")
+	// basics.Use(middleware.Translation())
+	// handler.RegisterBasics(basics, a.Srv())
 
-	nodes := r.Group(BasePath + "/nodes")
-	nodes.Use(middleware.Translation())
-	nodes.Use(middleware.JWT(svc, middleware.JWTSubjectAccessToken, true))
-	handler.RegisterNodes(nodes, svc)
+	// tokens := r.Group(BasePath + "/tokens")
+	// tokens.Use(middleware.Translation())
+	// tokens.Use(middleware.JWT(a.Srv(), middleware.JWTSubjectRefreshToken, true))
+	// handler.RegisterTokens(tokens, a.Srv())
 
-	blocks := r.Group(BasePath + "/blocks")
-	blocks.Use(middleware.Translation())
-	blocks.Use(middleware.JWT(svc, middleware.JWTSubjectAccessToken, true))
-	handler.RegisterBlocks(blocks, svc)
+	// teams := r.Group(BasePath + "/teams")
+	// teams.Use(middleware.Translation())
+	// teams.Use(middleware.JWT(a.Srv(), middleware.JWTSubjectAccessToken, true))
+	// handler.RegisterTeams(teams, a.Srv())
 
-	tables := r.Group(BasePath + "/tables")
-	tables.Use(middleware.Translation())
-	tables.Use(middleware.JWT(svc, middleware.JWTSubjectAccessToken, true))
-	handler.RegisterTables(tables, svc)
+	// nodes := r.Group(BasePath + "/nodes")
+	// nodes.Use(middleware.Translation())
+	// nodes.Use(middleware.JWT(a.Srv(), middleware.JWTSubjectAccessToken, true))
+	// handler.RegisterNodes(nodes, a.Srv())
 
-	websocket := r.Group(BasePath + "/ws")
-	handler.RegisterWebSocket(websocket, svc)
+	// blocks := r.Group(BasePath + "/blocks")
+	// blocks.Use(middleware.Translation())
+	// blocks.Use(middleware.JWT(a.Srv(), middleware.JWTSubjectAccessToken, true))
+	// handler.RegisterBlocks(blocks, a.Srv())
+
+	// tables := r.Group(BasePath + "/tables")
+	// tables.Use(middleware.Translation())
+	// tables.Use(middleware.JWT(a.Srv(), middleware.JWTSubjectAccessToken, true))
+	// handler.RegisterTables(tables, a.Srv())
+
+	// websocket := r.Group(BasePath + "/ws")
+	// handler.RegisterWebSocket(websocket, a.Srv())
 
 	return r
 }
