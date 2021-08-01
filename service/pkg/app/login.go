@@ -27,5 +27,13 @@ func (a *App) GetUserForLogin(id, loginId string) (*model.User, *model.AppError)
 			err.StatusCode = http.StatusBadRequest
 			return nil, err
 		}
+		return user, nil
 	}
+
+	// // Try to get the user by username/email
+	// if user, err := a.Srv().Store.User().GetForLogin(loginId, enableUsername, enableEmail); err == nil {
+	// 	return user, nil
+	// }
+
+	return nil, nil
 }

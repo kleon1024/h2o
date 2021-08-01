@@ -39,7 +39,7 @@ func (tl TokenLocation) String() string {
 
 func ParseAuthTokenFromRequest(ctx *gin.Context) (string, TokenLocation) {
 	// Get cookie first
-	if cookie, err := ctx.Cookie(model.SESSION_COOKIE_TOKEN); err == nil {
+	if cookie, err := ctx.Cookie(model.SessionCookieToken); err == nil {
 		return cookie, TokenLocationCookie
 	}
 

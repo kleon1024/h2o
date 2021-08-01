@@ -17,13 +17,29 @@ func (a *App) GetSession(token string) (*model.Session, *model.AppError) {
 		}
 	}
 
+	// TODO: Personal Access Token for Integration
 	// var appErr *model.AppError
 	// if session == nil || session.Id == "" {
 	// 	session, appErr = a.createSessionForUserAccessToken(token)
 	// 	if appErr != nil {
-	// 		// TODO
+	// 		detailedError := ""
+	// 		statusCode := http.StatusUnauthorized
+	// 		if appErr.Id != "app.user_access_token.invalid_or_missing" {
+	// 			detailedError = appErr.Error()
+	// 			statusCode = appErr.StatusCode
+	// 		} else {
+	// 			logrus.WithError(appErr).Warn("Error while creating session for user access token")
+	// 		}
+	// 		return nil, model.NewAppError("GetSession", "api.context.invalid_token.error", map[string]interface{}{"Token": token, "Error": detailedError}, "", statusCode)
+
 	// 	}
 	// }
 
-	return nil, nil
+	if session.Id == "" || session.IsExpired() {
+		return nil, model.NewAppError("GetSession", "api.context.invalid_token.error", map[string]interface{}{"Token": token, "Error": ""}, "session is either nil or expired", http.StatusUnauthorized)
+	}
+
+	// TODO: SessionIdleTimeout to relogin typically 30 days
+
+	return session, nil
 }

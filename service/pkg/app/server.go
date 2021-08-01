@@ -13,13 +13,15 @@ import (
 )
 
 type Server struct {
-	Config   *config.ServiceConfig
-	Database *gorm.DB
+	ServiceConfig *config.ServiceConfig
+	Database      *gorm.DB
 
 	sqlStore *sqlstore.SqlStore
 	Store    store.Store
 
 	newStore func() (store.Store, error)
+
+	configStore *config.Store
 
 	hubs     []*Hub
 	hashSeed maphash.Seed
@@ -42,7 +44,7 @@ func NewServer(options ...Option) (*Server, error) {
 
 	if s.newStore == nil {
 		s.newStore = func() (store.Store, error) {
-			s.sqlStore = sqlstore.New(s.Config)
+			s.sqlStore = sqlstore.New(s.ServiceConfig)
 
 			return nil, nil // TODO
 		}

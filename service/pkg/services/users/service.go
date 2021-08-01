@@ -1,6 +1,7 @@
 package users
 
 import (
+	"h2o/pkg/model"
 	"h2o/pkg/store"
 	"sync"
 
@@ -12,4 +13,5 @@ type UserService struct {
 	sessionStore store.SessionStore
 	sessionCache cache.Cache
 	sessionPool  sync.Pool
+	config       func() *model.Config
 }

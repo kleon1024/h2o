@@ -13,10 +13,10 @@ type Users struct {
 
 func RegisterUsers(r *gin.RouterGroup, a *app.App) {
 	u := &Users{a}
-	r.POST("", ContextHandler(a, false), u.createUser)
+	r.POST("", Api(a), u.createUser)
 
-	r.POST("login", ContextHandler(a, false), u.login)
-	r.POST("logout", ContextHandler(a, true), u.logout)
+	r.POST("login", Api(a), u.login)
+	r.POST("logout", ApiSessionRequired(a), u.logout)
 }
 
 // @id CreateUser

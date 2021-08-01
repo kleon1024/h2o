@@ -3,6 +3,7 @@ package sqlstore
 import (
 	"h2o/pkg/config"
 	"h2o/pkg/model"
+	"h2o/pkg/store"
 	"h2o/pkg/util/orm"
 	"os"
 
@@ -14,8 +15,13 @@ const (
 	ExitDBOpen = 101
 )
 
+type SqlStoreStores struct {
+	session store.SessionStore
+}
+
 type SqlStore struct {
-	db *gorm.DB
+	db     *gorm.DB
+	stores SqlStoreStores
 }
 
 func New(config *config.ServiceConfig) *SqlStore {
@@ -30,6 +36,8 @@ func New(config *config.ServiceConfig) *SqlStore {
 	db.AutoMigrate(&model.Session{})
 
 	store.db = db
+
+	store.stores.session = newSqlSessionStore(store)
 
 	return store
 }

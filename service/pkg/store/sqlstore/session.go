@@ -1,8 +1,11 @@
 package sqlstore
 
 import (
+	"context"
 	"fmt"
 	"h2o/pkg/model"
+
+	"h2o/pkg/store"
 
 	"github.com/pkg/errors"
 )
@@ -11,7 +14,7 @@ type SqlSessionStore struct {
 	*SqlStore
 }
 
-func NewSqlSessionStore(store *SqlStore) *SqlSessionStore {
+func newSqlSessionStore(store *SqlStore) *SqlSessionStore {
 	us := &SqlSessionStore{store}
 	return us
 }
@@ -29,13 +32,13 @@ func (me SqlSessionStore) Save(session *model.Session) (*model.Session, error) {
 	return session, nil
 }
 
-func (s *SqlSessionStore) GetByToken(token string) (*model.Session, error) {
+func (s *SqlSessionStore) Get(ctx context.Context, sessionIdOrToken string) (*model.Session, error) {
 	var sessions []*model.Session
 
-	if err := s.db.Model(&model.Session{}).Where("token = ?", token).Find(&sessions).Error; err != nil {
-		return nil, errors.Wrapf(err, "failed to get Sessions by token=%s", token)
+	if err := s.db.Model(&model.Session{}).Where("token = ?", sessionIdOrToken).Find(&sessions).Error; err != nil {
+		return nil, errors.Wrapf(err, "failed to get Sessions by sessionIdOrToken=%s", sessionIdOrToken)
 	} else if len(sessions) == 0 {
-		return nil, fmt.Errorf("not found Session token: %s", token)
+		return nil, store.NewErrNotFound("Session", fmt.Sprintf("sessionIdOrToken=%s", sessionIdOrToken))
 	}
 	session := sessions[0]
 	return session, nil

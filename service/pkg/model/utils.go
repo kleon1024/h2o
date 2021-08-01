@@ -46,6 +46,10 @@ type AppError struct {
 	params        map[string]interface{}
 }
 
+func (er *AppError) Error() string {
+	return er.Where + ": " + er.Message + ", " + er.DetailedError
+}
+
 func NewAppError(where string, id string, params map[string]interface{}, details string, status int) *AppError {
 	ap := &AppError{}
 	ap.Id = id

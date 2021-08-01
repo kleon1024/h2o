@@ -7,10 +7,11 @@ import (
 
 type Store interface {
 	Session() SessionStore
+	User() UserStore
 }
 
 type SessionStore interface {
-	Get(token string) (*model.Session, error)
+	Get(ctx context.Context, token string) (*model.Session, error)
 }
 
 type UserStore interface {

@@ -59,7 +59,7 @@ func GenerateTokens(user *dao.User, config *config.JWTConfig) (accessToken strin
 
 func JWT(svc *app.Server, subject string, required bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		jwtConfig := svc.Config.JWTConfig
+		jwtConfig := svc.ServiceConfig.JWTConfig
 		authorization := c.Request.Header.Get("Authorization")
 		if authorization == "" {
 			if required {

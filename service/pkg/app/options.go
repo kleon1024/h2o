@@ -12,14 +12,14 @@ type Option func(s *Server) error
 
 func Config(cfg *config.ServiceConfig) Option {
 	return func(s *Server) error {
-		s.Config = cfg
+		s.ServiceConfig = cfg
 		return nil
 	}
 }
 
 func ConfigLoadFile(configFile string) Option {
 	return func(s *Server) error {
-		if err := s.Config.Init(configFile); err != nil {
+		if err := s.ServiceConfig.Init(configFile); err != nil {
 			return err
 		}
 		return nil
@@ -38,7 +38,7 @@ func SetupLogging(debug bool) Option {
 
 func SetupDatabase() Option {
 	return func(s *Server) error {
-		db, err := orm.Connect(s.Config)
+		db, err := orm.Connect(s.ServiceConfig)
 		if err != nil {
 			return err
 		}

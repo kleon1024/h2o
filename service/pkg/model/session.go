@@ -6,23 +6,23 @@ import (
 )
 
 const (
-	SESSION_COOKIE_TOKEN              = "H2OAUTHTOKEN"
-	SESSION_COOKIE_USER               = "H2OUSERID"
-	SESSION_COOKIE_CSRF               = "H2OCSRF"
-	SESSION_CACHE_SIZE                = 35000
-	SESSION_PROP_PLATFORM             = "platform"
-	SESSION_PROP_OS                   = "os"
-	SESSION_PROP_BROWSER              = "browser"
-	SESSION_PROP_TYPE                 = "type"
-	SESSION_PROP_USER_ACCESS_TOKEN_ID = "user_access_token_id"
-	SESSION_PROP_IS_BOT               = "is_bot"
-	SESSION_PROP_IS_BOT_VALUE         = "true"
-	SESSION_TYPE_USER_ACCESS_TOKEN    = "UserAccessToken"
-	SESSION_TYPE_CLOUD_KEY            = "CloudKey"
-	SESSION_TYPE_REMOTECLUSTER_TOKEN  = "RemoteClusterToken"
-	SESSION_PROP_IS_GUEST             = "is_guest"
-	SESSION_ACTIVITY_TIMEOUT          = 1000 * 60 * 5 // 5 minutes
-	SESSION_USER_ACCESS_TOKEN_EXPIRY  = 100 * 365     // 100 years
+	SessionCookieToken            = "H2OAUTHTOKEN"
+	SessionCookieUser             = "H2OUSERID"
+	SessionCookieCsrf             = "H2OCSRF"
+	SessionCacheSize              = 35000
+	SessionPropPlatform           = "platform"
+	SessionPropOs                 = "os"
+	SessionPropBrowser            = "browser"
+	SessionPropType               = "type"
+	SessionPropUserAccessTokenId  = "user_access_token_id"
+	SessionPropIsBot              = "is_bot"
+	SessionPropIsBotValue         = "true"
+	SessionTypeUserAccessToken    = "UserAccessToken"
+	SessionTypeCloudKey           = "CloudKey"
+	SessionTypeRemoteclusterToken = "RemoteClusterToken"
+	SessionPropIsGuest            = "is_guest"
+	SessionActivityTimeout        = 1000 * 60 * 5 // 5 minutes
+	SessionUserAccessTokenExpiry  = 100 * 365     // 100 years
 )
 
 type StringMap map[string]string
@@ -35,6 +35,7 @@ type Session struct {
 	LastActivityAt int64     `json:"last_activity_at"`
 	UserId         string    `json:"user_id"`
 	DeviceId       string    `json:"device_id"`
+	IsOAuth        bool      `json:"is_oauth"`
 	Props          StringMap `json:"props"`
 	Local          bool      `gorm:"-" json:"local"`
 }
