@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/pingcap/errors"
+	"github.com/pkg/errors"
 )
 
 func GetSubpathFromConfig(config *model.Config) (string, error) {

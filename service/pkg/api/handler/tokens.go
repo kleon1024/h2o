@@ -32,7 +32,7 @@ func (h *Tokens) GetTokens(c *gin.Context) {
 	userValue, _ := c.Get(api.UserKey)
 	user := userValue.(dao.User)
 
-	accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, err := api.GenerateTokens(&user, &h.Service.Config.JWTConfig)
+	accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, err := api.GenerateTokens(&user, &h.Service.ServiceConfig.JWTConfig)
 	if err != nil {
 		api.Error(c, http.StatusBadRequest, err)
 	}

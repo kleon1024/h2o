@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"h2o/pkg/api/middleware"
+	"h2o/pkg/api"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,7 +11,7 @@ type BlockInputPath struct {
 }
 
 func (p *BlockInputPath) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypePath)
+	return api.GetValidParams(c, p, api.BindTypePath)
 }
 
 type BlockOutput struct {
@@ -35,7 +35,7 @@ type UpdateBlockInputBody struct {
 }
 
 func (p *UpdateBlockInputBody) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+	return api.GetValidParams(c, p, api.BindTypeBody)
 }
 
 type PatchBlockInputBody struct {
@@ -48,5 +48,5 @@ type PatchBlockInputBody struct {
 }
 
 func (p *PatchBlockInputBody) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+	return api.GetValidParams(c, p, api.BindTypeBody)
 }

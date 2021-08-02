@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"h2o/pkg/api/middleware"
+	"h2o/pkg/api"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,7 +11,7 @@ type ListNodeBlocksInputPath struct {
 }
 
 func (p *ListNodeBlocksInputPath) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypePath)
+	return api.GetValidParams(c, p, api.BindTypePath)
 }
 
 type ListNodeBlocksOutput struct {
@@ -28,7 +28,7 @@ type CreateNodeBlockInputBody struct {
 }
 
 func (p *CreateNodeBlockInputBody) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+	return api.GetValidParams(c, p, api.BindTypeBody)
 }
 
 type NodeInputPath struct {
@@ -36,7 +36,7 @@ type NodeInputPath struct {
 }
 
 func (p *NodeInputPath) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypePath)
+	return api.GetValidParams(c, p, api.BindTypePath)
 }
 
 type NodeOutput struct {
@@ -59,7 +59,7 @@ type UpdateNodeInputBody struct {
 }
 
 func (p *UpdateNodeInputBody) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+	return api.GetValidParams(c, p, api.BindTypeBody)
 }
 
 type PatchNodeInputBody struct {
@@ -72,7 +72,7 @@ type PatchNodeInputBody struct {
 }
 
 func (p *PatchNodeInputBody) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+	return api.GetValidParams(c, p, api.BindTypeBody)
 }
 
 type GetNodeTableOutput struct {

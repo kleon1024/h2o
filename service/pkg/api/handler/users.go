@@ -88,7 +88,7 @@ func (h *Users) CreateUser(c *gin.Context) {
 		api.Error(c, http.StatusBadRequest, fmt.Errorf("unsupported user type"))
 	}
 
-	accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, err := api.GenerateTokens(&user, &h.Service.Config.JWTConfig)
+	accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, err := api.GenerateTokens(&user, &h.Service.ServiceConfig.JWTConfig)
 	if err != nil {
 		api.Error(c, http.StatusBadRequest, err)
 	}

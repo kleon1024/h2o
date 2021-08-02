@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"h2o/pkg/api/middleware"
+	"h2o/pkg/api"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +16,7 @@ type CreateUserInputBodyType struct {
 }
 
 func (p *CreateUserInputBodyType) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+	return api.GetValidParams(c, p, api.BindTypeBody)
 }
 
 type CreateUserInputBody struct {
@@ -26,7 +26,7 @@ type CreateUserInputBody struct {
 }
 
 func (p *CreateUserInputBody) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+	return api.GetValidParams(c, p, api.BindTypeBody)
 }
 
 type CreateUserOutput struct {

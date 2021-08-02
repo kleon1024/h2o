@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"h2o/pkg/api/middleware"
+	"h2o/pkg/api"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,7 +19,7 @@ type Pagination struct {
 }
 
 func (p *Pagination) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeQuery)
+	return api.GetValidParams(c, p, api.BindTypeQuery)
 }
 
 type PaginationOutput struct {

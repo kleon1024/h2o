@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"h2o/pkg/api/middleware"
+	"h2o/pkg/api"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,7 +14,7 @@ type CreateTableColumnInputBody struct {
 }
 
 func (p *CreateTableColumnInputBody) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+	return api.GetValidParams(c, p, api.BindTypeBody)
 }
 
 type TableColumnInputPath struct {
@@ -23,7 +23,7 @@ type TableColumnInputPath struct {
 }
 
 func (p *TableColumnInputPath) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypePath)
+	return api.GetValidParams(c, p, api.BindTypePath)
 }
 
 type TableRowInputPath struct {
@@ -32,7 +32,7 @@ type TableRowInputPath struct {
 }
 
 func (p *TableRowInputPath) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypePath)
+	return api.GetValidParams(c, p, api.BindTypePath)
 }
 
 type UpdateTableColumnInputBody struct {
@@ -42,7 +42,7 @@ type UpdateTableColumnInputBody struct {
 }
 
 func (p *UpdateTableColumnInputBody) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+	return api.GetValidParams(c, p, api.BindTypeBody)
 }
 
 type ColumnInputPath struct {
@@ -50,7 +50,7 @@ type ColumnInputPath struct {
 }
 
 func (p *ColumnInputPath) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypePath)
+	return api.GetValidParams(c, p, api.BindTypePath)
 }
 
 type RowInputPath struct {
@@ -58,7 +58,7 @@ type RowInputPath struct {
 }
 
 func (p *RowInputPath) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypePath)
+	return api.GetValidParams(c, p, api.BindTypePath)
 }
 
 type TableInputPath struct {
@@ -66,7 +66,7 @@ type TableInputPath struct {
 }
 
 func (p *TableInputPath) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypePath)
+	return api.GetValidParams(c, p, api.BindTypePath)
 }
 
 type UpdateTableInputBody struct {
@@ -79,7 +79,7 @@ type UpdateTableInputBody struct {
 }
 
 func (p *UpdateTableInputBody) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+	return api.GetValidParams(c, p, api.BindTypeBody)
 }
 
 type PatchTableInputBody struct {
@@ -92,7 +92,7 @@ type PatchTableInputBody struct {
 }
 
 func (p *PatchTableInputBody) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+	return api.GetValidParams(c, p, api.BindTypeBody)
 }
 
 type GetTableTableOutput struct {
@@ -105,7 +105,7 @@ type TableRowInput struct {
 }
 
 func (p *TableRowInput) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+	return api.GetValidParams(c, p, api.BindTypeBody)
 }
 
 type ListTableRowsInput struct {
@@ -114,7 +114,7 @@ type ListTableRowsInput struct {
 }
 
 func (p *ListTableRowsInput) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeQuery)
+	return api.GetValidParams(c, p, api.BindTypeQuery)
 }
 
 type ListTableRowsOutput struct {

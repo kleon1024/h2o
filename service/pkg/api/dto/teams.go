@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"h2o/pkg/api/middleware"
+	"h2o/pkg/api"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +21,7 @@ type ListTeamNodesInputPath struct {
 }
 
 func (p *ListTeamNodesInputPath) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypePath)
+	return api.GetValidParams(c, p, api.BindTypePath)
 }
 
 type ListTeamNodesOutput struct {
@@ -48,5 +48,5 @@ type CreateTeamNodeInputBody struct {
 }
 
 func (p *CreateTeamNodeInputBody) Bind(c *gin.Context) error {
-	return middleware.GetValidParams(c, p, middleware.BindTypeBody)
+	return api.GetValidParams(c, p, api.BindTypeBody)
 }
