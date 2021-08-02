@@ -16,4 +16,5 @@ type SessionStore interface {
 
 type UserStore interface {
 	Get(ctx context.Context, id string) (*model.User, error)
+	GetForLogin(loginID string) (*model.User, error)
 }

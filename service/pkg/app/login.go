@@ -12,6 +12,14 @@ func (a *App) AuthenticateUserForLogin(c *request.Context, id, loginId, password
 		return nil, err
 	}
 
+	if user, err = a.authenticateUser(c, user, password); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (a *App) authenticateUser(c *request.Context, user *model.User, password string) (*model.User, *model.AppError) {
 	return user, nil
 }
 
@@ -30,10 +38,10 @@ func (a *App) GetUserForLogin(id, loginId string) (*model.User, *model.AppError)
 		return user, nil
 	}
 
-	// // Try to get the user by username/email
-	// if user, err := a.Srv().Store.User().GetForLogin(loginId, enableUsername, enableEmail); err == nil {
-	// 	return user, nil
-	// }
+	// Try to get the user by username/email/phone
+	if user, err := a.Srv().Store.User().GetForLogin(loginId); err == nil {
+		return user, nil
+	}
 
-	return nil, nil
+	return nil, model.NewAppError("GetUserForLogin", "store.sql_user.get_for_login.app_error", nil, "", http.StatusBadRequest)
 }
