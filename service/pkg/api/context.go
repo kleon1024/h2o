@@ -1,10 +1,10 @@
 package api
 
 import (
-	"h2o/pkg/app"
-	"h2o/pkg/app/request"
-	"h2o/pkg/model"
-	"h2o/pkg/utils"
+	"h2o/app"
+	"h2o/app/request"
+	"h2o/model"
+	"h2o/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

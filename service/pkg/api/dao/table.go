@@ -2,7 +2,7 @@ package dao
 
 import (
 	"fmt"
-	"h2o/pkg/util/orm"
+	"h2o/util/orm"
 	"strings"
 	"time"
 

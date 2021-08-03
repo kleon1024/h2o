@@ -2,10 +2,10 @@ package api
 
 import (
 	"fmt"
-	"h2o/pkg/api/dao"
-	"h2o/pkg/app"
-	"h2o/pkg/config"
-	"h2o/pkg/util/orm"
+	"h2o/api/dao"
+	"h2o/app"
+	"h2o/config"
+	"h2o/util/orm"
 	"net/http"
 	"strings"
 	"time"

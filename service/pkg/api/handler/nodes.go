@@ -2,12 +2,12 @@ package handler
 
 import (
 	"fmt"
-	"h2o/pkg/api"
-	"h2o/pkg/api/dao"
-	"h2o/pkg/api/dto"
-	"h2o/pkg/app"
-	"h2o/pkg/config"
-	"h2o/pkg/model"
+	"h2o/api"
+	"h2o/api/dao"
+	"h2o/api/dto"
+	"h2o/app"
+	"h2o/config"
+	"h2o/model"
 	"net/http"
 	"regexp"
 	"strings"

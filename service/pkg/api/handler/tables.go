@@ -2,10 +2,10 @@ package handler
 
 import (
 	"fmt"
-	"h2o/pkg/api"
-	"h2o/pkg/api/dao"
-	"h2o/pkg/api/dto"
-	"h2o/pkg/app"
+	"h2o/api"
+	"h2o/api/dao"
+	"h2o/api/dto"
+	"h2o/app"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

@@ -6,8 +6,10 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/eko/gocache v1.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/getsentry/sentry-go v0.11.0 // indirect
 	github.com/gin-contrib/cors v1.3.1 // indirect
 	github.com/gin-gonic/gin v1.6.3
+	github.com/go-errors/errors v1.4.0 // indirect
 	github.com/go-openapi/spec v0.20.3 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/locales v0.13.0 // indirect
@@ -15,6 +17,7 @@ require (
 	github.com/go-playground/validator/v10 v10.4.2 // indirect
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/gorilla/websocket v1.4.2
+	github.com/jmoiron/sqlx v1.3.4 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect

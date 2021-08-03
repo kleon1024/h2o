@@ -1,7 +1,7 @@
 package api
 
 import (
-	"h2o/pkg/app"
+	"h2o/app"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

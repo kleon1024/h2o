@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"h2o/pkg/api"
-	"h2o/pkg/app"
+	"h2o/api"
+	"h2o/app"
 
 	"github.com/gin-gonic/gin"
 )

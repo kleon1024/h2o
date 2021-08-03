@@ -2,7 +2,7 @@ package dao
 
 import (
 	"encoding/json"
-	"h2o/pkg/util/orm"
+	"h2o/util/orm"
 	"time"
 
 	"github.com/google/uuid"

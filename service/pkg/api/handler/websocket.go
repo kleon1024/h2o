@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"h2o/pkg/api"
-	"h2o/pkg/api/dao"
-	"h2o/pkg/app"
-	"h2o/pkg/model"
+	"h2o/api"
+	"h2o/api/dao"
+	"h2o/app"
+	"h2o/model"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

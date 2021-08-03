@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"h2o/pkg/api"
+	"h2o/api"
 
 	"github.com/gin-gonic/gin"
 )
