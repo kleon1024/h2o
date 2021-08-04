@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"h2o/config"
+	"h2o/model"
 	"h2o/services/users"
 	"h2o/store"
 	"h2o/store/sqlstore"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	sentry "github.com/getsentry/sentry-go"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -18,6 +20,8 @@ import (
 type Server struct {
 	ServiceConfig *config.ServiceConfig
 	Database      *gorm.DB
+
+	Router *gin.Engine
 
 	sqlStore *sqlstore.SqlStore
 	Store    store.Store
@@ -35,14 +39,30 @@ type Server struct {
 func NewServer(options ...Option) (*Server, error) {
 	var err error
 
+	r := gin.Default()
+
 	s := &Server{
 		hashSeed: maphash.MakeSeed(),
+		Router:   r,
 	}
 
 	for _, option := range options {
 		if err := option(s); err != nil {
 			return nil, fmt.Errorf("failed to apply option: %v", err)
 		}
+	}
+
+	if s.configStore == nil {
+		innerStore, err := config.NewFileStore("config.json")
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to load config")
+		}
+		configStore, err := config.NewStoreFromBacking(innerStore, nil, false)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to load config")
+		}
+
+		s.configStore = configStore
 	}
 
 	if s.newStore == nil {
@@ -67,4 +87,22 @@ func (s *Server) Shutdown() {
 	defer sentry.Flush(2 * time.Second)
 
 	s.HubStop()
+}
+
+func (s *Server) Start() error {
+	logrus.Info("Starting Server...")
+
+	addr := *s.Config().ServiceSettings.ListenAddress
+
+	if addr == "" {
+		if *s.Config().ServiceSettings.ConnectionSecurity == model.ConnSecurityTls {
+			addr = ":https"
+		} else {
+			addr = ":http"
+		}
+	}
+
+	go s.Router.Run(addr)
+
+	return nil
 }

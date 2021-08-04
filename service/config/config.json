@@ -1,6 +1,8 @@
 {
     "ServiceSettings": {
         "SiteURL": "",
+        "ListenAddress": ":8065",
+        "ConnectionSecurity": "",
         "EnableDeveloper": true,
         "SessionCacheInMinutes": 10
     },

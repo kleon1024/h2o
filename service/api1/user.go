@@ -1,4 +1,4 @@
-package api
+package api1
 
 import (
 	"h2o/app"
@@ -20,7 +20,7 @@ func RegisterUsers(r *gin.RouterGroup, a *app.App) {
 }
 
 // @id CreateUser
-// @summary 创建用户
+// @summary Create User
 // @description 无关联匿名账号试用，创建匿名用户，返回tokens
 // @description 无关联匿名账号登录，无登录账号，创建正式账号，返回tokens
 // @description 无关联匿名账号登录，有登录账号，返回tokens

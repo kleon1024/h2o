@@ -5,10 +5,16 @@ import (
 )
 
 const (
+	ConnSecurityNone     = ""
+	ConnSecurityPlain    = "PLAIN"
+	ConnSecurityTls      = "TLS"
+	ConnSecurityStarttls = "STARTTLS"
+
 	DatabaseDriverMysql    = "mysql"
 	DatabaseDriverPostgres = "postgres"
 
-	ServiceSettingsDefaultSiteUrl = "http://localhost:8065"
+	ServiceSettingsDefaultSiteUrl          = "http://localhost:8065"
+	ServiceSettingsDefaultListenAndAddress = ":8065"
 
 	FakeSetting = "********************************"
 
@@ -37,6 +43,8 @@ func (o *Config) Clone() *Config {
 
 type ServiceSettings struct {
 	SiteURL               *string `access:"environment_web_server,authentication_saml,write_restrictable"`
+	ListenAddress         *string `access:"environment_web_server,write_restrictable,cloud_restrictable"` // telemetry: none
+	ConnectionSecurity    *string `access:"environment_web_server,write_restrictable,cloud_restrictable"`
 	EnableDeveloper       *bool   `access:"environment_developer,write_restrictable,cloud_restrictable"`
 	SessionCacheInMinutes *int    `access:"environment_session_lengths,write_restrictable,cloud_restrictable"`
 }
@@ -49,6 +57,14 @@ func (s *ServiceSettings) SetDefaults(isUpdate bool) {
 		} else {
 			s.SiteURL = NewString("")
 		}
+	}
+
+	if s.ListenAddress == nil {
+		s.ListenAddress = NewString(ServiceSettingsDefaultListenAndAddress)
+	}
+
+	if s.ConnectionSecurity == nil {
+		s.ConnectionSecurity = NewString("")
 	}
 
 	if s.EnableDeveloper == nil {
@@ -145,6 +161,7 @@ func (o *Config) isUpdate() bool {
 func (o *Config) SetDefaults() {
 	isUpdate := o.isUpdate()
 
+	o.ServiceSettings.SetDefaults(isUpdate)
 	o.SqlSettings.SetDefaults(isUpdate)
 	o.PrivacySettings.setDefaults()
 	o.RateLimitSettings.SetDefaults()

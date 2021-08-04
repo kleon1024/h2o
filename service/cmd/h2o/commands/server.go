@@ -2,6 +2,7 @@ package commands
 
 import (
 	"bytes"
+	"h2o/api1"
 	"h2o/app"
 	"h2o/config"
 	"net"
@@ -78,18 +79,18 @@ func runServer(configStore *config.Store, interruptChan chan os.Signal) error {
 		}
 	}()
 
-	// a := app.New(app.ServerConnector(server))
-	// api := api4.Init(a, server.Router) // Setup Router
+	a := app.New(app.ServerConnector(server))
+	api1.Init(a, server.Router)
 
 	// wsapi.Init(server)
 	// web.New(a, server.Router)
 	// api4.InitLocal(a, server.LocalRouter)
 
-	// serverErr := server.Start()
-	// if serverErr != nil {
-	// 	logrus.Fatal(serverErr.Error())
-	// 	return serverErr
-	// }
+	serverErr := server.Start()
+	if serverErr != nil {
+		logrus.Fatal(serverErr.Error())
+		return serverErr
+	}
 
 	// // If we allow testing then listen for manual testing URL hits
 	// if *server.Config().ServiceSettings.EnableTesting {
