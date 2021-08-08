@@ -20,9 +20,9 @@ class ChannelPageModel extends ChangeNotifier {
 
   ChannelPageModel(this.context, this.node, {bool update = true})
       : globalModel = Provider.of<GlobalModel>(context) {
-    if (update) {
-      this.globalModel.blockDao!.updateBlocks(node);
-    }
+    // if (update) {
+    //   this.globalModel.blockDao!.updateBlocks(node);
+    // }
   }
 
   final controller = TextEditingController();
@@ -36,17 +36,16 @@ class ChannelPageModel extends ChangeNotifier {
       String uuidString = Uuid().v4();
       String preBlockID = EMPTY_UUID;
       if (blocks.length > 0) {
-        blocks.last.posBlockID = uuidString;
-        preBlockID = blocks.last.id;
+        blocks.last.previousId = uuidString;
+        preBlockID = blocks.last.uuid;
       }
       BlockBean blockBean = BlockBean(
-        id: uuidString,
+        uuid: uuidString,
         text: text,
         type: EnumToString.convertToString(BlockType.text),
-        preBlockID: preBlockID,
-        posBlockID: EMPTY_UUID,
-        authorID: this.globalModel.userDao!.user!.id,
-        updatedAt: DateTime.now().toUtc().toString(),
+        previousId: preBlockID,
+        authorId: this.globalModel.userDao!.user!.id,
+        updatedAt: DateTime.now().toUtc().millisecondsSinceEpoch,
       );
       blocks.add(blockBean);
       notifyListeners();
@@ -59,7 +58,7 @@ class ChannelPageModel extends ChangeNotifier {
   onChangeToDocument() async {
     node.type = EnumToString.convertToString(NodeType.document);
     // TODO Guarantee
-    Api.patchNode(node.id,
+    Api.patchNode(node.uuid,
         data: {"type": node.type},
         options: this.globalModel.userDao!.accessTokenOptions());
 

@@ -4,22 +4,29 @@ part 'node.g.dart';
 
 @JsonSerializable()
 class NodeBean {
-  String id;
+  int id;
+  String uuid;
   String type;
   String name;
   int indent;
-  String preNodeID;
-  String posNodeID;
+  @JsonKey(name: "previous_id")
+  String previousId;
+  @JsonKey(name: "created_at")
+  int createdAt;
+  @JsonKey(name: "updated_at")
+  int updatedAt;
   @JsonKey(ignore: true)
   bool expanded;
 
   NodeBean({
-    required this.id,
+    this.id = 0,
+    required this.uuid,
     required this.type,
     required this.name,
     required this.indent,
-    required this.preNodeID,
-    required this.posNodeID,
+    required this.previousId,
+    this.createdAt = 0,
+    this.updatedAt = 0,
     this.expanded = false,
   });
 

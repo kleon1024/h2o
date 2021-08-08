@@ -8,9 +8,6 @@ import 'package:h2o/bean/response.dart';
 import 'package:h2o/bean/table.dart';
 import 'package:h2o/bean/team.dart';
 import 'package:h2o/bean/user.dart';
-import 'package:h2o/utils/platform.dart';
-import 'package:web_socket_channel/html.dart';
-import 'package:web_socket_channel/io.dart';
 
 enum HttpMethod {
   GET,
@@ -22,16 +19,16 @@ enum HttpMethod {
 
 class Api {
   static final _client = Dio();
-  static IOWebSocketChannel? _wsIO;
-  static HtmlWebSocketChannel? _wsHtml;
+  // static IOWebSocketChannel? _wsIO;
+  // static HtmlWebSocketChannel? _wsHtml;
 
-  static ws() {
-    if (PlatformInfo().isWeb()) {
-      return _wsHtml;
-    } else {
-      return _wsIO;
-    }
-  }
+  // static ws() {
+  //   if (PlatformInfo().isWeb()) {
+  //     return _wsHtml;
+  //   } else {
+  //     return _wsIO;
+  //   }
+  // }
 
   static initialize() {
     _client.options.baseUrl = "http://127.0.0.1:8000";
@@ -45,14 +42,14 @@ class Api {
       request: false,
     ));
 
-    if (PlatformInfo().isWeb()) {
-      debugPrint("connect to ws");
-      _wsHtml = HtmlWebSocketChannel.connect(
-          Uri.parse("ws://127.0.0.1:8000/api/v1/ws"));
-    } else {
-      _wsIO = IOWebSocketChannel.connect(
-          Uri.parse("ws://127.0.0.1:8000/api/v1/ws"));
-    }
+    // if (PlatformInfo().isWeb()) {
+    //   debugPrint("connect to ws");
+    //   _wsHtml = HtmlWebSocketChannel.connect(
+    //       Uri.parse("ws://127.0.0.1:8000/api/v1/ws"));
+    // } else {
+    //   _wsIO = IOWebSocketChannel.connect(
+    //       Uri.parse("ws://127.0.0.1:8000/api/v1/ws"));
+    // }
     // _ws?.stream.listen((message) {
     //   debugPrint(message);
     // });

@@ -28,17 +28,17 @@ class TableDao extends ChangeNotifier {
 
   Future updateTables(NodeBean nodeBean) async {
     TableBean? table = await Api.getNodeTable(
-      nodeBean.id,
+      nodeBean.uuid,
       options: this.globalModel!.userDao!.accessTokenOptions(),
       cancelToken: cancelToken,
     );
 
     if (table != null) {
-      tableMap[nodeBean.id] = table;
+      tableMap[nodeBean.uuid] = table;
 
       if (table.columns.length == 0) {
         if (tableRowMap[nodeBean.id] == null) {
-          tableRowMap[nodeBean.id] = [];
+          tableRowMap[nodeBean.uuid] = [];
         }
         this.globalModel!.triggerCallback(EventType.TABLE_UPDATED);
         return;
@@ -56,7 +56,7 @@ class TableDao extends ChangeNotifier {
         cancelToken: cancelToken,
       );
       if (rows != null) {
-        tableRowMap[nodeBean.id] = rows;
+        tableRowMap[nodeBean.uuid] = rows;
         this.globalModel!.triggerCallback(EventType.TABLE_UPDATED);
       }
       notifyListeners();

@@ -6,6 +6,7 @@ import 'package:h2o/dao/block.dart';
 import 'package:h2o/dao/node.dart';
 import 'package:h2o/dao/table.dart';
 import 'package:h2o/dao/team.dart';
+import 'package:h2o/dao/transaction.dart';
 import 'package:h2o/dao/user.dart';
 import 'package:h2o/model/global.dart';
 import 'package:h2o/model/navigation_page.dart';
@@ -26,6 +27,7 @@ void main() async {
             ChangeNotifierProvider(create: (_) => NodeDao()),
             ChangeNotifierProvider(create: (_) => BlockDao()),
             ChangeNotifierProvider(create: (_) => TableDao()),
+            ChangeNotifierProvider(create: (_) => TransactionDao()),
           ],
           child: MyApp(),
         ),
@@ -34,7 +36,7 @@ void main() async {
           Locale('zh', 'CN'),
         ],
         fallbackLocale: Locale('en', 'US'),
-        path: 'translations'),
+        path: 'assets/translations'),
   );
 }
 
@@ -59,6 +61,7 @@ class MyAppState extends State<MyApp> {
     Provider.of<NodeDao>(context)..setContext(context, globalModel);
     Provider.of<BlockDao>(context)..setContext(context, globalModel);
     Provider.of<TableDao>(context)..setContext(context, globalModel);
+    Provider.of<TransactionDao>(context)..setContext(context, globalModel);
 
     return ScreenUtilInit(
         designSize: Size(1080, 1920),

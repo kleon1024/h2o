@@ -8,24 +8,26 @@ part of 'block.dart';
 
 BlockBean _$BlockBeanFromJson(Map<String, dynamic> json) {
   return BlockBean(
-    id: json['id'] as String,
-    preBlockID: json['preBlockID'] as String,
-    posBlockID: json['posBlockID'] as String,
+    id: json['id'] as int,
+    uuid: json['uuid'] as String,
+    previousId: json['previous_id'] as String,
     type: json['type'] as String,
     text: json['text'] as String,
     revision: json['revision'] as int,
-    authorID: json['authorID'] as String,
-    updatedAt: json['updatedAt'] as String,
+    authorId: json['author_id'] as String,
+    createdAt: json['created_at'] as int,
+    updatedAt: json['updated_at'] as int,
   );
 }
 
 Map<String, dynamic> _$BlockBeanToJson(BlockBean instance) => <String, dynamic>{
       'id': instance.id,
-      'preBlockID': instance.preBlockID,
-      'posBlockID': instance.posBlockID,
+      'uuid': instance.uuid,
       'type': instance.type,
       'text': instance.text,
       'revision': instance.revision,
-      'authorID': instance.authorID,
-      'updatedAt': instance.updatedAt,
+      'author_id': instance.authorId,
+      'previous_id': instance.previousId,
+      'created_at': instance.createdAt,
+      'updated_at': instance.updatedAt,
     };

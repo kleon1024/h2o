@@ -15,10 +15,15 @@ class TeamDao extends ChangeNotifier {
       this.context = context;
       this.globalModel = globalModel;
       globalModel.teamDao = this;
+      this.loadTeams();
 
-      globalModel.registerCallback(
-          EventType.FIRST_TIME_LOGIN_SUCCESS, updateTeams);
+      // globalModel.registerCallback(
+      //     EventType.FIRST_TIME_LOGIN_SUCCESS, updateTeams);
     }
+  }
+
+  Future loadTeams() async {
+    this.teams = [TeamBean(id: "123", name: "My Team")];
   }
 
   Future updateTeams() async {

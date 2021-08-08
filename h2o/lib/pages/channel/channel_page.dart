@@ -52,7 +52,7 @@ class ChannelPage extends StatelessWidget {
                 delegate: SliverChildBuilderDelegate((context, index) {
                   bool showCreator = true;
                   if (index < blocks.length - 1) {
-                    if (blocks[index + 1].authorID == blocks[index].authorID) {
+                    if (blocks[index + 1].authorId == blocks[index].authorId) {
                       showCreator = false;
                     }
                   }

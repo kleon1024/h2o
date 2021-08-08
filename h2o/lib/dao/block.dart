@@ -7,7 +7,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:h2o/api/api.dart';
 import 'package:h2o/bean/block.dart';
 import 'package:h2o/bean/node.dart';
-import 'package:h2o/global/constants.dart';
 import 'package:h2o/model/global.dart';
 
 enum BlockType {
@@ -82,11 +81,9 @@ class BlockDao extends ChangeNotifier {
     debugPrint("sendBlockEvent:" +
         EnumToString.convertToString(blockEventType) +
         " " +
-        blockBean.id +
+        blockBean.uuid +
         " pre:" +
-        blockBean.preBlockID +
-        " pos:" +
-        blockBean.posBlockID);
+        blockBean.previousId);
     this.channel.send(BlockEvent(blockBean, blockEventType, node: nodeBean));
   }
 
@@ -95,13 +92,12 @@ class BlockDao extends ChangeNotifier {
     BlockBean? retBlockBean;
     if (blockEvent.type == BlockEventType.create) {
       retBlockBean = await Api.createNodeBlock(
-        blockEvent.node!.id,
+        blockEvent.node!.uuid,
         data: {
           "id": blockBean.id,
           "text": blockBean.text,
           "type": blockBean.type,
-          "preBlockID": blockBean.preBlockID,
-          "posBlockID": blockBean.posBlockID,
+          "previous": blockBean.previousId,
         },
         options: this.globalModel!.userDao!.accessTokenOptions(),
       );
@@ -112,12 +108,11 @@ class BlockDao extends ChangeNotifier {
       return false;
     } else if (blockEvent.type == BlockEventType.patch) {
       retBlockBean = await Api.patchBlock(
-        blockBean.id,
+        blockBean.uuid,
         data: {
           "text": blockBean.text,
           "type": blockBean.type,
-          "preBlockID": blockBean.preBlockID,
-          "posBlockID": blockBean.posBlockID,
+          "previous": blockBean.previousId,
         },
         options: this.globalModel!.userDao!.accessTokenOptions(),
       );
@@ -128,7 +123,7 @@ class BlockDao extends ChangeNotifier {
       return false;
     } else if (blockEvent.type == BlockEventType.delete) {
       retBlockBean = await Api.deleteBlock(
-        blockBean.id,
+        blockBean.uuid,
         options: this.globalModel!.userDao!.accessTokenOptions(),
       );
       if (retBlockBean != null) {
@@ -140,43 +135,43 @@ class BlockDao extends ChangeNotifier {
     return true;
   }
 
-  Future updateBlocks(NodeBean nodeBean) async {
-    List<BlockBean>? blocks = await Api.listNodeBlocks(
-      nodeBean.id,
-      data: {"offset": 0, "limit": 100},
-      options: this.globalModel!.userDao!.accessTokenOptions(),
-      cancelToken: cancelToken,
-    );
-
-    if (blocks != null) {
-      if (blocks.length == 0) {
-        blockMap[nodeBean.id] = [];
-        return;
-      }
-      Map<String, BlockBean> preBlockMap = {};
-      blocks.forEach((block) {
-        preBlockMap[block.preBlockID] = block;
-      });
-      BlockBean block = preBlockMap[EMPTY_UUID]!;
-      int cnt = 0;
-      List<BlockBean> orderedBlocks = [];
-      debugPrint("blocks length:" + blocks.length.toString());
-      while (block.posBlockID != EMPTY_UUID) {
-        cnt += 1;
-        debugPrint(cnt.toString() + ":" + block.id);
-        if (cnt >= blocks.length) {
-          break;
-        }
-        orderedBlocks.add(block);
-        block = preBlockMap[block.id]!;
-      }
-      orderedBlocks.add(block);
-      blockMap[nodeBean.id] = orderedBlocks;
-
-      this.globalModel!.triggerCallback(EventType.NODE_BLOCKS_UPDATED);
-      notifyListeners();
-    }
-  }
+  // Future updateBlocks(NodeBean nodeBean) async {
+  //   List<BlockBean>? blocks = await Api.listNodeBlocks(
+  //     nodeBean.uuid,
+  //     data: {"offset": 0, "limit": 100},
+  //     options: this.globalModel!.userDao!.accessTokenOptions(),
+  //     cancelToken: cancelToken,
+  //   );
+  //
+  //   if (blocks != null) {
+  //     if (blocks.length == 0) {
+  //       blockMap[nodeBean.uuid] = [];
+  //       return;
+  //     }
+  //     Map<String, BlockBean> preBlockMap = {};
+  //     blocks.forEach((block) {
+  //       preBlockMap[block.previousId] = block;
+  //     });
+  //     BlockBean block = preBlockMap[EMPTY_UUID]!;
+  //     int cnt = 0;
+  //     List<BlockBean> orderedBlocks = [];
+  //     debugPrint("blocks length:" + blocks.length.toString());
+  //     while (block.posBlockID != EMPTY_UUID) {
+  //       cnt += 1;
+  //       debugPrint(cnt.toString() + ":" + block.id);
+  //       if (cnt >= blocks.length) {
+  //         break;
+  //       }
+  //       orderedBlocks.add(block);
+  //       block = preBlockMap[block.id]!;
+  //     }
+  //     orderedBlocks.add(block);
+  //     blockMap[nodeBean.uuid] = orderedBlocks;
+  //
+  //     this.globalModel!.triggerCallback(EventType.NODE_BLOCKS_UPDATED);
+  //     notifyListeners();
+  //   }
+  // }
 
   updateBlock(NodeBean node, BlockBean updatedBlock) {
     List<BlockBean> blocks = blockMap[node.id]!;

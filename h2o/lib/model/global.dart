@@ -3,6 +3,7 @@ import 'package:h2o/dao/block.dart';
 import 'package:h2o/dao/node.dart';
 import 'package:h2o/dao/table.dart';
 import 'package:h2o/dao/team.dart';
+import 'package:h2o/dao/transaction.dart';
 import 'package:h2o/dao/user.dart';
 import 'package:h2o/model/navigation_page.dart';
 
@@ -24,6 +25,7 @@ class GlobalModel extends ChangeNotifier {
   NodeDao? nodeDao;
   BlockDao? blockDao;
   TableDao? tableDao;
+  TransactionDao? transactionDao;
   Map<EventType, List<Future Function()>> callbackRegistry = {};
 
   NavigationPageModel? navigationPageModel;

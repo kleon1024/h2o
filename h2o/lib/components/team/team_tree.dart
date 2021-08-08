@@ -30,33 +30,31 @@ class TeamTree extends StatelessWidget {
     List<NodeBean> nodes = [];
     if (team != null && nodeDao.nodeMap.containsKey(team.id)) {
       nodes = nodeDao.nodeMap[team.id]!;
+      debugPrint(nodes.toString());
     }
+
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
       margin: EdgeInsets.symmetric(vertical: 18, horizontal: 8),
       decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.all(Radius.circular(8))),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(36),
-          child: AppBar(
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            title: Text(team == null ? "" : team.name),
-            titleSpacing: 0.0,
-          ),
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          title: Text("Test"),
         ),
         body: BouncingScrollView(
           slivers: [
             SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
               return Node(nodes[index], onTapPlus: () {
-                var preNodeID = nodes[index].id;
+                var preNodeID = nodes[index].uuid;
                 var posNodeID = EMPTY_UUID;
                 if (index < nodes.length - 1) {
-                  posNodeID = nodes[index + 1].id;
+                  posNodeID = nodes[index + 1].uuid;
                 }
 
                 Navigator.of(context).push(
@@ -65,10 +63,9 @@ class TeamTree extends StatelessWidget {
                         create: (_) => AddNodePageModel(
                             team!,
                             preNodeID,
-                            posNodeID,
                             nodes[index].indent,
                             true,
-                            index,
+                            index + 1,
                             context,
                             globalModel),
                         child: AddNodePage());
@@ -82,7 +79,7 @@ class TeamTree extends StatelessWidget {
               String posNodeID = EMPTY_UUID;
               int indent = 0;
               if (nodes.length > 0) {
-                preNodeID = nodes[nodes.length - 1].id;
+                preNodeID = nodes[nodes.length - 1].uuid;
               }
 
               return ElevatedButton.icon(
@@ -93,7 +90,6 @@ class TeamTree extends StatelessWidget {
                           create: (_) => AddNodePageModel(
                               team!,
                               preNodeID,
-                              posNodeID,
                               indent,
                               false,
                               nodes.length,

@@ -96,8 +96,9 @@ class Block extends StatelessWidget {
                                   height: 1, fontWeight: FontWeight.bold),
                             ),
                             Text(
-                              timeago
-                                  .format(DateTime.parse(blockBean.updatedAt)),
+                              timeago.format(
+                                  DateTime.fromMillisecondsSinceEpoch(
+                                      blockBean.updatedAt)),
                               style: TextStyle(
                                   height: 1, fontWeight: FontWeight.bold),
                             ),

@@ -1,9 +1,9 @@
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:h2o/api/api.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/team.dart';
 import 'package:h2o/dao/node.dart';
+import 'package:h2o/dao/transaction.dart';
 import 'package:h2o/model/global.dart';
 import 'package:uuid/uuid.dart';
 
@@ -18,13 +18,12 @@ class AddNodePageModel extends ChangeNotifier {
 
   TeamBean team;
   String preNodeID;
-  String posNodeID;
   int indent;
   bool showIndentRadio;
   int insertIndex;
 
-  AddNodePageModel(this.team, this.preNodeID, this.posNodeID, this.indent,
-      this.showIndentRadio, this.insertIndex, this.context, this.globalModel);
+  AddNodePageModel(this.team, this.preNodeID, this.indent, this.showIndentRadio,
+      this.insertIndex, this.context, this.globalModel);
 
   TextEditingController controller = TextEditingController();
   NodeType nodeType = NodeType.directory;
@@ -60,30 +59,30 @@ class AddNodePageModel extends ChangeNotifier {
     }
     String uuidString = Uuid().v4();
     NodeBean? nodeBean = NodeBean(
-        id: uuidString,
+        uuid: uuidString,
         type: EnumToString.convertToString(nodeType),
         name: controller.text,
         indent: indent,
-        preNodeID: preNodeID,
-        posNodeID: posNodeID);
+        previousId: preNodeID);
+    debugPrint(this.globalModel.nodeDao!.nodeMap.toString());
     this.globalModel.nodeDao!.nodeMap[team.id]!.insert(insertIndex, nodeBean);
-    notifyListeners();
-    Navigator.pop(this.context);
+    this.globalModel.transactionDao!.transaction(
+        Transaction([Operation(OperationType.InsertNode, node: nodeBean)]));
 
-    nodeBean = await Api.createTeamNode(
-      team.id,
-      data: {
-        "id": uuidString,
-        "name": controller.text,
-        "type": EnumToString.convertToString(nodeType),
-        "indent": indent,
-        "preNodeID": preNodeID,
-        "posNodeID": posNodeID,
-      },
-      options: this.globalModel.userDao!.accessTokenOptions(),
-    );
-    if (nodeBean != null) {
-      this.globalModel.triggerCallback(EventType.NODE_CREATED);
-    }
+    Navigator.pop(this.context);
+    notifyListeners();
+
+    // nodeBean = await Api.createTeamNode(
+    //   team.id,
+    //   data: {
+    //     "id": uuidString,
+    //     "name": controller.text,
+    //     "type": EnumToString.convertToString(nodeType),
+    //     "indent": indent,
+    //     "preNodeID": preNodeID,
+    //   },
+    //   options: this.globalModel.userDao!.accessTokenOptions(),
+    // );
+    this.globalModel.triggerCallback(EventType.NODE_CREATED);
   }
 }

@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:h2o/api/api.dart';
+import 'package:h2o/bean/token.dart';
 import 'package:h2o/bean/user.dart';
 import 'package:h2o/global/enum.dart';
 import 'package:h2o/model/global.dart';
@@ -30,12 +31,20 @@ class UserDao extends ChangeNotifier {
         this.user = userBean;
       }
       this.refresh();
+      // if (this.user == null) {
+      //   debugPrint("create anonymous user");
+      //   await this.createAnonymousUser();
+      // } else {
+      //   debugPrint("refresh token");
+      //   await this.refreshToken();
+      // }
+
       if (this.user == null) {
-        debugPrint("create anonymous user");
-        await this.createAnonymousUser();
-      } else {
-        debugPrint("refresh token");
-        await this.refreshToken();
+        this.user = UserBean(
+            id: "123",
+            name: "test",
+            accessToken: TokenBean(token: "", expiresAt: ""),
+            refreshToken: TokenBean(token: "", expiresAt: ""));
       }
 
       if (this.isLogin()) {

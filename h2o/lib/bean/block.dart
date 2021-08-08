@@ -5,35 +5,41 @@ part 'block.g.dart';
 
 @JsonSerializable()
 class BlockBean {
-  String id;
-  String preBlockID;
-  String posBlockID;
+  int id;
+  String uuid;
   String type;
   String text;
   int revision;
-  String authorID;
-  String updatedAt;
+  @JsonKey(name: "author_id")
+  String authorId;
+  @JsonKey(name: "previous_id")
+  String previousId;
+  @JsonKey(name: "created_at")
+  int createdAt;
+  @JsonKey(name: "updated_at")
+  int updatedAt;
 
   BlockBean({
-    this.id = EMPTY_UUID,
-    this.preBlockID = EMPTY_UUID,
-    this.posBlockID = EMPTY_UUID,
+    this.id = 0,
+    this.uuid = EMPTY_UUID,
+    this.previousId = EMPTY_UUID,
     this.type = "text",
     this.text = "",
     this.revision = 0,
-    this.authorID = EMPTY_UUID,
-    this.updatedAt = "",
+    this.authorId = EMPTY_UUID,
+    this.createdAt = 0,
+    this.updatedAt = 0,
   });
 
   factory BlockBean.copyFrom(BlockBean bean) {
     return BlockBean(
       id: bean.id,
-      preBlockID: bean.preBlockID,
-      posBlockID: bean.posBlockID,
+      uuid: bean.uuid,
+      previousId: bean.previousId,
       type: bean.type,
       text: bean.text,
       revision: bean.revision,
-      authorID: bean.authorID,
+      authorId: bean.authorId,
       updatedAt: bean.updatedAt,
     );
   }
