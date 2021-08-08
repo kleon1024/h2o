@@ -1,0 +1,44 @@
+{
+    "ServiceSettings": {
+        "SiteURL": "",
+        "ListenAddress": ":8065",
+        "ConnectionSecurity": "",
+        "EnableDeveloper": true,
+        "SessionCacheInMinutes": 10
+    },
+    "SqlSettings": {
+        "DriverName": "postgres",
+        "DataSource": "postgres://mmuser:mostest@localhost/mattermost_test?sslmode=disable\u0026connect_timeout=10",
+        "DataSourceReplicas": [],
+        "DataSourceSearchReplicas": [],
+        "MaxIdleConns": 20,
+        "ConnMaxLifetimeMilliseconds": 3600000,
+        "ConnMaxIdleTimeMilliseconds": 300000,
+        "MaxOpenConns": 300,
+        "Trace": false,
+        "AtRestEncryptKey": "ory8jpkazf9o1b9ue61ezxki6ao4an5o",
+        "QueryTimeout": 30,
+        "DisableDatabaseSearch": false,
+        "ReplicaLagSettings": []
+    },
+    "PrivacySettings": {
+        "ShowEmailAddress": true,
+        "ShowFullName": true
+    },
+    "RateLimitSettings": {
+        "Enable": false,
+        "PerSec": 10,
+        "MaxBurst": 100,
+        "MemoryStoreSize": 10000,
+        "VaryByRemoteAddr": true,
+        "VaryByUser": false,
+        "VaryByHeader": ""
+    },
+    "PasswordSettings": {
+        "MinimumLength": null,
+        "Lowercase": null,
+        "Number": null,
+        "Uppercase": null,
+        "Symbol": null
+    }
+}

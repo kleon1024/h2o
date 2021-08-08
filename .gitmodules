@@ -1,0 +1,3 @@
+[submodule "h2o-server/3rdparty/gorp"]
+	path = h2o-server/3rdparty/gorp
+	url = https://github.com/mattermost/gorp
