@@ -57,9 +57,9 @@ class DocumentPageModel extends ChangeNotifier {
   bool editingNewGuard = false;
 
   Future updateFocus() async {
-    List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.id]!;
+    List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.uuid]!;
     blocks.forEach((block) {
-      if (!focusMap.containsKey(block.id)) {
+      if (!focusMap.containsKey(block.uuid)) {
         focusMap[block.uuid] = {block.type: FocusNode()};
       }
     });
@@ -75,7 +75,7 @@ class DocumentPageModel extends ChangeNotifier {
 
   Future setEditingNewPrePosBlockID() async {
     if (editingNew) {
-      List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.id]!;
+      List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.uuid]!;
       editingIndex = blocks.length;
       if (blocks.length > 0) {
         editingPreBlockID = blocks[blocks.length - 1].uuid;
@@ -93,8 +93,9 @@ class DocumentPageModel extends ChangeNotifier {
       }
       editingNew = false;
     } else {
-      if (editingBlock.id != EMPTY_UUID) {
-        List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.id]!;
+      if (editingBlock.uuid != EMPTY_UUID) {
+        List<BlockBean> blocks =
+            this.globalModel.blockDao!.blockMap[node.uuid]!;
         bool patchBlockBean = editingController.text != editingBlock.text;
         if (patchBlockBean) {
           BlockBean? blockBean = editingBlock;
@@ -121,7 +122,7 @@ class DocumentPageModel extends ChangeNotifier {
 
   onCreateBlock(bool submit) async {
     if (editingNew) {
-      List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.id]!;
+      List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.uuid]!;
       String uuidString = Uuid().v4();
       BlockBean? blockBean = BlockBean(
         uuid: uuidString,
@@ -134,7 +135,7 @@ class DocumentPageModel extends ChangeNotifier {
       this
           .globalModel
           .blockDao!
-          .blockMap[node.id]!
+          .blockMap[node.uuid]!
           .insert(editingIndex, blockBean);
       // if (blocks.length > 1) {
       //   blocks[editingIndex - 1].posBlockID = blockBean.id;
@@ -159,7 +160,8 @@ class DocumentPageModel extends ChangeNotifier {
           BlockBean.copyFrom(blockBean), BlockEventType.create, node);
     } else {
       if (submit) {
-        List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.id]!;
+        List<BlockBean> blocks =
+            this.globalModel.blockDao!.blockMap[node.uuid]!;
 
         bool patchBlockBean = editingController.text != editingBlock.text;
         if (patchBlockBean) {
@@ -199,7 +201,7 @@ class DocumentPageModel extends ChangeNotifier {
         editingController.text = editingBlock.text;
         editingPreBlockID = editingBlock.previousId;
         // editingPosBlockID = editingBlock.posBlockID;
-        focusMap[editingBlock.id]![editingBlock.type]!.requestFocus();
+        focusMap[editingBlock.uuid]![editingBlock.type]!.requestFocus();
         if (editingIndex < blocks.length - 1) {
           blocks[editingIndex + 1].previousId = newBlockBean.uuid;
         }
@@ -215,19 +217,19 @@ class DocumentPageModel extends ChangeNotifier {
     if (text == "# ") {
       editingBlock.type = EnumToString.convertToString(BlockType.heading1);
       editingController.text = "";
-      focusMap[editingBlock.id]![editingBlock.type] = FocusNode();
+      focusMap[editingBlock.uuid]![editingBlock.type] = FocusNode();
     } else if (text == "## ") {
       editingBlock.type = EnumToString.convertToString(BlockType.heading2);
       editingController.text = "";
-      focusMap[editingBlock.id]![editingBlock.type] = FocusNode();
+      focusMap[editingBlock.uuid]![editingBlock.type] = FocusNode();
     } else if (text == "### ") {
       editingBlock.type = EnumToString.convertToString(BlockType.heading3);
       editingController.text = "";
-      focusMap[editingBlock.id]![editingBlock.type] = FocusNode();
+      focusMap[editingBlock.uuid]![editingBlock.type] = FocusNode();
     } else if (text == "* ") {
       editingBlock.type = EnumToString.convertToString(BlockType.bulletedList);
       editingController.text = "";
-      focusMap[editingBlock.id]![editingBlock.type] = FocusNode();
+      focusMap[editingBlock.uuid]![editingBlock.type] = FocusNode();
     }
     editingController.selection = TextSelection.fromPosition(
         TextPosition(offset: editingController.text.length));
@@ -241,12 +243,12 @@ class DocumentPageModel extends ChangeNotifier {
     }
 
     notifyListeners();
-    focusMap[editingBlock.id]![editingBlock.type]!.requestFocus();
+    focusMap[editingBlock.uuid]![editingBlock.type]!.requestFocus();
   }
 
   onTapBlock(BlockBean block, index) {
-    debugPrint("onTapBlock:" + block.id.toString());
-    if (block.id != EMPTY_UUID) {
+    debugPrint("onTapBlock:" + block.uuid.toString());
+    if (block.uuid != EMPTY_UUID) {
       if (editingNew && editingNewGuard) {
         editingNewGuard = false;
         return;
@@ -266,7 +268,7 @@ class DocumentPageModel extends ChangeNotifier {
         editState = EditState.ReadyToDelete;
       }
 
-      focusMap[block.id]![block.type]!.requestFocus();
+      focusMap[block.uuid]![block.type]!.requestFocus();
       notifyListeners();
     }
   }
@@ -286,8 +288,8 @@ class DocumentPageModel extends ChangeNotifier {
         } else if (editState == EditState.ReadyToBeText) {
           editState = EditState.ReadyToDelete;
           editingBlock.type = EnumToString.convertToString(BlockType.text);
-          focusMap[editingBlock.id]![editingBlock.type] = FocusNode();
-          focusMap[editingBlock.id]![editingBlock.type]!.requestFocus();
+          focusMap[editingBlock.uuid]![editingBlock.type] = FocusNode();
+          focusMap[editingBlock.uuid]![editingBlock.type]!.requestFocus();
           notifyListeners();
           return;
         } else if (editState != EditState.ReadyToDelete) {
@@ -295,7 +297,8 @@ class DocumentPageModel extends ChangeNotifier {
         }
 
         debugPrint("--------------empty backspace detected--------------");
-        List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.id]!;
+        List<BlockBean> blocks =
+            this.globalModel.blockDao!.blockMap[node.uuid]!;
         if (editingNew) {
           editingNew = false;
           editingIndex = blocks.length - 1;
@@ -304,10 +307,10 @@ class DocumentPageModel extends ChangeNotifier {
             editingController.text = editingBlock.text;
             editingPreBlockID = editingBlock.previousId;
             // editingPosBlockID = editingBlock.posBlockID;
-            focusMap[editingBlock.id]![editingBlock.type]!.requestFocus();
+            focusMap[editingBlock.uuid]![editingBlock.type]!.requestFocus();
           }
         } else if (editingIndex >= 0 && editingIndex < blocks.length) {
-          focusMap.remove(editingBlock.id);
+          focusMap.remove(editingBlock.uuid);
           globalModel.blockDao!.sendBlockEvent(
               BlockBean.copyFrom(editingBlock), BlockEventType.delete, node);
 
@@ -333,7 +336,7 @@ class DocumentPageModel extends ChangeNotifier {
             editingController.text = editingBlock.text;
             editingPreBlockID = editingBlock.previousId;
             // editingPosBlockID = editingBlock.posBlockID;
-            focusMap[editingBlock.id]![editingBlock.type]!.requestFocus();
+            focusMap[editingBlock.uuid]![editingBlock.type]!.requestFocus();
           }
           blocks.removeAt(editingIndex + 1);
         }
@@ -362,7 +365,7 @@ class DocumentPageModel extends ChangeNotifier {
   onReorder(int oldIndex, int newIndex) {
     debugPrint("move " + oldIndex.toString() + "->" + newIndex.toString());
     if (oldIndex == newIndex) return;
-    List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.id]!;
+    List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.uuid]!;
     BlockBean movingBlock = blocks[oldIndex];
     if (oldIndex > 0 && oldIndex != newIndex + 1) {
       // blocks[oldIndex - 1].posBlockID = movingBlock.posBlockID;

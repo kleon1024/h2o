@@ -64,8 +64,8 @@ class AddColumnPageModel extends ChangeNotifier {
       name: controller.text,
       defaultValue: defaultValue,
     );
-    this.globalModel.tableDao!.tableMap[node.id]!.columns.add(columnBean);
-    var rows = this.globalModel.tableDao!.tableRowMap[node.id];
+    this.globalModel.tableDao!.tableMap[node.uuid]!.columns.add(columnBean);
+    var rows = this.globalModel.tableDao!.tableRowMap[node.uuid];
     if (rows == null) {
       rows = [];
     }

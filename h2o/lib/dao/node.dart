@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:h2o/bean/node.dart';
+import 'package:h2o/db/db.dart';
 import 'package:h2o/model/global.dart';
 
 enum NodeType {
@@ -30,7 +31,8 @@ class NodeDao extends ChangeNotifier {
   }
 
   Future loadNodes() async {
-    this.nodeMap["123"] = [];
+    var nodes = await DBProvider.db.getNodes();
+    this.nodeMap["123"] = nodes;
   }
 
   // Future updateNodes() async {

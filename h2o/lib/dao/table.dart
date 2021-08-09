@@ -37,7 +37,7 @@ class TableDao extends ChangeNotifier {
       tableMap[nodeBean.uuid] = table;
 
       if (table.columns.length == 0) {
-        if (tableRowMap[nodeBean.id] == null) {
+        if (tableRowMap[nodeBean.uuid] == null) {
           tableRowMap[nodeBean.uuid] = [];
         }
         this.globalModel!.triggerCallback(EventType.TABLE_UPDATED);

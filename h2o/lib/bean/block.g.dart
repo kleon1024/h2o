@@ -8,7 +8,6 @@ part of 'block.dart';
 
 BlockBean _$BlockBeanFromJson(Map<String, dynamic> json) {
   return BlockBean(
-    id: json['id'] as int,
     uuid: json['uuid'] as String,
     previousId: json['previous_id'] as String,
     type: json['type'] as String,
@@ -21,7 +20,6 @@ BlockBean _$BlockBeanFromJson(Map<String, dynamic> json) {
 }
 
 Map<String, dynamic> _$BlockBeanToJson(BlockBean instance) => <String, dynamic>{
-      'id': instance.id,
       'uuid': instance.uuid,
       'type': instance.type,
       'text': instance.text,

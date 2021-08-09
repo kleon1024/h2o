@@ -5,7 +5,6 @@ part 'block.g.dart';
 
 @JsonSerializable()
 class BlockBean {
-  int id;
   String uuid;
   String type;
   String text;
@@ -20,7 +19,6 @@ class BlockBean {
   int updatedAt;
 
   BlockBean({
-    this.id = 0,
     this.uuid = EMPTY_UUID,
     this.previousId = EMPTY_UUID,
     this.type = "text",
@@ -33,7 +31,6 @@ class BlockBean {
 
   factory BlockBean.copyFrom(BlockBean bean) {
     return BlockBean(
-      id: bean.id,
       uuid: bean.uuid,
       previousId: bean.previousId,
       type: bean.type,

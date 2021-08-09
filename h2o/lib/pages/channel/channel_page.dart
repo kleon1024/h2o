@@ -15,8 +15,8 @@ class ChannelPage extends StatelessWidget {
     final blockDao = Provider.of<BlockDao>(context);
 
     List<BlockBean> blocks = [];
-    if (blockDao.blockMap.containsKey(channelPageModel.node.id)) {
-      blocks = blockDao.blockMap[channelPageModel.node.id]!.reversed.toList();
+    if (blockDao.blockMap.containsKey(channelPageModel.node.uuid)) {
+      blocks = blockDao.blockMap[channelPageModel.node.uuid]!.reversed.toList();
     }
 
     OutlineInputBorder inputBorder = OutlineInputBorder(

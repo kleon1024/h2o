@@ -8,7 +8,6 @@ part of 'node.dart';
 
 NodeBean _$NodeBeanFromJson(Map<String, dynamic> json) {
   return NodeBean(
-    id: json['id'] as int,
     uuid: json['uuid'] as String,
     type: json['type'] as String,
     name: json['name'] as String,
@@ -20,7 +19,6 @@ NodeBean _$NodeBeanFromJson(Map<String, dynamic> json) {
 }
 
 Map<String, dynamic> _$NodeBeanToJson(NodeBean instance) => <String, dynamic>{
-      'id': instance.id,
       'uuid': instance.uuid,
       'type': instance.type,
       'name': instance.name,

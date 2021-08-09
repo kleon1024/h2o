@@ -28,13 +28,13 @@ class TablePage extends StatelessWidget {
     NodeBean node = tablePageModel.node;
     TableBean? tableBean;
     debugPrint("buildTablePage");
-    if (tableDao.tableMap.containsKey(node.id)) {
-      columns = tableDao.tableMap[node.id]!.columns;
+    if (tableDao.tableMap.containsKey(node.uuid)) {
+      columns = tableDao.tableMap[node.uuid]!.columns;
       headers.addAll(columns.map((c) => c.name));
-      tableBean = tableDao.tableMap[node.id];
+      tableBean = tableDao.tableMap[node.uuid];
     }
-    if (tableDao.tableRowMap.containsKey(node.id)) {
-      rows = tableDao.tableRowMap[node.id]!;
+    if (tableDao.tableRowMap.containsKey(node.uuid)) {
+      rows = tableDao.tableRowMap[node.uuid]!;
     }
     List indexColumns =
         List<String>.generate(rows.length, (index) => (index + 1).toString());

@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:h2o/bean/block.dart';
 import 'package:h2o/bean/node.dart';
+import 'package:h2o/db/db.dart';
 import 'package:h2o/model/global.dart';
 
 enum OperationType {
@@ -15,11 +16,11 @@ enum OperationType {
 }
 
 class Operation {
-  OperationType op;
+  OperationType type;
   NodeBean? node;
   BlockBean? block;
 
-  Operation(this.op, {this.node, this.block});
+  Operation(this.type, {this.node, this.block});
 }
 
 class Transaction {
@@ -52,6 +53,16 @@ class TransactionDao extends ChangeNotifier {
     while (true) {
       final event = await localChannel.receive();
       if (!event.isClosed) {
+        var t = event.data!;
+        t.operations.forEach((operation) {
+          switch (operation.type) {
+            case OperationType.InsertNode:
+              DBProvider.db.insertNode(operation.node!);
+              break;
+            default:
+          }
+        });
+
         debugPrint("process local transaction");
       }
     }

@@ -26,7 +26,7 @@ class BulletedListBlock extends StatelessWidget {
         focusNode: FocusNode(),
         onKey: documentPageModel.handleRawKeyEvent,
         child: TextField(
-          focusNode: documentPageModel.focusMap[block.id]![block.type],
+          focusNode: documentPageModel.focusMap[block.uuid]![block.type],
           style: textStyle,
           onSubmitted: (_) {
             documentPageModel.onSubmitCreateBlock(block);

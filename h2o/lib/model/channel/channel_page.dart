@@ -31,7 +31,7 @@ class ChannelPageModel extends ChangeNotifier {
   onTapCreateBlock(String text) async {
     controller.text = "";
     if (text.trim().isNotEmpty) {
-      List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.id]!;
+      List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.uuid]!;
 
       String uuidString = Uuid().v4();
       String preBlockID = EMPTY_UUID;

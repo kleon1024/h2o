@@ -8,7 +8,7 @@ class PlatformInfo {
   }
 
   bool isAppOS() {
-    return Platform.isMacOS || Platform.isAndroid;
+    return Platform.isIOS || Platform.isAndroid;
   }
 
   bool isWeb() {

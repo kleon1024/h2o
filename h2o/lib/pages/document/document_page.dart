@@ -17,7 +17,7 @@ class DocumentPage extends StatelessWidget {
 
     debugPrint("editingNew:" + documentPageModel.editingNew.toString());
     debugPrint(
-        "editingBlock.id:" + documentPageModel.editingBlock.id.toString());
+        "editingBlock.id:" + documentPageModel.editingBlock.uuid.toString());
     debugPrint(
         "editingPreBlockID:" + documentPageModel.editingPreBlockID.toString());
     debugPrint(
@@ -27,8 +27,8 @@ class DocumentPage extends StatelessWidget {
     debugPrint("editBlock.type:" + documentPageModel.editingBlock.type);
 
     List<BlockBean> blocks = [];
-    if (blockDao.blockMap.containsKey(documentPageModel.node.id)) {
-      blocks = blockDao.blockMap[documentPageModel.node.id]!;
+    if (blockDao.blockMap.containsKey(documentPageModel.node.uuid)) {
+      blocks = blockDao.blockMap[documentPageModel.node.uuid]!;
     }
     debugPrint("blocks:" + blocks.toString());
     debugPrint("---");
@@ -62,9 +62,10 @@ class DocumentPage extends StatelessWidget {
                   delegate:
                       ReorderableSliverChildBuilderDelegate((context, index) {
                     FocusNode? focusNode;
-                    if (documentPageModel.focusMap[blocks[index].id] != null) {
+                    if (documentPageModel.focusMap[blocks[index].uuid] !=
+                        null) {
                       focusNode = documentPageModel
-                          .focusMap[blocks[index].id]![blocks[index].type]!;
+                          .focusMap[blocks[index].uuid]![blocks[index].type]!;
                     }
 
                     return Container(
@@ -77,8 +78,8 @@ class DocumentPage extends StatelessWidget {
                           NodeType.document,
                           index,
                           showCreator: false,
-                          editing: documentPageModel.editingBlock.id ==
-                              blocks[index].id,
+                          editing: documentPageModel.editingBlock.uuid ==
+                              blocks[index].uuid,
                           handleRawKeyEvent:
                               documentPageModel.handleRawKeyEvent,
                           focusNode: focusNode,
@@ -111,8 +112,8 @@ class DocumentPage extends StatelessWidget {
                             handleRawKeyEvent:
                                 documentPageModel.handleRawKeyEvent,
                             focusNode: documentPageModel.focusMap[
-                                documentPageModel.editingBlock
-                                    .id]![documentPageModel.editingBlock.type],
+                                    documentPageModel.editingBlock.uuid]![
+                                documentPageModel.editingBlock.type],
                             onTextFieldChanged:
                                 documentPageModel.onTextFieldChanged,
                             onSubmitCreateBlock:

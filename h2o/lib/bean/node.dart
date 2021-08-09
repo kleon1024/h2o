@@ -4,7 +4,6 @@ part 'node.g.dart';
 
 @JsonSerializable()
 class NodeBean {
-  int id;
   String uuid;
   String type;
   String name;
@@ -19,7 +18,6 @@ class NodeBean {
   bool expanded;
 
   NodeBean({
-    this.id = 0,
     required this.uuid,
     required this.type,
     required this.name,

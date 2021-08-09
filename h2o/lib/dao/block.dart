@@ -94,7 +94,7 @@ class BlockDao extends ChangeNotifier {
       retBlockBean = await Api.createNodeBlock(
         blockEvent.node!.uuid,
         data: {
-          "id": blockBean.id,
+          "uuid": blockBean.uuid,
           "text": blockBean.text,
           "type": blockBean.type,
           "previous": blockBean.previousId,
@@ -174,9 +174,9 @@ class BlockDao extends ChangeNotifier {
   // }
 
   updateBlock(NodeBean node, BlockBean updatedBlock) {
-    List<BlockBean> blocks = blockMap[node.id]!;
+    List<BlockBean> blocks = blockMap[node.uuid]!;
     for (int i = 0; i < blocks.length; i++) {
-      if (blocks[i].id == updatedBlock.id) {
+      if (blocks[i].uuid == updatedBlock.uuid) {
         blocks[i] = updatedBlock;
         break;
       }

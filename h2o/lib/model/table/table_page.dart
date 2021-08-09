@@ -32,9 +32,9 @@ class TablePageModel extends ChangeNotifier {
 
   Future updateFocus() async {
     List<ColumnBean> columns =
-        this.globalModel.tableDao!.tableMap[node.id]!.columns;
+        this.globalModel.tableDao!.tableMap[node.uuid]!.columns;
     List<Map<String, String>> rows =
-        this.globalModel.tableDao!.tableRowMap[node.id]!;
+        this.globalModel.tableDao!.tableRowMap[node.uuid]!;
     debugPrint("updated focus map :" +
         rows.length.toString() +
         " x " +
@@ -48,14 +48,14 @@ class TablePageModel extends ChangeNotifier {
   }
 
   onTapCreateRow() async {
-    TableBean table = this.globalModel.tableDao!.tableMap[node.id]!;
+    TableBean table = this.globalModel.tableDao!.tableMap[node.uuid]!;
     Map<String, String> row = {};
-    this.globalModel.tableDao!.tableMap[node.id]!.columns.forEach((c) {
+    this.globalModel.tableDao!.tableMap[node.uuid]!.columns.forEach((c) {
       row[c.id] = c.defaultValue;
     });
 
     List<Map<String, String>> rows =
-        this.globalModel.tableDao!.tableRowMap[node.id]!;
+        this.globalModel.tableDao!.tableRowMap[node.uuid]!;
     rows.add(row);
     debugPrint("add " + row.toString());
 
@@ -81,9 +81,9 @@ class TablePageModel extends ChangeNotifier {
 
   onTapEmptyArea() async {
     if (editingRowIndex >= 0 && editingColumn.id != EMPTY_UUID) {
-      TableBean table = this.globalModel.tableDao!.tableMap[node.id]!;
+      TableBean table = this.globalModel.tableDao!.tableMap[node.uuid]!;
       Map<String, String> row =
-          this.globalModel.tableDao!.tableRowMap[node.id]![editingRowIndex];
+          this.globalModel.tableDao!.tableRowMap[node.uuid]![editingRowIndex];
       Map<String, String> patchRow = {
         editingColumn.id: editingController.text,
       };
