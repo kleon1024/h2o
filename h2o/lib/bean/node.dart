@@ -14,6 +14,8 @@ class NodeBean {
   int createdAt;
   @JsonKey(name: "updated_at")
   int updatedAt;
+  @JsonKey(name: "team_id")
+  String teamId;
   @JsonKey(ignore: true)
   bool expanded;
 
@@ -23,6 +25,7 @@ class NodeBean {
     required this.name,
     required this.indent,
     required this.previousId,
+    required this.teamId,
     this.createdAt = 0,
     this.updatedAt = 0,
     this.expanded = false,

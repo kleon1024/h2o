@@ -1,13 +1,24 @@
+import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:h2o/api/api.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:h2o/bean/column.dart';
 import 'package:h2o/bean/node.dart';
-import 'package:h2o/bean/table.dart';
-import 'package:h2o/global/constants.dart';
+import 'package:h2o/bean/row.dart';
+import 'package:h2o/dao/table.dart';
+import 'package:h2o/dao/transaction.dart';
 import 'package:h2o/model/global.dart';
 import 'package:provider/provider.dart';
+import 'package:syncfusion_flutter_datagrid/datagrid.dart';
+import 'package:uuid/uuid.dart';
 
-class TablePageModel extends ChangeNotifier {
+class DataTableCell {
+  String name;
+  Object value;
+  DataTableCell({required this.name, required this.value});
+}
+
+class TablePageModel extends DataGridSource {
   BuildContext context;
   GlobalModel globalModel;
 
@@ -15,104 +26,179 @@ class TablePageModel extends ChangeNotifier {
 
   TablePageModel(this.context, this.node)
       : globalModel = Provider.of<GlobalModel>(context) {
-    this.globalModel.tableDao!.updateTables(node);
-    this.globalModel.registerCallback(EventType.COLUMN_CREATED, refresh);
-    this.globalModel.registerCallback(EventType.TABLE_UPDATED, updateFocus);
-    this.globalModel.registerCallback(EventType.COLUMN_CREATED, updateFocus);
+    debugPrint("New Table Page Model");
+    this.globalModel.tableDao!.loadTables(node);
+    // this.globalModel.registerCallback(EventType.COLUMN_CREATED, refresh);
+    // this.globalModel.registerCallback(EventType.TABLE_UPDATED, updateFocus);
+    // this.globalModel.registerCallback(EventType.COLUMN_CREATED, updateFocus);
   }
 
-  final editingController = TextEditingController();
-  final Map<int, Map<String, FocusNode>> focusMap = {};
-  int editingRowIndex = -1;
-  ColumnBean editingColumn = ColumnBean();
+  List<RowBean> get rawRows => () {
+        var rows = this.globalModel.tableDao!.tableRowMap[node.uuid];
+        if (rows == null) {
+          rows = [];
+        }
+        return rows;
+      }();
 
-  Future refresh() async {
-    notifyListeners();
+  List<ColumnBean> get rawColumns => () {
+        var cols = this.globalModel.tableDao!.tableColumnMap[node.uuid];
+        if (cols == null) {
+          cols = [];
+        }
+        return cols;
+      }();
+
+  @override
+  List<DataGridRow> get rows => this
+      .rawRows
+      .map<DataGridRow>((r) => DataGridRow(cells: () {
+            List<DataGridCell> cells = [];
+            for (int i = 0; i < rawColumns.length; i++) {
+              debugPrint(
+                  r.uuid + " " + i.toString() + " " + r.values[i].toString());
+              cells.add(DataGridCell<Object>(
+                  columnName: rawColumns[i].name, value: r.values[i]));
+            }
+            return cells;
+          }()))
+      .toList();
+
+  @override
+  DataGridRowAdapter? buildRow(DataGridRow row) {
+    return DataGridRowAdapter(
+        cells: row.getCells().map<Widget>((dataGridCell) {
+      return Container(
+          alignment: Alignment.centerLeft,
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            dataGridCell.value.toString(),
+            style: Theme.of(context).textTheme.bodyText2!,
+            overflow: TextOverflow.ellipsis,
+          ));
+    }).toList());
   }
 
-  Future updateFocus() async {
-    List<ColumnBean> columns =
-        this.globalModel.tableDao!.tableMap[node.uuid]!.columns;
-    List<Map<String, String>> rows =
-        this.globalModel.tableDao!.tableRowMap[node.uuid]!;
-    debugPrint("updated focus map :" +
-        rows.length.toString() +
-        " x " +
-        columns.length.toString());
-    for (int i = 0; i < rows.length; i++) {
-      focusMap[i] = {};
-      for (int j = 0; j < columns.length; j++) {
-        focusMap[i]![columns[j].id] = FocusNode();
-      }
+  @override
+  void onCellSubmit(DataGridRow dataGridRow, RowColumnIndex rowColumnIndex,
+      GridColumn column) {}
+
+  handleRawKeyEvent(RawKeyEvent event) {
+    if (event is RawKeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.enter) {
+      notifyListeners();
     }
   }
+
+  @override
+  Widget? buildEditWidget(DataGridRow dataGridRow,
+      RowColumnIndex rowColumnIndex, GridColumn column, CellSubmit submitCell) {
+    // Text going to display on editable widget
+    ColumnBean column = rawColumns[rowColumnIndex.columnIndex];
+    RowBean row = rawRows[rowColumnIndex.rowIndex];
+    final Object obj = row.values[rowColumnIndex.columnIndex];
+    String displayText = obj.toString();
+
+    Object newCellValue = '';
+    TextEditingController editingController = TextEditingController();
+
+    List<TextInputFormatter> formatters = [];
+    if (column.type == EnumToString.convertToString(ColumnType.integer)) {
+      formatters.add(FilteringTextInputFormatter.allow(RegExp(r"[0-9]")));
+    }
+    var focusNode = FocusNode();
+    focusNode.addListener(() {
+      if (!focusNode.hasFocus) {
+        debugPrint("lost focus");
+        this.globalModel.transactionDao!.transaction(Transaction([
+              Operation(OperationType.UpdateRow, node: node, columns: [
+                column.uuid
+              ], rows: [
+                RowBean(uuid: row.uuid, values: [editingController.text])
+              ])
+            ]));
+        notifyListeners();
+      }
+    });
+    var tf = TextField(
+      autofocus: true,
+      focusNode: focusNode,
+      controller: editingController..text = displayText,
+      textAlign: TextAlign.left,
+      style: Theme.of(context).textTheme.bodyText1!,
+      inputFormatters: formatters,
+      decoration: InputDecoration(
+        isDense: true,
+        border: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        errorBorder: InputBorder.none,
+        disabledBorder: InputBorder.none,
+        contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 1.0),
+      ),
+      keyboardType: TextInputType.text,
+      onChanged: (String value) {
+        if (column.type == EnumToString.convertToString(ColumnType.string)) {
+          newCellValue = value;
+        } else if (column.type ==
+            EnumToString.convertToString(ColumnType.integer)) {
+          if (value.length == 0) {
+            value = '0';
+          } else {
+            newCellValue = int.parse(value);
+          }
+        }
+
+        row.values[rowColumnIndex.columnIndex] = newCellValue;
+      },
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      alignment: Alignment.centerLeft,
+      child: RawKeyboardListener(
+        focusNode: FocusNode(),
+        onKey: handleRawKeyEvent,
+        child: tf,
+      ),
+    );
+  }
+
+  bool sorting = false;
+  String sortColumn = "";
+  DataGridSortDirection sortDirection = DataGridSortDirection.ascending;
 
   onTapCreateRow() async {
-    TableBean table = this.globalModel.tableDao!.tableMap[node.uuid]!;
-    Map<String, String> row = {};
-    this.globalModel.tableDao!.tableMap[node.uuid]!.columns.forEach((c) {
-      row[c.id] = c.defaultValue;
+    List<Object> row = [];
+    List<String> columnsStr = [];
+    List<String> rowStr = [];
+    this.globalModel.tableDao!.tableColumnMap[node.uuid]!.forEach((c) {
+      if (EnumToString.convertToString(ColumnType.integer) == c.type) {
+        row.add(int.parse(c.defaultValue));
+      } else {
+        row.add(c.defaultValue);
+      }
+      columnsStr.add(c.uuid);
+      rowStr.add(c.defaultValue);
     });
+    var rowBean = RowBean(uuid: Uuid().v4(), values: row);
 
-    List<Map<String, String>> rows =
-        this.globalModel.tableDao!.tableRowMap[node.uuid]!;
-    rows.add(row);
-    debugPrint("add " + row.toString());
+    List<RowBean> rows = this.globalModel.tableDao!.tableRowMap[node.uuid]!;
+    rows.add(rowBean);
 
-    notifyListeners();
+    this.globalModel.transactionDao!.transaction(Transaction([
+          Operation(OperationType.InsertRow,
+              node: node, columns: columnsStr, rows: [rowBean])
+        ]));
 
-    Map<String, String>? retRow = await Api.createRow(
-      table.id,
-      data: {'row': row},
-      options: this.globalModel.userDao!.accessTokenOptions(),
-    );
-    if (retRow != null) {}
-  }
-
-  onTapCell(int rowIndex, ColumnBean columnBean, String value) async {
-    debugPrint(
-        "on tap cell:" + rowIndex.toString() + "," + columnBean.id.toString());
-    editingRowIndex = rowIndex;
-    editingColumn = columnBean;
-    editingController.text = value;
-    focusMap[editingRowIndex]![editingColumn.id]!.requestFocus();
     notifyListeners();
   }
 
-  onTapEmptyArea() async {
-    if (editingRowIndex >= 0 && editingColumn.id != EMPTY_UUID) {
-      TableBean table = this.globalModel.tableDao!.tableMap[node.uuid]!;
-      Map<String, String> row =
-          this.globalModel.tableDao!.tableRowMap[node.uuid]![editingRowIndex];
-      Map<String, String> patchRow = {
-        editingColumn.id: editingController.text,
-      };
-      row[editingColumn.id] = editingController.text;
-      // TODO Guarantee Success
-      Api.patchRow(
-        table.id,
-        row["id"]!,
-        data: {"row": patchRow},
-        options: this.globalModel.userDao!.accessTokenOptions(),
-      );
-    }
-
-    editingRowIndex = -1;
-    editingColumn = ColumnBean();
-    editingController.text = "";
+  onTapEmptyArea() {
     notifyListeners();
   }
 
-  onIntegerValueTextFieldChanged(String text) {
-    if (text.isEmpty) {
-      text = "0";
-    }
-    while (text.length > 1 && text.startsWith("0")) {
-      text = text.substring(1);
-    }
-    editingController.text = text;
-    editingController.selection = TextSelection.fromPosition(
-        TextPosition(offset: editingController.text.length));
+  Future refresh() async {
     notifyListeners();
   }
 }

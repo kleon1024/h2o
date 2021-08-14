@@ -8,7 +8,10 @@ part of 'table.dart';
 
 TableBean _$TableBeanFromJson(Map<String, dynamic> json) {
   return TableBean(
-    id: json['id'] as String,
+    uuid: json['uuid'] as String,
+    nodeId: json['node_id'] as String,
+    createdAt: json['created_at'] as int,
+    updatedAt: json['updated_at'] as int,
     columns: (json['columns'] as List<dynamic>)
         .map((e) => ColumnBean.fromJson(e as Map<String, dynamic>))
         .toList(),
@@ -16,6 +19,9 @@ TableBean _$TableBeanFromJson(Map<String, dynamic> json) {
 }
 
 Map<String, dynamic> _$TableBeanToJson(TableBean instance) => <String, dynamic>{
-      'id': instance.id,
+      'uuid': instance.uuid,
+      'node_id': instance.nodeId,
+      'created_at': instance.createdAt,
+      'updated_at': instance.updatedAt,
       'columns': instance.columns,
     };

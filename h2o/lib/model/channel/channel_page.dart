@@ -5,6 +5,7 @@ import 'package:h2o/bean/block.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/dao/block.dart';
 import 'package:h2o/dao/node.dart';
+import 'package:h2o/dao/transaction.dart';
 import 'package:h2o/global/constants.dart';
 import 'package:h2o/model/document/document_page.dart';
 import 'package:h2o/model/global.dart';
@@ -20,9 +21,9 @@ class ChannelPageModel extends ChangeNotifier {
 
   ChannelPageModel(this.context, this.node, {bool update = true})
       : globalModel = Provider.of<GlobalModel>(context) {
-    // if (update) {
-    //   this.globalModel.blockDao!.updateBlocks(node);
-    // }
+    if (update) {
+      this.globalModel.blockDao!.loadBlocks(node);
+    }
   }
 
   final controller = TextEditingController();
@@ -34,23 +35,20 @@ class ChannelPageModel extends ChangeNotifier {
       List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.uuid]!;
 
       String uuidString = Uuid().v4();
-      String preBlockID = EMPTY_UUID;
-      if (blocks.length > 0) {
-        blocks.last.previousId = uuidString;
-        preBlockID = blocks.last.uuid;
-      }
       BlockBean blockBean = BlockBean(
+        nodeId: node.uuid,
         uuid: uuidString,
         text: text,
         type: EnumToString.convertToString(BlockType.text),
-        previousId: preBlockID,
+        previousId: EMPTY_UUID,
         authorId: this.globalModel.userDao!.user!.id,
+        createdAt: DateTime.now().toUtc().millisecondsSinceEpoch,
         updatedAt: DateTime.now().toUtc().millisecondsSinceEpoch,
       );
-      blocks.add(blockBean);
+      blocks.insert(0, blockBean);
       notifyListeners();
-      this.globalModel.blockDao!.sendBlockEvent(
-          BlockBean.copyFrom(blockBean), BlockEventType.create, node);
+      this.globalModel.transactionDao!.transaction(Transaction(
+          [Operation(OperationType.InsertChannelBlock, block: blockBean)]));
     }
     focusNode.requestFocus();
   }

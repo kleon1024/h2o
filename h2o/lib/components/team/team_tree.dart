@@ -30,21 +30,24 @@ class TeamTree extends StatelessWidget {
     List<NodeBean> nodes = [];
     if (team != null && nodeDao.nodeMap.containsKey(team.id)) {
       nodes = nodeDao.nodeMap[team.id]!;
-      debugPrint(nodes.toString());
     }
 
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-      margin: EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+      padding: EdgeInsets.symmetric(vertical: 0, horizontal: 18),
+      margin: EdgeInsets.symmetric(vertical: 20, horizontal: 8),
       decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.all(Radius.circular(8))),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          title: Text("Test"),
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(40),
+          child: AppBar(
+            primary: false,
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            title: Text("Test"),
+          ),
         ),
         body: BouncingScrollView(
           slivers: [
@@ -76,7 +79,6 @@ class TeamTree extends StatelessWidget {
             SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
               String preNodeID = EMPTY_UUID;
-              String posNodeID = EMPTY_UUID;
               int indent = 0;
               if (nodes.length > 0) {
                 preNodeID = nodes[nodes.length - 1].uuid;

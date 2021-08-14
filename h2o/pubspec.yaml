@@ -23,6 +23,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  syncfusion_flutter_datagrid: ^19.2.55-beta
+  syncfusion_flutter_charts: ^19.2.51
   path_provider: ^2.0.2
   sqflite: ^2.0.0+3
   sqflite_common_ffi: ^2.0.0+1

@@ -13,6 +13,10 @@ class BlockBean {
   String authorId;
   @JsonKey(name: "previous_id")
   String previousId;
+  @JsonKey(name: "node_id")
+  String nodeId;
+  @JsonKey(name: "properties")
+  String properties;
   @JsonKey(name: "created_at")
   int createdAt;
   @JsonKey(name: "updated_at")
@@ -21,6 +25,8 @@ class BlockBean {
   BlockBean({
     this.uuid = EMPTY_UUID,
     this.previousId = EMPTY_UUID,
+    required this.nodeId,
+    this.properties = "{}",
     this.type = "text",
     this.text = "",
     this.revision = 0,
@@ -31,6 +37,7 @@ class BlockBean {
 
   factory BlockBean.copyFrom(BlockBean bean) {
     return BlockBean(
+      nodeId: bean.nodeId,
       uuid: bean.uuid,
       previousId: bean.previousId,
       type: bean.type,

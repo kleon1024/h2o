@@ -28,8 +28,11 @@ class BulletedListBlock extends StatelessWidget {
         child: TextField(
           focusNode: documentPageModel.focusMap[block.uuid]![block.type],
           style: textStyle,
+          keyboardType: TextInputType.multiline,
+          maxLines: 2,
+          minLines: 1,
           onSubmitted: (_) {
-            documentPageModel.onSubmitCreateBlock(block);
+            documentPageModel.onSubmitCreateBlock();
           },
           controller: documentPageModel.editingController,
           onChanged: documentPageModel.onTextFieldChanged,
@@ -47,7 +50,7 @@ class BulletedListBlock extends StatelessWidget {
 
     return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Container(
-          padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+          padding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
           child: Text("\u2022  ",
               textAlign: TextAlign.center,
               style: textStyle.merge(TextStyle(fontWeight: FontWeight.bold)))),

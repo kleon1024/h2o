@@ -9,7 +9,7 @@ class TextBlock extends StatelessWidget {
   final bool editing;
   final Function(RawKeyEvent event)? handleRawKeyEvent;
   final FocusNode? focusNode;
-  final Function(BlockBean block)? onSubmitCreateBlock;
+  final Function()? onSubmitCreateBlock;
   final TextEditingController? editingController;
   final Function(String text)? onTextFieldChanged;
 
@@ -53,10 +53,16 @@ class TextBlock extends StatelessWidget {
         focusNode: FocusNode(),
         onKey: handleRawKeyEvent,
         child: TextField(
+          keyboardType: TextInputType.multiline,
+          maxLines: 2,
+          minLines: 1,
           focusNode: focusNode,
           style: textStyle,
           onSubmitted: (_) {
-            onSubmitCreateBlock!(block);
+            onSubmitCreateBlock!();
+          },
+          onEditingComplete: () {
+            debugPrint("on Editing Complete");
           },
           controller: editingController,
           onChanged: onTextFieldChanged,
@@ -73,7 +79,7 @@ class TextBlock extends StatelessWidget {
     }
 
     return Container(
-        padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+        padding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         child: Text(
           this.block.text
           // +

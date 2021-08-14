@@ -8,17 +8,23 @@ part of 'column.dart';
 
 ColumnBean _$ColumnBeanFromJson(Map<String, dynamic> json) {
   return ColumnBean(
-    id: json['id'] as String,
+    uuid: json['uuid'] as String,
     name: json['name'] as String,
     type: json['type'] as String,
-    defaultValue: json['defaultValue'] as String,
+    defaultValue: json['default_value'] as String,
+    tableId: json['table_id'] as String,
+    createdAt: json['created_at'] as int,
+    updatedAt: json['updated_at'] as int,
   );
 }
 
 Map<String, dynamic> _$ColumnBeanToJson(ColumnBean instance) =>
     <String, dynamic>{
-      'id': instance.id,
+      'uuid': instance.uuid,
       'name': instance.name,
       'type': instance.type,
-      'defaultValue': instance.defaultValue,
+      'default_value': instance.defaultValue,
+      'table_id': instance.tableId,
+      'created_at': instance.createdAt,
+      'updated_at': instance.updatedAt,
     };

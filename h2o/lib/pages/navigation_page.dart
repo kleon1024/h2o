@@ -20,7 +20,7 @@ class NavigationPage extends StatelessWidget {
       ),
       child: Scaffold(
         body: Container(
-          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
           child: Row(
             children: [
               Expanded(flex: 1, child: TeamSideBar()),

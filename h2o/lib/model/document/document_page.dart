@@ -1,15 +1,12 @@
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
-import 'package:h2o/api/api.dart';
 import 'package:h2o/bean/block.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/dao/block.dart';
-import 'package:h2o/dao/node.dart';
+import 'package:h2o/dao/transaction.dart';
 import 'package:h2o/global/constants.dart';
-import 'package:h2o/model/channel/channel_page.dart';
 import 'package:h2o/model/global.dart';
-import 'package:h2o/pages/channel/channel_page.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
@@ -27,11 +24,20 @@ class DocumentPageModel extends ChangeNotifier {
   GlobalModel globalModel;
 
   NodeBean node;
+  // Is Editing New Block
+  bool editingNew = false;
+  String editingPreBlockID = EMPTY_UUID;
+  String editingPosBlockID = EMPTY_UUID;
+  BlockBean editingBlock;
+  int editingIndex = 0;
+  EditState editState = EditState.Idle;
+  bool editingNewGuard = false;
 
   DocumentPageModel(this.context, this.node, {bool update = true})
-      : globalModel = Provider.of<GlobalModel>(context) {
+      : globalModel = Provider.of<GlobalModel>(context),
+        editingBlock = BlockBean(nodeId: node.uuid) {
     if (update) {
-      // this.globalModel.blockDao!.updateBlocks(node);
+      this.globalModel.blockDao!.loadDocumentBlocks(node);
     } else {
       updateFocus();
     }
@@ -47,15 +53,6 @@ class DocumentPageModel extends ChangeNotifier {
     }
   };
 
-  // New
-  bool editingNew = false;
-  String editingPreBlockID = EMPTY_UUID;
-  String editingPosBlockID = EMPTY_UUID;
-  BlockBean editingBlock = BlockBean();
-  int editingIndex = 0;
-  EditState editState = EditState.Idle;
-  bool editingNewGuard = false;
-
   Future updateFocus() async {
     List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.uuid]!;
     blocks.forEach((block) {
@@ -65,7 +62,7 @@ class DocumentPageModel extends ChangeNotifier {
     });
   }
 
-  onSubmitCreateBlock(BlockBean block) async {
+  onSubmitCreateBlock() async {
     // TODO: atomic
     debugPrint("onSubmitCreateBlock");
     this.onCreateBlock(true);
@@ -78,11 +75,14 @@ class DocumentPageModel extends ChangeNotifier {
       List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.uuid]!;
       editingIndex = blocks.length;
       if (blocks.length > 0) {
-        editingPreBlockID = blocks[blocks.length - 1].uuid;
+        editingPreBlockID = blocks.last.uuid;
       } else {
-        editingPosBlockID = EMPTY_UUID;
+        editingPreBlockID = EMPTY_UUID;
       }
-      editingPosBlockID = EMPTY_UUID;
+      // } else {
+      //   editingPosBlockID = EMPTY_UUID;
+      // }
+      // editingPosBlockID = EMPTY_UUID;
     }
   }
 
@@ -93,6 +93,7 @@ class DocumentPageModel extends ChangeNotifier {
       }
       editingNew = false;
     } else {
+      // Editing an existing block then save on tap empty area & create a new block
       if (editingBlock.uuid != EMPTY_UUID) {
         List<BlockBean> blocks =
             this.globalModel.blockDao!.blockMap[node.uuid]!;
@@ -101,8 +102,10 @@ class DocumentPageModel extends ChangeNotifier {
           BlockBean? blockBean = editingBlock;
           blockBean.text = editingController.text;
           blocks[editingIndex] = blockBean;
-          globalModel.blockDao!.sendBlockEvent(
-              BlockBean.copyFrom(blockBean), BlockEventType.patch, node);
+          this.globalModel.transactionDao!.transaction(Transaction([
+                Operation(OperationType.UpdateDocumentBlock,
+                    block: BlockBean.fromJson(blockBean.toJson()))
+              ]));
         }
       }
       editingNew = true;
@@ -113,6 +116,7 @@ class DocumentPageModel extends ChangeNotifier {
     }
     editingController.text = "";
     editingBlock = BlockBean(
+      nodeId: node.uuid,
       updatedAt: DateTime.now().toUtc().millisecondsSinceEpoch,
       authorId: globalModel.userDao!.user!.id,
     );
@@ -120,12 +124,14 @@ class DocumentPageModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Submit: enter key to submit
   onCreateBlock(bool submit) async {
     if (editingNew) {
       List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.uuid]!;
       String uuidString = Uuid().v4();
       BlockBean? blockBean = BlockBean(
         uuid: uuidString,
+        nodeId: node.uuid,
         type: editingBlock.type,
         text: editingController.text,
         previousId: editingPreBlockID,
@@ -140,6 +146,7 @@ class DocumentPageModel extends ChangeNotifier {
       // if (blocks.length > 1) {
       //   blocks[editingIndex - 1].posBlockID = blockBean.id;
       // }
+
       focusMap[blockBean.uuid] = {blockBean.type: FocusNode()};
       setEditingNewPrePosBlockID();
       editingController.text = "";
@@ -156,8 +163,10 @@ class DocumentPageModel extends ChangeNotifier {
       }
       notifyListeners();
 
-      globalModel.blockDao!.sendBlockEvent(
-          BlockBean.copyFrom(blockBean), BlockEventType.create, node);
+      this.globalModel.transactionDao!.transaction(Transaction([
+            Operation(OperationType.InsertDocumentBlock,
+                block: BlockBean.copyFrom(blockBean))
+          ]));
     } else {
       if (submit) {
         List<BlockBean> blocks =
@@ -168,8 +177,11 @@ class DocumentPageModel extends ChangeNotifier {
           BlockBean? blockBean = editingBlock;
           blockBean.text = editingController.text;
           blocks[editingIndex] = blockBean;
-          globalModel.blockDao!.sendBlockEvent(
-              BlockBean.copyFrom(blockBean), BlockEventType.patch, node);
+
+          this.globalModel.transactionDao!.transaction(Transaction([
+                Operation(OperationType.UpdateDocumentBlock,
+                    block: BlockBean.copyFrom(blockBean))
+              ]));
         }
 
         String uuidString = Uuid().v4();
@@ -177,6 +189,7 @@ class DocumentPageModel extends ChangeNotifier {
           uuid: uuidString,
           type: EnumToString.convertToString(BlockType.text),
           text: "",
+          nodeId: node.uuid,
           previousId: editingBlock.uuid,
           updatedAt: DateTime.now().toUtc().millisecondsSinceEpoch,
           authorId: globalModel.userDao!.user!.id,
@@ -190,10 +203,11 @@ class DocumentPageModel extends ChangeNotifier {
           editState = EditState.ReadyToBeText;
         }
 
-        // blocks[editingIndex].posBlockID = newBlockBean.id;
         blocks.insert(editingIndex + 1, newBlockBean);
-        globalModel.blockDao!.sendBlockEvent(
-            BlockBean.copyFrom(newBlockBean), BlockEventType.create, node);
+        this.globalModel.transactionDao!.transaction(Transaction([
+              Operation(OperationType.InsertDocumentBlock,
+                  block: BlockBean.copyFrom(newBlockBean))
+            ]));
 
         focusMap[newBlockBean.uuid] = {newBlockBean.type: FocusNode()};
         editingIndex += 1;
@@ -214,6 +228,10 @@ class DocumentPageModel extends ChangeNotifier {
 
   onTextFieldChanged(String text) {
     debugPrint("onTextFieldChanged:" + text.toString());
+    if (text.endsWith("\n")) {
+      this.editingController.text = text.trimRight();
+      this.onSubmitCreateBlock();
+    }
     if (text == "# ") {
       editingBlock.type = EnumToString.convertToString(BlockType.heading1);
       editingController.text = "";
@@ -311,8 +329,10 @@ class DocumentPageModel extends ChangeNotifier {
           }
         } else if (editingIndex >= 0 && editingIndex < blocks.length) {
           focusMap.remove(editingBlock.uuid);
-          globalModel.blockDao!.sendBlockEvent(
-              BlockBean.copyFrom(editingBlock), BlockEventType.delete, node);
+          this.globalModel.transactionDao!.transaction(Transaction([
+                Operation(OperationType.DeleteDocumentBlock,
+                    block: BlockBean.copyFrom(editingBlock))
+              ]));
 
           if (editingIndex == 0) {
             if (blocks.length > 1) {
@@ -320,6 +340,7 @@ class DocumentPageModel extends ChangeNotifier {
             }
             editingIndex -= 1;
             editingBlock = BlockBean(
+              nodeId: node.uuid,
               updatedAt: DateTime.now().toUtc().millisecondsSinceEpoch,
               authorId: globalModel.userDao!.user!.id,
             );
@@ -345,76 +366,43 @@ class DocumentPageModel extends ChangeNotifier {
     }
   }
 
-  onChangeToChannel() async {
-    node.type = EnumToString.convertToString(NodeType.channel);
-    // TODO Guarantee
-    Api.patchNode(node.uuid,
-        data: {"type": node.type},
-        options: this.globalModel.userDao!.accessTokenOptions());
-
-    Navigator.pop(context);
-    Navigator.of(context).push(
-      CupertinoPageRoute(builder: (ctx) {
-        return ChangeNotifierProvider(
-            create: (_) => ChannelPageModel(context, node, update: false),
-            child: ChannelPage());
-      }),
-    );
-  }
-
   onReorder(int oldIndex, int newIndex) {
     debugPrint("move " + oldIndex.toString() + "->" + newIndex.toString());
     if (oldIndex == newIndex) return;
     List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.uuid]!;
     BlockBean movingBlock = blocks[oldIndex];
-    if (oldIndex > 0 && oldIndex != newIndex + 1) {
-      // blocks[oldIndex - 1].posBlockID = movingBlock.posBlockID;
-      this.globalModel.blockDao!.sendBlockEvent(
-          BlockBean.copyFrom(blocks[oldIndex - 1]), BlockEventType.patch, node);
-    }
-    if (oldIndex < blocks.length - 1 && newIndex != oldIndex + 1) {
+    String oldPreviousId = movingBlock.previousId;
+
+    List<Operation> ops = [];
+    // Remove at oldIndex
+    if (oldIndex < blocks.length - 1) {
       blocks[oldIndex + 1].previousId = movingBlock.previousId;
-      this.globalModel.blockDao!.sendBlockEvent(
-          BlockBean.copyFrom(blocks[oldIndex + 1]), BlockEventType.patch, node);
     }
 
+    // Insert at newIndex
     if (oldIndex < newIndex) {
-      if (newIndex == oldIndex + 1) {
-        blocks[newIndex].previousId = movingBlock.previousId;
-      }
       movingBlock.previousId = blocks[newIndex].uuid;
-      // movingBlock.posBlockID = blocks[newIndex].posBlockID;
-      // blocks[newIndex].posBlockID = movingBlock.id;
       if (newIndex < blocks.length - 1) {
         blocks[newIndex + 1].previousId = movingBlock.uuid;
-        this.globalModel.blockDao!.sendBlockEvent(
-            BlockBean.copyFrom(blocks[newIndex + 1]),
-            BlockEventType.patch,
-            node);
       }
     } else {
-      if (oldIndex == newIndex + 1) {
-        // blocks[newIndex].posBlockID = movingBlock.posBlockID;
-      }
       movingBlock.previousId = blocks[newIndex].previousId;
-      // movingBlock.posBlockID = blocks[newIndex].id;
       blocks[newIndex].previousId = movingBlock.uuid;
-      if (newIndex > 0) {
-        // blocks[newIndex - 1].posBlockID = movingBlock.id;
-        this.globalModel.blockDao!.sendBlockEvent(
-            BlockBean.copyFrom(blocks[newIndex - 1]),
-            BlockEventType.patch,
-            node);
-      }
     }
 
-    this.globalModel.blockDao!.sendBlockEvent(
-        BlockBean.copyFrom(blocks[oldIndex]), BlockEventType.patch, node);
-    this.globalModel.blockDao!.sendBlockEvent(
-        BlockBean.copyFrom(blocks[newIndex]), BlockEventType.patch, node);
+    String newPreviousId = movingBlock.previousId;
 
     BlockBean blockBean = blocks.removeAt(oldIndex);
+    blockBean.previousId = oldPreviousId;
+    ops.add(Operation(OperationType.DeleteDocumentBlock,
+        block: BlockBean.copyFrom(blockBean)));
+    blockBean.previousId = newPreviousId;
     blocks.insert(newIndex, blockBean);
+    ops.add(Operation(OperationType.InsertDocumentBlock,
+        block: BlockBean.copyFrom(blockBean)));
+
+    this.globalModel.transactionDao!.transaction(Transaction(ops));
+
     notifyListeners();
   }
 }

@@ -1,3 +1,4 @@
+import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:h2o/bean/block.dart';
@@ -39,11 +40,11 @@ class DocumentPage extends StatelessWidget {
         child: AppBar(
           title: Text(documentPageModel.node.name),
           actions: [
-            IconButton(
-                onPressed: () {
-                  documentPageModel.onChangeToChannel();
-                },
-                icon: Icon(CupertinoIcons.number, size: 18)),
+            // IconButton(
+            //     onPressed: () {
+            //       documentPageModel.onChangeToChannel();
+            //     },
+            //     icon: Icon(CupertinoIcons.number, size: 18)),
             IconButton(
                 onPressed: () {}, icon: Icon(CupertinoIcons.group, size: 18)),
           ],
@@ -70,29 +71,26 @@ class DocumentPage extends StatelessWidget {
 
                     return Container(
                         padding: EdgeInsets.symmetric(
-                          vertical: 3,
+                          vertical: 0,
                           horizontal: 20,
                         ),
-                        child: Block(
-                          blocks[index],
-                          NodeType.document,
-                          index,
-                          showCreator: false,
-                          editing: documentPageModel.editingBlock.uuid ==
-                              blocks[index].uuid,
-                          handleRawKeyEvent:
-                              documentPageModel.handleRawKeyEvent,
-                          focusNode: focusNode,
-                          onTextFieldChanged:
-                              documentPageModel.onTextFieldChanged,
-                          onSubmitCreateBlock:
-                              documentPageModel.onSubmitCreateBlock,
-                          editingController:
-                              documentPageModel.editingController,
-                          onTap: () {
-                            documentPageModel.onTapBlock(blocks[index], index);
-                          },
-                        ));
+                        child: Block(blocks[index], NodeType.document, index,
+                            showCreator: false,
+                            editing: documentPageModel.editingBlock.uuid ==
+                                blocks[index].uuid,
+                            handleRawKeyEvent:
+                                documentPageModel.handleRawKeyEvent,
+                            focusNode: focusNode,
+                            onTextFieldChanged:
+                                documentPageModel.onTextFieldChanged,
+                            onSubmitCreateBlock:
+                                documentPageModel.onSubmitCreateBlock,
+                            editingController: documentPageModel
+                                .editingController, onEnter: () {
+                          documentPageModel.onSubmitCreateBlock();
+                        }, onClick: () {
+                          documentPageModel.onTapBlock(blocks[index], index);
+                        }));
                   }, childCount: blocks.length),
                 ),
                 SliverList(
@@ -100,7 +98,7 @@ class DocumentPage extends StatelessWidget {
                     if (documentPageModel.editingNew) {
                       return Container(
                           padding: EdgeInsets.symmetric(
-                            vertical: 3,
+                            vertical: 0,
                             horizontal: 20,
                           ),
                           child: Block(
@@ -116,18 +114,54 @@ class DocumentPage extends StatelessWidget {
                                 documentPageModel.editingBlock.type],
                             onTextFieldChanged:
                                 documentPageModel.onTextFieldChanged,
-                            onSubmitCreateBlock:
-                                documentPageModel.onSubmitCreateBlock,
                             editingController:
                                 documentPageModel.editingController,
-                            onTap: () {
-                              documentPageModel.onTapBlock(
-                                  blocks[index], index);
+                            onEnter: () {
+                              documentPageModel.onSubmitCreateBlock();
                             },
+                            onSubmitCreateBlock:
+                                documentPageModel.onSubmitCreateBlock,
                           ));
                     } else {
                       return Container();
                     }
+                  }, childCount: 1),
+                ),
+                SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    return Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 0,
+                          horizontal: 20,
+                        ),
+                        child: Block(
+                          BlockBean(
+                            uuid: "123",
+                            nodeId: "123",
+                            type: EnumToString.convertToString(
+                              BlockType.chart,
+                            ),
+                            properties: "{}",
+                          ),
+                          NodeType.document,
+                          index,
+                          showCreator: false,
+                          editing: documentPageModel.editingNew,
+                          handleRawKeyEvent:
+                              documentPageModel.handleRawKeyEvent,
+                          focusNode: documentPageModel.focusMap[
+                              documentPageModel.editingBlock
+                                  .uuid]![documentPageModel.editingBlock.type],
+                          onTextFieldChanged:
+                              documentPageModel.onTextFieldChanged,
+                          editingController:
+                              documentPageModel.editingController,
+                          onEnter: () {
+                            documentPageModel.onSubmitCreateBlock();
+                          },
+                          onSubmitCreateBlock:
+                              documentPageModel.onSubmitCreateBlock,
+                        ));
                   }, childCount: 1),
                 ),
               ],

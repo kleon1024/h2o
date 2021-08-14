@@ -16,9 +16,6 @@ class TeamDao extends ChangeNotifier {
       this.globalModel = globalModel;
       globalModel.teamDao = this;
       this.loadTeams();
-
-      // globalModel.registerCallback(
-      //     EventType.FIRST_TIME_LOGIN_SUCCESS, updateTeams);
     }
   }
 

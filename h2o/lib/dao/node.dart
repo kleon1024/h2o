@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/db/db.dart';
+import 'package:h2o/global/constants.dart';
 import 'package:h2o/model/global.dart';
 
 enum NodeType {
@@ -31,8 +32,26 @@ class NodeDao extends ChangeNotifier {
   }
 
   Future loadNodes() async {
-    var nodes = await DBProvider.db.getNodes();
-    this.nodeMap["123"] = nodes;
+    String teamId = "123";
+    var nodes = await DBProvider.db.getNodes(teamId);
+
+    List<NodeBean> reordered = [];
+    Map<String, NodeBean> nodeMap = {};
+    nodes.forEach((n) {
+      nodeMap[n.previousId] = n;
+      debugPrint(n.previousId + " : " + n.uuid);
+    });
+    String previousId = EMPTY_UUID;
+    for (int i = 0; i < nodes.length; i++) {
+      var n = nodeMap[previousId];
+      if (n == null) {
+        debugPrint("reorder nodes unexpected previous node id: " + previousId);
+      }
+      reordered.add(n!);
+      previousId = n.uuid;
+    }
+    this.nodeMap[teamId] = reordered;
+    notifyListeners();
   }
 
   // Future updateNodes() async {

@@ -2,7 +2,9 @@ import 'package:channel/channel.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:h2o/bean/block.dart';
+import 'package:h2o/bean/column.dart';
 import 'package:h2o/bean/node.dart';
+import 'package:h2o/bean/row.dart';
 import 'package:h2o/db/db.dart';
 import 'package:h2o/model/global.dart';
 
@@ -10,17 +12,33 @@ enum OperationType {
   InsertNode,
   DeleteNode,
   UpdateNode,
-  InsertBlock,
-  DeleteBlock,
-  UpdateBlock
+  InsertChannelBlock,
+  DeleteChannelBlock,
+  UpdateChannelBlock,
+  InsertDocumentBlock,
+  DeleteDocumentBlock,
+  UpdateDocumentBlock,
+  InsertTable,
+  DeleteTable,
+  UpdateTable,
+  InsertColumn,
+  DeleteColumn,
+  UpdateColumn,
+  InsertRow,
+  DeleteRow,
+  UpdateRow,
 }
 
 class Operation {
   OperationType type;
   NodeBean? node;
   BlockBean? block;
+  ColumnBean? column;
+  List<String>? columns;
+  List<RowBean>? rows;
 
-  Operation(this.type, {this.node, this.block});
+  Operation(this.type,
+      {this.node, this.block, this.column, this.columns, this.rows});
 }
 
 class Transaction {
@@ -54,10 +72,27 @@ class TransactionDao extends ChangeNotifier {
       final event = await localChannel.receive();
       if (!event.isClosed) {
         var t = event.data!;
-        t.operations.forEach((operation) {
+        t.operations.forEach((operation) async {
           switch (operation.type) {
             case OperationType.InsertNode:
-              DBProvider.db.insertNode(operation.node!);
+              await DBProvider.db.insertNode(operation.node!);
+              break;
+            case OperationType.InsertChannelBlock:
+              await DBProvider.db.insertBlock(operation.block!);
+              break;
+            case OperationType.InsertTable:
+              await DBProvider.db.insertTable(operation.node!);
+              break;
+            case OperationType.InsertColumn:
+              await DBProvider.db.insertColumn(operation.column!);
+              break;
+            case OperationType.InsertRow:
+              await DBProvider.db.insertRows(
+                  operation.node!.uuid, operation.columns!, operation.rows!);
+              break;
+            case OperationType.UpdateRow:
+              await DBProvider.db.updateRows(
+                  operation.node!.uuid, operation.columns!, operation.rows!);
               break;
             default:
           }

@@ -57,17 +57,31 @@ class AddNodePageModel extends ChangeNotifier {
     if (this.indentType == IndentType.increase) {
       indent += 1;
     }
+    var teamNodes = this.globalModel.nodeDao!.nodeMap[team.id]!;
     String uuidString = Uuid().v4();
-    NodeBean? nodeBean = NodeBean(
-        uuid: uuidString,
-        type: EnumToString.convertToString(nodeType),
-        name: controller.text,
-        indent: indent,
-        previousId: preNodeID);
+    NodeBean nodeBean = NodeBean(
+      uuid: uuidString,
+      type: EnumToString.convertToString(nodeType),
+      name: controller.text,
+      indent: indent,
+      previousId: preNodeID,
+      teamId: team.id,
+    );
     debugPrint(this.globalModel.nodeDao!.nodeMap.toString());
-    this.globalModel.nodeDao!.nodeMap[team.id]!.insert(insertIndex, nodeBean);
-    this.globalModel.transactionDao!.transaction(
-        Transaction([Operation(OperationType.InsertNode, node: nodeBean)]));
+    if (teamNodes.length > insertIndex) {
+      teamNodes[insertIndex].previousId = nodeBean.uuid;
+    }
+    teamNodes.insert(insertIndex, nodeBean);
+
+    List<Operation> ops = [];
+    ops.add(Operation(OperationType.InsertNode, node: nodeBean));
+
+    if (nodeType == NodeType.table) {
+      this.globalModel.tableDao!.tableColumnMap[nodeBean.uuid] = [];
+      this.globalModel.tableDao!.tableRowMap[nodeBean.uuid] = [];
+      ops.add(Operation(OperationType.InsertTable, node: nodeBean));
+    }
+    this.globalModel.transactionDao!.transaction(Transaction(ops));
 
     Navigator.pop(this.context);
     notifyListeners();

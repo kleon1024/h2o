@@ -16,7 +16,7 @@ class ChannelPage extends StatelessWidget {
 
     List<BlockBean> blocks = [];
     if (blockDao.blockMap.containsKey(channelPageModel.node.uuid)) {
-      blocks = blockDao.blockMap[channelPageModel.node.uuid]!.reversed.toList();
+      blocks = blockDao.blockMap[channelPageModel.node.uuid]!;
     }
 
     OutlineInputBorder inputBorder = OutlineInputBorder(
@@ -33,11 +33,6 @@ class ChannelPage extends StatelessWidget {
         child: AppBar(
           title: Text(channelPageModel.node.name),
           actions: [
-            IconButton(
-                onPressed: () {
-                  channelPageModel.onChangeToDocument();
-                },
-                icon: Icon(CupertinoIcons.doc_text, size: 18)),
             IconButton(onPressed: () {}, icon: Icon(Icons.group, size: 18)),
           ],
         ),
@@ -78,9 +73,9 @@ class ChannelPage extends StatelessWidget {
           height: 80,
           child: Row(
             children: [
-              Container(
-                width: 42,
-              ),
+              // Container(
+              //   width: 42,
+              // ),
               Expanded(
                 child: TextField(
                   focusNode: channelPageModel.focusNode,

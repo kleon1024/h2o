@@ -1,12 +1,11 @@
 import 'dart:async';
 
-import 'package:channel/channel.dart';
 import 'package:dio/dio.dart';
-import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:h2o/api/api.dart';
 import 'package:h2o/bean/block.dart';
 import 'package:h2o/bean/node.dart';
+import 'package:h2o/db/db.dart';
+import 'package:h2o/global/constants.dart';
 import 'package:h2o/model/global.dart';
 
 enum BlockType {
@@ -23,7 +22,7 @@ enum BlockType {
   image,
   table,
   tableReference,
-  barChart,
+  chart,
   referenceBlock,
   referenceNode,
 }
@@ -43,97 +42,101 @@ class BlockDao extends ChangeNotifier {
   Map<String, List<BlockBean>> blockMap = {};
   CancelToken cancelToken = CancelToken();
   GlobalModel? globalModel;
-  final channel = Channel<BlockEvent>();
-  int backOffSeconds = 0;
 
   setContext(BuildContext context, GlobalModel globalModel) async {
     if (this.context == null) {
       this.context = context;
       this.globalModel = globalModel;
       globalModel.blockDao = this;
-      while (true) {
-        final event = await channel.receive();
-        if (!event.isClosed) {
-          // TODO block until success
-          bool status = false;
-          while (!status) {
-            status = await Future.delayed(Duration(seconds: backOffSeconds),
-                () async {
-              return await this.sendBlockBean(event.data!);
-            });
-            if (status) {
-              this.backOffSeconds = 0;
-            } else {
-              if (this.backOffSeconds <= 0) {
-                this.backOffSeconds = 1;
-              } else {
-                this.backOffSeconds *= 4;
-              }
-            }
-          }
-        }
-      }
     }
   }
 
-  sendBlockEvent(
-      BlockBean blockBean, BlockEventType blockEventType, NodeBean nodeBean) {
-    debugPrint("sendBlockEvent:" +
-        EnumToString.convertToString(blockEventType) +
-        " " +
-        blockBean.uuid +
-        " pre:" +
-        blockBean.previousId);
-    this.channel.send(BlockEvent(blockBean, blockEventType, node: nodeBean));
+  Future loadBlocks(NodeBean node) async {
+    var blocks = await DBProvider.db.getBlocks(node.uuid);
+    this.blockMap[node.uuid] = blocks;
+    notifyListeners();
   }
 
-  Future<bool> sendBlockBean(BlockEvent blockEvent) async {
-    BlockBean blockBean = blockEvent.block;
-    BlockBean? retBlockBean;
-    if (blockEvent.type == BlockEventType.create) {
-      retBlockBean = await Api.createNodeBlock(
-        blockEvent.node!.uuid,
-        data: {
-          "uuid": blockBean.uuid,
-          "text": blockBean.text,
-          "type": blockBean.type,
-          "previous": blockBean.previousId,
-        },
-        options: this.globalModel!.userDao!.accessTokenOptions(),
-      );
-      if (retBlockBean != null) {
-        notifyListeners();
-        return true;
+  Future loadDocumentBlocks(NodeBean node) async {
+    var blocks = await DBProvider.db.getBlocks(node.uuid);
+    List<BlockBean> reordered = [];
+    Map<String, BlockBean> blockMap = {};
+    blocks.forEach((n) {
+      blockMap[n.previousId] = n;
+      debugPrint(n.previousId + " : " + n.uuid);
+    });
+    String previousId = EMPTY_UUID;
+    for (int i = 0; i < blockMap.length; i++) {
+      var n = blockMap[previousId];
+      if (n == null) {
+        debugPrint(
+            "reorder blocks unexpected previous block id: " + previousId);
       }
-      return false;
-    } else if (blockEvent.type == BlockEventType.patch) {
-      retBlockBean = await Api.patchBlock(
-        blockBean.uuid,
-        data: {
-          "text": blockBean.text,
-          "type": blockBean.type,
-          "previous": blockBean.previousId,
-        },
-        options: this.globalModel!.userDao!.accessTokenOptions(),
-      );
-      if (retBlockBean != null) {
-        notifyListeners();
-        return true;
-      }
-      return false;
-    } else if (blockEvent.type == BlockEventType.delete) {
-      retBlockBean = await Api.deleteBlock(
-        blockBean.uuid,
-        options: this.globalModel!.userDao!.accessTokenOptions(),
-      );
-      if (retBlockBean != null) {
-        notifyListeners();
-        return true;
-      }
-      return false;
+      reordered.add(n!);
+      previousId = n.uuid;
     }
-    return true;
+    this.blockMap[node.uuid] = reordered;
+    notifyListeners();
   }
+
+  // sendBlockEvent(
+  //     BlockBean blockBean, BlockEventType blockEventType, NodeBean nodeBean) {
+  //   debugPrint("sendBlockEvent:" +
+  //       EnumToString.convertToString(blockEventType) +
+  //       " " +
+  //       blockBean.uuid +
+  //       " pre:" +
+  //       blockBean.previousId);
+  //   this.channel.send(BlockEvent(blockBean, blockEventType, node: nodeBean));
+  // }
+
+  // Future<bool> sendBlockBean(BlockEvent blockEvent) async {
+  //   BlockBean blockBean = blockEvent.block;
+  //   BlockBean? retBlockBean;
+  //   if (blockEvent.type == BlockEventType.create) {
+  //     retBlockBean = await Api.createNodeBlock(
+  //       blockEvent.node!.uuid,
+  //       data: {
+  //         "uuid": blockBean.uuid,
+  //         "text": blockBean.text,
+  //         "type": blockBean.type,
+  //         "previous": blockBean.previousId,
+  //       },
+  //       options: this.globalModel!.userDao!.accessTokenOptions(),
+  //     );
+  //     if (retBlockBean != null) {
+  //       notifyListeners();
+  //       return true;
+  //     }
+  //     return false;
+  //   } else if (blockEvent.type == BlockEventType.patch) {
+  //     retBlockBean = await Api.patchBlock(
+  //       blockBean.uuid,
+  //       data: {
+  //         "text": blockBean.text,
+  //         "type": blockBean.type,
+  //         "previous": blockBean.previousId,
+  //       },
+  //       options: this.globalModel!.userDao!.accessTokenOptions(),
+  //     );
+  //     if (retBlockBean != null) {
+  //       notifyListeners();
+  //       return true;
+  //     }
+  //     return false;
+  //   } else if (blockEvent.type == BlockEventType.delete) {
+  //     retBlockBean = await Api.deleteBlock(
+  //       blockBean.uuid,
+  //       options: this.globalModel!.userDao!.accessTokenOptions(),
+  //     );
+  //     if (retBlockBean != null) {
+  //       notifyListeners();
+  //       return true;
+  //     }
+  //     return false;
+  //   }
+  //   return true;
+  // }
 
   // Future updateBlocks(NodeBean nodeBean) async {
   //   List<BlockBean>? blocks = await Api.listNodeBlocks(
@@ -173,15 +176,15 @@ class BlockDao extends ChangeNotifier {
   //   }
   // }
 
-  updateBlock(NodeBean node, BlockBean updatedBlock) {
-    List<BlockBean> blocks = blockMap[node.uuid]!;
-    for (int i = 0; i < blocks.length; i++) {
-      if (blocks[i].uuid == updatedBlock.uuid) {
-        blocks[i] = updatedBlock;
-        break;
-      }
-    }
-  }
+  // updateBlock(NodeBean node, BlockBean updatedBlock) {
+  //   List<BlockBean> blocks = blockMap[node.uuid]!;
+  //   for (int i = 0; i < blocks.length; i++) {
+  //     if (blocks[i].uuid == updatedBlock.uuid) {
+  //       blocks[i] = updatedBlock;
+  //       break;
+  //     }
+  //   }
+  // }
 
   @override
   void dispose() {

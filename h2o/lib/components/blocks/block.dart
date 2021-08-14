@@ -2,6 +2,7 @@ import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
 import 'package:h2o/bean/block.dart';
 import 'package:h2o/components/blocks/bulleted_list_block.dart';
+import 'package:h2o/components/blocks/chart_block.dart';
 import 'package:h2o/components/blocks/numbered_list_block.dart';
 import 'package:h2o/components/blocks/text_block.dart';
 import 'package:h2o/dao/block.dart';
@@ -16,20 +17,26 @@ class Block extends StatelessWidget {
   final int index;
   final Function(RawKeyEvent event)? handleRawKeyEvent;
   final FocusNode? focusNode;
-  final Function(BlockBean block)? onSubmitCreateBlock;
   final TextEditingController? editingController;
   final Function(String text)? onTextFieldChanged;
-  final Function()? onTap;
+  final Function()? onSubmitCreateBlock;
+  final Function()? onEnter;
+  final Function()? onClick;
 
-  const Block(this.blockBean, this.nodeType, this.index,
-      {this.showCreator = false,
-      this.editing = false,
-      this.handleRawKeyEvent,
-      this.focusNode,
-      this.onTextFieldChanged,
-      this.onSubmitCreateBlock,
-      this.editingController,
-      this.onTap});
+  const Block(
+    this.blockBean,
+    this.nodeType,
+    this.index, {
+    this.showCreator = false,
+    this.editing = false,
+    this.handleRawKeyEvent,
+    this.focusNode,
+    this.onTextFieldChanged,
+    this.onSubmitCreateBlock,
+    this.editingController,
+    this.onEnter,
+    this.onClick,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -51,10 +58,18 @@ class Block extends StatelessWidget {
             editingController: editingController);
         break;
       case BlockType.bulletedList:
-        block = BulletedListBlock(blockBean, editing: editing);
+        block = BulletedListBlock(
+          blockBean,
+          editing: editing,
+        );
         break;
       case BlockType.numberedList:
-        block = NumberedListBlock(text: "Numbered List");
+        block = NumberedListBlock(
+          text: "Numbered List",
+        );
+        break;
+      case BlockType.chart:
+        block = ChartBlock(blockBean);
         break;
       default:
         block = Container(
@@ -62,9 +77,9 @@ class Block extends StatelessWidget {
         );
     }
 
-    block = InkWell(
-      onTap: onTap,
-      focusColor: Theme.of(context).cardColor,
+    block = GestureDetector(
+      onTap: onClick,
+      // focusColor: Theme.of(context).cardColor,
       child: block,
     );
 

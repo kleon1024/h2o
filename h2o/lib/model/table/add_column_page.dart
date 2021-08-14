@@ -1,21 +1,22 @@
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:h2o/api/api.dart';
 import 'package:h2o/bean/column.dart';
 import 'package:h2o/bean/node.dart';
-import 'package:h2o/bean/table.dart';
 import 'package:h2o/dao/table.dart';
+import 'package:h2o/dao/transaction.dart';
 import 'package:h2o/model/global.dart';
+import 'package:h2o/model/table/table_page.dart';
 import 'package:uuid/uuid.dart';
 
 class AddColumnPageModel extends ChangeNotifier {
   BuildContext context;
   GlobalModel globalModel;
+  TablePageModel tablePageModel;
 
-  TableBean table;
   NodeBean node;
 
-  AddColumnPageModel(this.context, this.globalModel, this.table, this.node);
+  AddColumnPageModel(
+      this.context, this.globalModel, this.node, this.tablePageModel);
 
   TextEditingController controller = TextEditingController();
   ColumnType columnType = ColumnType.string;
@@ -58,35 +59,35 @@ class AddColumnPageModel extends ChangeNotifier {
 
   onTapCreateColumn() async {
     String uuidString = Uuid().v4();
-    ColumnBean? columnBean = ColumnBean(
-      id: uuidString,
+    ColumnBean columnBean = ColumnBean(
+      uuid: uuidString,
       type: EnumToString.convertToString(columnType),
       name: controller.text,
+      tableId: node.uuid,
       defaultValue: defaultValue,
     );
-    this.globalModel.tableDao!.tableMap[node.uuid]!.columns.add(columnBean);
+    this.globalModel.tableDao!.tableColumnMap[node.uuid]!.add(columnBean);
+    this.globalModel.transactionDao!.transaction(Transaction([
+          Operation(OperationType.InsertColumn,
+              column: ColumnBean.fromJson(columnBean.toJson()))
+        ]));
     var rows = this.globalModel.tableDao!.tableRowMap[node.uuid];
     if (rows == null) {
       rows = [];
     }
+
+    Object defaultObject = defaultValue;
+    if (columnType == ColumnType.integer) {
+      defaultObject = int.parse(defaultValue);
+    }
+
     rows.forEach((row) {
-      row[columnBean!.id] = defaultValue;
+      row.values.add(defaultObject);
     });
 
-    this.globalModel.triggerCallback(EventType.COLUMN_CREATED);
+    this.tablePageModel.refresh();
     Navigator.pop(this.context);
-
-    columnBean = await Api.createColumn(
-      table.id,
-      data: {
-        "id": uuidString,
-        "name": controller.text,
-        "type": EnumToString.convertToString(columnType),
-        "defaultValue": defaultValue,
-      },
-      options: this.globalModel.userDao!.accessTokenOptions(),
-    );
-    if (columnBean != null) {}
+    notifyListeners();
   }
 
   onDefaultIntegerValueTextFieldChanged(String text) {

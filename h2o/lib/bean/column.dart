@@ -5,16 +5,26 @@ part 'column.g.dart';
 
 @JsonSerializable()
 class ColumnBean {
-  String id;
+  String uuid;
   String name;
   String type;
+  @JsonKey(name: "default_value")
   String defaultValue;
+  @JsonKey(name: "table_id")
+  String tableId;
+  @JsonKey(name: "created_at")
+  int createdAt;
+  @JsonKey(name: "updated_at")
+  int updatedAt;
 
   ColumnBean({
-    this.id = EMPTY_UUID,
+    this.uuid = EMPTY_UUID,
     this.name = "column",
     this.type = "string",
     this.defaultValue = "",
+    this.tableId = EMPTY_UUID,
+    this.createdAt = 0,
+    this.updatedAt = 0,
   });
 
   factory ColumnBean.fromJson(Map<String, dynamic> json) =>
