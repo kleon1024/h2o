@@ -119,6 +119,31 @@ class ChannelPageModel extends ChangeNotifier {
     this.onTapSelectionCancel();
   }
 
+  onCopyBlocksToChannel(NodeBean chNode) async {
+    List<int> orderedIndex = this.selectedBlockIndex.toList();
+    orderedIndex.sort();
+    if (!this.globalModel.blockDao!.blockMap.containsKey(chNode.uuid)) {
+      await this.globalModel.blockDao!.loadBlocks(chNode);
+    }
+    List<BlockBean> chBlocks =
+        this.globalModel.blockDao!.blockMap[chNode.uuid]!;
+    List<BlockBean> blocks =
+        this.globalModel.blockDao!.blockMap[this.node.uuid]!;
+    List<Operation> ops = [];
+    for (var index in orderedIndex) {
+      var newBlock = BlockBean.fromJson(blocks[index].toJson());
+      newBlock.uuid = Uuid().v4();
+      newBlock.nodeId = chNode.uuid;
+      chBlocks.add(newBlock);
+      ops.add(Operation(OperationType.InsertChannelBlock,
+          block: BlockBean.fromJson(newBlock.toJson())));
+    }
+
+    this.globalModel.transactionDao!.transaction(Transaction(ops));
+    debugPrint(orderedIndex.toString());
+    this.onTapSelectionCancel();
+  }
+
   onTapCreateBlock(String text) async {
     controller.text = "";
     if (text.trim().isNotEmpty) {

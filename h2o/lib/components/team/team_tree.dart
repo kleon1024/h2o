@@ -13,6 +13,7 @@ import 'package:h2o/model/navigation_page.dart';
 import 'package:h2o/model/team/add_node_page.dart';
 import 'package:h2o/pages/team/add_node_page.dart';
 import 'package:provider/provider.dart';
+import 'package:reorderables/reorderables.dart';
 
 class TeamTree extends StatelessWidget {
   @override
@@ -22,18 +23,15 @@ class TeamTree extends StatelessWidget {
     final navigationPageModel = Provider.of<NavigationPageModel>(context);
     final globalModel = Provider.of<GlobalModel>(context);
 
-    TeamBean? team;
-    if (teamDao.teams.length > 0) {
-      team = teamDao.teams[navigationPageModel.currentTeamIndex];
+    if (teamDao.teams.length == 0) {
+      return Container();
     }
+    TeamBean team = teamDao.teams[navigationPageModel.currentTeamIndex];
 
-    List<NodeBean> nodes = [];
-    if (team != null && nodeDao.nodeMap.containsKey(team.uuid)) {
-      nodes = nodeDao.nodeMap[team.uuid]!;
-    }
+    List<NodeBean> nodes = navigationPageModel.expandedNodes;
 
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 0, horizontal: 18),
+      padding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
       margin: EdgeInsets.symmetric(vertical: 20, horizontal: 8),
       decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
@@ -50,32 +48,45 @@ class TeamTree extends StatelessWidget {
           ),
         ),
         body: BouncingScrollView(
+          controller: ScrollController(),
           slivers: [
-            SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-              return Node(nodes[index], onTapPlus: () {
-                var preNodeID = nodes[index].uuid;
-                var posNodeID = EMPTY_UUID;
-                if (index < nodes.length - 1) {
-                  posNodeID = nodes[index + 1].uuid;
-                }
+            ReorderableSliverList(
+                onReorderStarted: (int index) {
+                  debugPrint("onReorderStarted");
+                  navigationPageModel.onReorderStart(nodes[index]);
+                },
+                onNoReorder: (int index) {
+                  debugPrint("onNoReorder");
+                  navigationPageModel.onReorderEnd(nodes[index]);
+                },
+                onReorder: navigationPageModel.onReorder,
+                delegate:
+                    ReorderableSliverChildBuilderDelegate((context, index) {
+                  return Node(
+                    nodes[index],
+                    onTapExpand: () {
+                      navigationPageModel.onExpandNode(nodes[index]);
+                    },
+                    onTapPlus: () {
+                      var preNodeID = nodes[index].uuid;
 
-                Navigator.of(context).push(
-                  CupertinoPageRoute(builder: (ctx) {
-                    return ChangeNotifierProvider(
-                        create: (_) => AddNodePageModel(
-                            team!,
-                            preNodeID,
-                            nodes[index].indent,
-                            true,
-                            index + 1,
-                            context,
-                            globalModel),
-                        child: AddNodePage());
-                  }),
-                );
-              });
-            }, childCount: nodes.length)),
+                      Navigator.of(context).push(
+                        CupertinoPageRoute(builder: (ctx) {
+                          return ChangeNotifierProvider(
+                              create: (_) => AddNodePageModel(
+                                  team,
+                                  preNodeID,
+                                  nodes[index].indent,
+                                  true,
+                                  index + 1,
+                                  context,
+                                  globalModel),
+                              child: AddNodePage());
+                        }),
+                      );
+                    },
+                  );
+                }, childCount: nodes.length)),
             SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
               String preNodeID = EMPTY_UUID;
@@ -90,7 +101,7 @@ class TeamTree extends StatelessWidget {
                     CupertinoPageRoute(builder: (ctx) {
                       return ChangeNotifierProvider(
                           create: (_) => AddNodePageModel(
-                              team!,
+                              team,
                               preNodeID,
                               indent,
                               false,

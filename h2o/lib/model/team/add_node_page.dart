@@ -72,6 +72,9 @@ class AddNodePageModel extends ChangeNotifier {
       teamNodes[insertIndex].previousId = nodeBean.uuid;
     }
     teamNodes.insert(insertIndex, nodeBean);
+    if (insertIndex > 0) {
+      teamNodes[insertIndex - 1].expanded = true;
+    }
 
     List<Operation> ops = [];
     ops.add(Operation(OperationType.InsertNode, node: nodeBean));

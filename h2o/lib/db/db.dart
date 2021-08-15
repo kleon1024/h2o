@@ -169,6 +169,17 @@ class DBProvider {
         where: "uuid = ?", whereArgs: [bean.uuid]);
   }
 
+  Future deleteNode(NodeBean bean) async {
+    final db = await database;
+    var n = await findPreviousNode(bean.uuid);
+    if (n != null) {
+      n.previousId = bean.previousId;
+      await updateNode(n);
+      debugPrint("update node:" + n.previousId + ":" + n.previousId);
+    }
+    await db.delete("nodes", where: "uuid = ?", whereArgs: [bean.uuid]);
+  }
+
   Future deleteAllNodes() async {
     final db = await database;
     await db.delete("nodes");

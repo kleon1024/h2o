@@ -18,6 +18,8 @@ class NodeBean {
   String teamId;
   @JsonKey(ignore: true)
   bool expanded;
+  @JsonKey(ignore: true)
+  bool isLeaf;
 
   NodeBean({
     required this.uuid,
@@ -29,6 +31,7 @@ class NodeBean {
     this.createdAt = 0,
     this.updatedAt = 0,
     this.expanded = false,
+    this.isLeaf = false,
   });
 
   factory NodeBean.fromJson(Map<String, dynamic> json) =>

@@ -154,6 +154,7 @@ class ChannelPage extends StatelessWidget {
             child: BouncingScrollView(
               scrollBar: true,
               reverse: true,
+              controller: ScrollController(),
               slivers: [
                 SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
@@ -249,6 +250,7 @@ class ChannelPage extends StatelessWidget {
                 Navigator.of(context).push(
                   CupertinoPageRoute(builder: (ctx) {
                     return ForwardToDocPage(
+                      type: NodeType.document,
                       teamId: channelPageModel.node.teamId,
                       onCancel: channelPageModel.onTapSelectionCancel,
                       onConfirm: channelPageModel.onCopyBlocksToDoc,
@@ -263,8 +265,10 @@ class ChannelPage extends StatelessWidget {
                 Navigator.of(context).push(
                   CupertinoPageRoute(builder: (ctx) {
                     return ForwardToDocPage(
+                      type: NodeType.document,
                       teamId: channelPageModel.node.teamId,
                       onCancel: channelPageModel.onTapSelectionCancel,
+                      // TODO: Move multiple blocks to doc
                       onConfirm: (_) {},
                     );
                   }),
@@ -278,8 +282,10 @@ class ChannelPage extends StatelessWidget {
                 Navigator.of(context).push(
                   CupertinoPageRoute(builder: (ctx) {
                     return ForwardToDocPage(
+                      type: NodeType.channel,
                       teamId: channelPageModel.node.teamId,
                       onCancel: channelPageModel.onTapSelectionCancel,
+                      // TODO: Move multiple blocks to channel
                       onConfirm: (_) {},
                     );
                   }),
@@ -293,9 +299,10 @@ class ChannelPage extends StatelessWidget {
                 Navigator.of(context).push(
                   CupertinoPageRoute(builder: (ctx) {
                     return ForwardToDocPage(
+                      type: NodeType.channel,
                       teamId: channelPageModel.node.teamId,
                       onCancel: channelPageModel.onTapSelectionCancel,
-                      onConfirm: (_) {},
+                      onConfirm: channelPageModel.onCopyBlocksToChannel,
                     );
                   }),
                 );

@@ -68,43 +68,50 @@ class Node extends StatelessWidget {
         onTapNode = onTapExpand;
     }
 
+    IconData icon = CupertinoIcons.circle;
+    if (!nodeBean.isLeaf) {
+      icon = nodeBean.expanded
+          ? CupertinoIcons.chevron_down
+          : CupertinoIcons.chevron_right;
+    }
+
     return Container(
       child: Row(children: [
         InkWell(
-          onTap: this.onTapExpand,
+          onTap: nodeBean.isLeaf ? null : this.onTapExpand,
           child: Container(
-            padding: EdgeInsets.symmetric(vertical: 4),
-            child: Icon(
-                nodeBean.expanded
-                    ? CupertinoIcons.chevron_down
-                    : CupertinoIcons.chevron_right,
-                size: 16),
+            margin: EdgeInsets.only(right: 8, top: 8, bottom: 8),
+            child: Icon(icon, size: 16),
           ),
         ),
         Expanded(
-            child: InkWell(
-          onTap: onTapNode,
-          child: Container(
-            padding: EdgeInsets.only(left: 12.0 * nodeBean.indent),
+          child: InkWell(
+            onTap: onTapNode,
             child: Container(
               padding: EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  Icon(iconData, size: 16),
-                  Text(" "),
-                  Text(
-                    nodeBean.name,
-                    style: Theme.of(context).textTheme.bodyText2,
+              child: Container(
+                padding: EdgeInsets.only(left: 12.0 * nodeBean.indent + 8),
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Icon(iconData, size: 16),
+                      Text(" "),
+                      Text(
+                        nodeBean.name,
+                        style: Theme.of(context).textTheme.bodyText2,
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        )),
+        ),
         InkWell(
           onTap: this.onTapPlus,
           child: Container(
-            padding: EdgeInsets.symmetric(vertical: 4),
+            padding: EdgeInsets.only(left: 8, top: 8, bottom: 8),
             child: Icon(CupertinoIcons.plus, size: 16),
           ),
         ),

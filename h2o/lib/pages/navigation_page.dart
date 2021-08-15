@@ -23,8 +23,8 @@ class NavigationPage extends StatelessWidget {
           padding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
           child: Row(
             children: [
-              Expanded(flex: 1, child: TeamSideBar()),
-              Expanded(flex: 8, child: TeamTree()),
+              Container(width: 40, child: TeamSideBar()),
+              Expanded(child: TeamTree()),
             ],
           ),
         ),

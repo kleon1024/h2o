@@ -12,9 +12,13 @@ class ForwardToDocPage extends StatelessWidget {
   final String teamId;
   final Function()? onCancel;
   final Function(NodeBean node)? onConfirm;
+  final NodeType type;
 
   ForwardToDocPage(
-      {required this.teamId, required this.onCancel, required this.onConfirm});
+      {required this.teamId,
+      required this.onCancel,
+      required this.onConfirm,
+      required this.type});
 
   @override
   Widget build(BuildContext context) {
@@ -24,8 +28,7 @@ class ForwardToDocPage extends StatelessWidget {
     if (nodeDao.nodeMap.containsKey(this.teamId)) {
       var allNodes = nodeDao.nodeMap[this.teamId]!;
       allNodes.forEach((n) {
-        if (EnumToString.fromString(NodeType.values, n.type) ==
-            NodeType.document) {
+        if (EnumToString.fromString(NodeType.values, n.type) == this.type) {
           nodes.add(n);
         }
       });
