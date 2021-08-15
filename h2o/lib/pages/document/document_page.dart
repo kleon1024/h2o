@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:h2o/bean/block.dart';
+import 'package:h2o/bean/chart.dart';
+import 'package:h2o/bean/chart_series.dart';
 import 'package:h2o/components/blocks/block.dart';
 import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
 import 'package:h2o/dao/block.dart';
@@ -21,8 +25,6 @@ class DocumentPage extends StatelessWidget {
         "editingBlock.id:" + documentPageModel.editingBlock.uuid.toString());
     debugPrint(
         "editingPreBlockID:" + documentPageModel.editingPreBlockID.toString());
-    debugPrint(
-        "editingPosBlockID:" + documentPageModel.editingPosBlockID.toString());
     debugPrint("editingIndex:" + documentPageModel.editingIndex.toString());
     debugPrint("editState:" + documentPageModel.editState.toString());
     debugPrint("editBlock.type:" + documentPageModel.editingBlock.type);
@@ -31,7 +33,6 @@ class DocumentPage extends StatelessWidget {
     if (blockDao.blockMap.containsKey(documentPageModel.node.uuid)) {
       blocks = blockDao.blockMap[documentPageModel.node.uuid]!;
     }
-    debugPrint("blocks:" + blocks.toString());
     debugPrint("---");
     return Scaffold(
       backgroundColor: Theme.of(context).cardColor,
@@ -40,11 +41,6 @@ class DocumentPage extends StatelessWidget {
         child: AppBar(
           title: Text(documentPageModel.node.name),
           actions: [
-            // IconButton(
-            //     onPressed: () {
-            //       documentPageModel.onChangeToChannel();
-            //     },
-            //     icon: Icon(CupertinoIcons.number, size: 18)),
             IconButton(
                 onPressed: () {}, icon: Icon(CupertinoIcons.group, size: 18)),
           ],
@@ -141,7 +137,22 @@ class DocumentPage extends StatelessWidget {
                             type: EnumToString.convertToString(
                               BlockType.chart,
                             ),
-                            properties: "{}",
+                            properties: jsonEncode(ChartBean(
+                                table: "7945c9b5-54da-4138-8b29-72cd57842385",
+                                series: [
+                                  ChartSeries(
+                                    type: "line",
+                                    x: "b8392c7c-653c-4f35-8fa6-9fa2b63c33aa",
+                                    y: "93d4870c-a3cd-43b9-ab5b-172c2773bdba",
+                                    points: [],
+                                  ),
+                                  ChartSeries(
+                                    type: "column",
+                                    x: "b8392c7c-653c-4f35-8fa6-9fa2b63c33aa",
+                                    y: "1cb3594e-c412-461e-8656-4d7699acc599",
+                                    points: [],
+                                  ),
+                                ]).toJson()),
                           ),
                           NodeType.document,
                           index,
@@ -168,6 +179,34 @@ class DocumentPage extends StatelessWidget {
             ),
           ),
         ),
+        documentPageModel.isEditing
+            ? Container(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                height: 40,
+                decoration: new BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 25.0, // soften the shadow
+                      spreadRadius: 5.0, //extend the shadow
+                      offset: Offset(
+                        0, // Move to right 10  horizontally
+                        0, // Move to bottom 10 Vertically
+                      ),
+                    )
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    InkWell(
+                      child: Icon(Icons.add, size: 16),
+                      onTap: () {},
+                    ),
+                  ],
+                ),
+              )
+            : Container()
       ]),
     );
   }

@@ -1,3 +1,6 @@
+import 'package:bot_toast/bot_toast.dart';
+import 'package:clipboard/clipboard.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:h2o/api/api.dart';
@@ -16,7 +19,6 @@ import 'package:uuid/uuid.dart';
 class ChannelPageModel extends ChangeNotifier {
   BuildContext context;
   GlobalModel globalModel;
-
   NodeBean node;
 
   ChannelPageModel(this.context, this.node, {bool update = true})
@@ -28,6 +30,48 @@ class ChannelPageModel extends ChangeNotifier {
 
   final controller = TextEditingController();
   final focusNode = FocusNode();
+  bool selecting = false;
+  Set<int> selectedBlockIndex = Set();
+  int showTooltipIndex = -1;
+
+  onSelectBlock(int index, bool value) {
+    debugPrint(
+        "onSelectBlock:" + index.toString() + " value: " + value.toString());
+    if (value) {
+      selectedBlockIndex.add(index);
+    } else {
+      selectedBlockIndex.remove(index);
+    }
+    notifyListeners();
+  }
+
+  onTapSelection(int index) {
+    this.selecting = true;
+    this.selectedBlockIndex.clear();
+    this.selectedBlockIndex.add(index);
+    this.showTooltipIndex = -1;
+    notifyListeners();
+  }
+
+  onLongPressBlock(int index) {
+    this.showTooltipIndex = index;
+    notifyListeners();
+  }
+
+  onTapCopyBlock(int index) {
+    var blocks = this.globalModel.blockDao!.blockMap[node.uuid]!;
+    FlutterClipboard.copy(blocks[index].text).then((value) {
+      BotToast.showText(text: tr("channel.block.tooltip.copy.toast"));
+    });
+    this.showTooltipIndex = -1;
+    notifyListeners();
+  }
+
+  onTapSelectionCancel() {
+    this.selecting = false;
+    this.selectedBlockIndex.clear();
+    notifyListeners();
+  }
 
   onTapCreateBlock(String text) async {
     controller.text = "";

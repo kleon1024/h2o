@@ -72,7 +72,7 @@ class TextBlock extends StatelessWidget {
             hintText: tr(hint),
             fillColor: Theme.of(context).cardColor,
             filled: true,
-            contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 4),
           ),
         ),
       );

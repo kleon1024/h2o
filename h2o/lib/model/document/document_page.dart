@@ -33,6 +33,10 @@ class DocumentPageModel extends ChangeNotifier {
   EditState editState = EditState.Idle;
   bool editingNewGuard = false;
 
+  bool get isEditing =>
+      editingBlock.uuid == EMPTY_UUID && editingNew ||
+      editingBlock.uuid != EMPTY_UUID;
+
   DocumentPageModel(this.context, this.node, {bool update = true})
       : globalModel = Provider.of<GlobalModel>(context),
         editingBlock = BlockBean(nodeId: node.uuid) {
@@ -79,10 +83,6 @@ class DocumentPageModel extends ChangeNotifier {
       } else {
         editingPreBlockID = EMPTY_UUID;
       }
-      // } else {
-      //   editingPosBlockID = EMPTY_UUID;
-      // }
-      // editingPosBlockID = EMPTY_UUID;
     }
   }
 
@@ -143,9 +143,6 @@ class DocumentPageModel extends ChangeNotifier {
           .blockDao!
           .blockMap[node.uuid]!
           .insert(editingIndex, blockBean);
-      // if (blocks.length > 1) {
-      //   blocks[editingIndex - 1].posBlockID = blockBean.id;
-      // }
 
       focusMap[blockBean.uuid] = {blockBean.type: FocusNode()};
       setEditingNewPrePosBlockID();
@@ -165,7 +162,7 @@ class DocumentPageModel extends ChangeNotifier {
 
       this.globalModel.transactionDao!.transaction(Transaction([
             Operation(OperationType.InsertDocumentBlock,
-                block: BlockBean.copyFrom(blockBean))
+                block: BlockBean.fromJson(blockBean.toJson()))
           ]));
     } else {
       if (submit) {
@@ -180,7 +177,7 @@ class DocumentPageModel extends ChangeNotifier {
 
           this.globalModel.transactionDao!.transaction(Transaction([
                 Operation(OperationType.UpdateDocumentBlock,
-                    block: BlockBean.copyFrom(blockBean))
+                    block: BlockBean.fromJson(blockBean.toJson()))
               ]));
         }
 
@@ -206,7 +203,7 @@ class DocumentPageModel extends ChangeNotifier {
         blocks.insert(editingIndex + 1, newBlockBean);
         this.globalModel.transactionDao!.transaction(Transaction([
               Operation(OperationType.InsertDocumentBlock,
-                  block: BlockBean.copyFrom(newBlockBean))
+                  block: BlockBean.fromJson(newBlockBean.toJson()))
             ]));
 
         focusMap[newBlockBean.uuid] = {newBlockBean.type: FocusNode()};
@@ -219,7 +216,6 @@ class DocumentPageModel extends ChangeNotifier {
         if (editingIndex < blocks.length - 1) {
           blocks[editingIndex + 1].previousId = newBlockBean.uuid;
         }
-
         notifyListeners();
       }
     }
@@ -324,7 +320,6 @@ class DocumentPageModel extends ChangeNotifier {
             editingBlock = blocks[editingIndex];
             editingController.text = editingBlock.text;
             editingPreBlockID = editingBlock.previousId;
-            // editingPosBlockID = editingBlock.posBlockID;
             focusMap[editingBlock.uuid]![editingBlock.type]!.requestFocus();
           }
         } else if (editingIndex >= 0 && editingIndex < blocks.length) {
@@ -395,11 +390,11 @@ class DocumentPageModel extends ChangeNotifier {
     BlockBean blockBean = blocks.removeAt(oldIndex);
     blockBean.previousId = oldPreviousId;
     ops.add(Operation(OperationType.DeleteDocumentBlock,
-        block: BlockBean.copyFrom(blockBean)));
+        block: BlockBean.fromJson(blockBean.toJson())));
     blockBean.previousId = newPreviousId;
     blocks.insert(newIndex, blockBean);
     ops.add(Operation(OperationType.InsertDocumentBlock,
-        block: BlockBean.copyFrom(blockBean)));
+        block: BlockBean.fromJson(blockBean.toJson())));
 
     this.globalModel.transactionDao!.transaction(Transaction(ops));
 

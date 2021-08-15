@@ -72,13 +72,25 @@ class TransactionDao extends ChangeNotifier {
       final event = await localChannel.receive();
       if (!event.isClosed) {
         var t = event.data!;
-        t.operations.forEach((operation) async {
+        for (var operation in t.operations) {
+          debugPrint("++transaction " + operation.type.toString());
           switch (operation.type) {
             case OperationType.InsertNode:
               await DBProvider.db.insertNode(operation.node!);
               break;
             case OperationType.InsertChannelBlock:
               await DBProvider.db.insertBlock(operation.block!);
+              break;
+            case OperationType.InsertDocumentBlock:
+              debugPrint("6");
+              await DBProvider.db.insertDocumentBlock(operation.block!);
+              break;
+            case OperationType.UpdateDocumentBlock:
+              await DBProvider.db.updateBlock(operation.block!);
+              break;
+            case OperationType.DeleteDocumentBlock:
+              debugPrint("1");
+              await DBProvider.db.deleteDocumentBlock(operation.block!);
               break;
             case OperationType.InsertTable:
               await DBProvider.db.insertTable(operation.node!);
@@ -89,14 +101,16 @@ class TransactionDao extends ChangeNotifier {
             case OperationType.InsertRow:
               await DBProvider.db.insertRows(
                   operation.node!.uuid, operation.columns!, operation.rows!);
+              this.globalModel!.blockDao!.chartBlockMap.clear();
               break;
             case OperationType.UpdateRow:
               await DBProvider.db.updateRows(
                   operation.node!.uuid, operation.columns!, operation.rows!);
+              this.globalModel!.blockDao!.chartBlockMap.clear();
               break;
             default:
           }
-        });
+        }
 
         debugPrint("process local transaction");
       }

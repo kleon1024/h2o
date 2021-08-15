@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:h2o/bean/block.dart';
+import 'package:h2o/bean/chart.dart';
+import 'package:h2o/bean/data_point.dart';
 import 'package:h2o/bean/node.dart';
+import 'package:h2o/bean/row.dart';
 import 'package:h2o/db/db.dart';
 import 'package:h2o/global/constants.dart';
 import 'package:h2o/model/global.dart';
@@ -40,6 +44,7 @@ class BlockEvent {
 class BlockDao extends ChangeNotifier {
   BuildContext? context;
   Map<String, List<BlockBean>> blockMap = {};
+  Map<String, ChartBean> chartBlockMap = {};
   CancelToken cancelToken = CancelToken();
   GlobalModel? globalModel;
 
@@ -54,6 +59,19 @@ class BlockDao extends ChangeNotifier {
   Future loadBlocks(NodeBean node) async {
     var blocks = await DBProvider.db.getBlocks(node.uuid);
     this.blockMap[node.uuid] = blocks;
+    notifyListeners();
+  }
+
+  Future loadChartData(BlockBean block) async {
+    debugPrint(block.properties);
+    final chart = ChartBean.fromJson(jsonDecode(block.properties));
+    for (var s in chart.series) {
+      List<RowBean> rows = await DBProvider.db.getRows(chart.table, [s.x, s.y]);
+      for (var r in rows) {
+        s.points.add(DataPoint(x: r.values[0], y: r.values[1] as num));
+      }
+    }
+    this.chartBlockMap[block.uuid] = chart;
     notifyListeners();
   }
 
@@ -76,6 +94,7 @@ class BlockDao extends ChangeNotifier {
       previousId = n.uuid;
     }
     this.blockMap[node.uuid] = reordered;
+    this.globalModel!.triggerCallback(EventType.NODE_BLOCKS_UPDATED);
     notifyListeners();
   }
 

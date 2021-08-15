@@ -8,7 +8,6 @@ import 'package:h2o/bean/column.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/row.dart';
 import 'package:h2o/dao/table.dart';
-import 'package:h2o/global/constants.dart';
 import 'package:h2o/utils/platform.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
@@ -104,13 +103,11 @@ class DBProvider {
 
   Future insertNode(NodeBean bean) async {
     final db = await database;
-    if (bean.previousId != EMPTY_UUID) {
-      var n = await findPreviousNode(bean.previousId);
-      if (n != null) {
-        n.previousId = bean.uuid;
-        await updateNode(n);
-        debugPrint("update node:" + n.previousId + ":" + n.uuid);
-      }
+    var n = await findPreviousNode(bean.previousId);
+    if (n != null) {
+      n.previousId = bean.uuid;
+      await updateNode(n);
+      debugPrint("update node:" + n.previousId + ":" + n.uuid);
     }
     await db.insert("nodes", bean.toJson());
     debugPrint("insert node:" + bean.previousId + ":" + bean.uuid);
@@ -145,6 +142,27 @@ class DBProvider {
     return NodeBean.fromJson(nodes[0]);
   }
 
+  Future<BlockBean?> findPreviousBlock(String uuid) async {
+    final db = await database;
+    var blocks =
+        await db.query("blocks", where: "previous_id = ?", whereArgs: [uuid]);
+    if (blocks.length > 1) {
+      debugPrint("warning: find multiple blocks with same previous_id=" +
+          uuid +
+          " which is unexpected");
+    } else if (blocks.length == 0) {
+      debugPrint("warning: cannot find any node with previous_id=" + uuid);
+      return null;
+    }
+    return BlockBean.fromJson(blocks[0]);
+  }
+
+  Future updateBlock(BlockBean bean) async {
+    final db = await database;
+    await db.update("blocks", bean.toJson(),
+        where: "uuid = ?", whereArgs: [bean.uuid]);
+  }
+
   Future updateNode(NodeBean bean) async {
     final db = await database;
     await db.update("nodes", bean.toJson(),
@@ -173,6 +191,37 @@ class DBProvider {
     final db = await database;
     await db.insert("blocks", bean.toJson());
     debugPrint("insert blocks node_id=" + bean.nodeId + " id=" + bean.uuid);
+  }
+
+  Future deleteBlock(BlockBean bean) async {
+    final db = await database;
+    await db.delete("blocks", where: "uuid = ?", whereArgs: [bean.uuid]);
+  }
+
+  Future insertDocumentBlock(BlockBean bean) async {
+    final db = await database;
+
+    var n = await findPreviousBlock(bean.previousId);
+    if (n != null) {
+      n.previousId = bean.uuid;
+      await updateBlock(n);
+      debugPrint("update block:" + n.previousId + ":" + n.uuid);
+    }
+
+    await db.insert("blocks", bean.toJson());
+    debugPrint("insert block:" + bean.previousId + ":" + bean.uuid);
+  }
+
+  Future deleteDocumentBlock(BlockBean bean) async {
+    final db = await database;
+    var n = await findPreviousBlock(bean.uuid);
+    if (n != null) {
+      n.previousId = bean.previousId;
+      await updateBlock(n);
+      debugPrint("update block:" + n.previousId + ":" + n.previousId);
+    }
+    await db.delete("blocks", where: "uuid = ?", whereArgs: [bean.uuid]);
+    debugPrint("delete block:" + bean.previousId + ":" + bean.uuid);
   }
 
   Future insertTable(NodeBean bean) async {
@@ -237,7 +286,6 @@ class DBProvider {
         .map((e) => () {
               List<Object> row = [];
               columns.forEach((c) {
-                debugPrint(c);
                 row.add(e[c]!);
               });
               return RowBean(uuid: e["uuid"]! as String, values: row);

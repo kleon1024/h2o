@@ -11,6 +11,7 @@ BlockBean _$BlockBeanFromJson(Map<String, dynamic> json) {
     uuid: json['uuid'] as String,
     previousId: json['previous_id'] as String,
     nodeId: json['node_id'] as String,
+    properties: json['properties'] as String,
     type: json['type'] as String,
     text: json['text'] as String,
     revision: json['revision'] as int,
@@ -28,6 +29,7 @@ Map<String, dynamic> _$BlockBeanToJson(BlockBean instance) => <String, dynamic>{
       'author_id': instance.authorId,
       'previous_id': instance.previousId,
       'node_id': instance.nodeId,
+      'properties': instance.properties,
       'created_at': instance.createdAt,
       'updated_at': instance.updatedAt,
     };

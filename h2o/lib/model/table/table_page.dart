@@ -55,8 +55,6 @@ class TablePageModel extends DataGridSource {
       .map<DataGridRow>((r) => DataGridRow(cells: () {
             List<DataGridCell> cells = [];
             for (int i = 0; i < rawColumns.length; i++) {
-              debugPrint(
-                  r.uuid + " " + i.toString() + " " + r.values[i].toString());
               cells.add(DataGridCell<Object>(
                   columnName: rawColumns[i].name, value: r.values[i]));
             }

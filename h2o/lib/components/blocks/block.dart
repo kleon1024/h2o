@@ -22,6 +22,10 @@ class Block extends StatelessWidget {
   final Function()? onSubmitCreateBlock;
   final Function()? onEnter;
   final Function()? onClick;
+  final Function()? onLongPress;
+  final bool selected;
+  final bool selecting;
+  final Function(int index, bool value)? onSelected;
 
   const Block(
     this.blockBean,
@@ -36,6 +40,10 @@ class Block extends StatelessWidget {
     this.editingController,
     this.onEnter,
     this.onClick,
+    this.onLongPress,
+    this.selected = false,
+    this.selecting = false,
+    this.onSelected,
   });
 
   @override
@@ -79,12 +87,24 @@ class Block extends StatelessWidget {
 
     block = GestureDetector(
       onTap: onClick,
+      onLongPress: onLongPress,
       // focusColor: Theme.of(context).cardColor,
       child: block,
     );
 
     if (nodeType == NodeType.document) {
       return Container(width: double.infinity, child: block);
+    }
+
+    Widget checkbox = Container();
+    if (this.selecting) {
+      checkbox = Checkbox(
+          value: this.selected,
+          onChanged: (val) {
+            if (this.onSelected != null) {
+              this.onSelected!(index, val!);
+            }
+          });
     }
 
     if (this.showCreator) {
@@ -123,6 +143,7 @@ class Block extends StatelessWidget {
                       block,
                     ])),
           ),
+          checkbox,
         ],
       );
     } else {
@@ -139,6 +160,7 @@ class Block extends StatelessWidget {
             ),
           ),
         ),
+        checkbox,
       ]);
     }
   }

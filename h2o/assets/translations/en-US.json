@@ -37,5 +37,10 @@
   "doc.block.heading1.hint": "Heading 1",
   "doc.block.heading2.hint": "Heading 2",
   "doc.block.heading3.hint": "Heading 3",
-  "doc.block.bulletedList.hint": "Bulleted List"
+  "doc.block.bulletedList.hint": "Bulleted List",
+  "channel.block.tooltip.select": "Select",
+  "channel.block.tooltip.copy": "Copy",
+  "channel.block.tooltip.copy.toast": "Copied",
+  "channel.block.selection.forward": "Forward",
+  "channel.block.selection.cancel": "Cancel"
 }
