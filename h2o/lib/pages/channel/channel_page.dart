@@ -3,11 +3,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:h2o/bean/block.dart';
 import 'package:h2o/components/blocks/block.dart';
+import 'package:h2o/components/buttons/bottom_sheet_button.dart';
 import 'package:h2o/components/buttons/tooltip_button.dart';
 import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
 import 'package:h2o/dao/block.dart';
 import 'package:h2o/dao/node.dart';
 import 'package:h2o/model/channel/channel_page.dart';
+import 'package:h2o/pages/channel/forward_to_doc.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:simple_tooltip/simple_tooltip.dart';
 
@@ -37,45 +40,63 @@ class ChannelPage extends StatelessWidget {
     );
 
     if (channelPageModel.selecting) {
-      leading = TextButton(
-        child: Text(tr("channel.block.selection.cancel"),
-            style: Theme.of(context).textTheme.caption,
-            overflow: TextOverflow.ellipsis),
-        onPressed: () {
+      leading = InkWell(
+        child: Center(
+          child: Text(tr("channel.block.selection.cancel"),
+              style: Theme.of(context).textTheme.bodyText2,
+              overflow: TextOverflow.ellipsis),
+        ),
+        onTap: () {
           channelPageModel.onTapSelectionCancel();
         },
       );
     }
 
     Widget widget = Container(
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      height: 80,
+      height: 60,
       child: Row(
         children: [
+          Container(
+            width: 15,
+          ),
           Expanded(
-            child: TextField(
-              focusNode: channelPageModel.focusNode,
-              style: Theme.of(context).textTheme.bodyText1,
-              controller: channelPageModel.controller,
-              textInputAction: TextInputAction.send,
-              keyboardType: TextInputType.text,
-              onSubmitted: channelPageModel.onTapCreateBlock,
-              decoration: InputDecoration(
-                isDense: true,
-                contentPadding:
-                    EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                fillColor: Theme.of(context).canvasColor,
-                filled: true,
-                enabledBorder: inputBorder,
-                focusedBorder: inputBorder,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 5),
+              child: TextField(
+                focusNode: channelPageModel.focusNode,
+                style: Theme.of(context).textTheme.bodyText1,
+                controller: channelPageModel.controller,
+                textInputAction: TextInputAction.send,
+                keyboardType: TextInputType.text,
+                onSubmitted: channelPageModel.onTapCreateBlock,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding:
+                      EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                  fillColor: Theme.of(context).canvasColor,
+                  filled: true,
+                  enabledBorder: inputBorder,
+                  focusedBorder: inputBorder,
+                ),
               ),
             ),
+          ),
+          GestureDetector(
+            onTap: () {},
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 5),
+              child: Icon(Icons.add_circle_outline, size: 20),
+            ),
+          ),
+          Container(
+            width: 10,
           ),
         ],
       ),
     );
 
     if (channelPageModel.selecting) {
+      Widget menu = buildForwardMenu(context, channelPageModel);
       widget = Container(
         padding: EdgeInsets.symmetric(horizontal: 20),
         height: 60,
@@ -95,7 +116,19 @@ class ChannelPage extends StatelessWidget {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [TooltipButton(icon: Icons.forward_outlined)],
+          children: [
+            TooltipButton(
+              icon: Icons.forward_outlined,
+              onTap: () {
+                showCupertinoModalBottomSheet(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return menu;
+                  },
+                );
+              },
+            )
+          ],
         ),
       );
     }
@@ -112,87 +145,176 @@ class ChannelPage extends StatelessWidget {
           ],
         ),
       ),
-      body: Column(children: [
-        Expanded(
-          child: BouncingScrollView(
-            scrollBar: true,
-            reverse: true,
-            slivers: [
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  bool showCreator = true;
-                  if (index < blocks.length - 1) {
-                    if (blocks[index + 1].authorId == blocks[index].authorId) {
-                      showCreator = false;
-                    }
-                  }
-
-                  bool selected = false;
-                  if (channelPageModel.selecting) {
-                    selected =
-                        channelPageModel.selectedBlockIndex.contains(index);
-                  }
-
-                  Widget widget = Block(
-                    blocks[index],
-                    NodeType.channel,
-                    index,
-                    showCreator: showCreator,
-                    onLongPress: () {
-                      if (!channelPageModel.selecting) {
-                        channelPageModel.onLongPressBlock(index);
+      body: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).requestFocus();
+        },
+        child: Column(children: [
+          Expanded(
+            child: BouncingScrollView(
+              scrollBar: true,
+              reverse: true,
+              slivers: [
+                SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    bool showCreator = true;
+                    if (index < blocks.length - 1) {
+                      if (blocks[index + 1].authorId ==
+                          blocks[index].authorId) {
+                        showCreator = false;
                       }
-                    },
-                    selecting: channelPageModel.selecting,
-                    selected: selected,
-                    onSelected: channelPageModel.onSelectBlock,
-                  );
+                    }
 
-                  if (channelPageModel.showTooltipIndex == index) {
-                    widget = SimpleTooltip(
-                        backgroundColor: Theme.of(context).canvasColor,
-                        ballonPadding:
-                            EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                        arrowTipDistance: 4,
-                        arrowLength: 10,
-                        content: Container(
-                          child: Wrap(
-                            children: [
-                              TooltipButton(
-                                  icon: Icons.copy,
-                                  text: tr("channel.block.tooltip.copy"),
-                                  onTap: () {
-                                    channelPageModel.onTapCopyBlock(index);
-                                  }),
-                              TooltipButton(
-                                  icon: Icons.check_box_outlined,
-                                  text: tr("channel.block.tooltip.select"),
-                                  onTap: () {
-                                    channelPageModel.onTapSelection(index);
-                                  }),
-                            ],
+                    bool selected = false;
+                    if (channelPageModel.selecting) {
+                      selected =
+                          channelPageModel.selectedBlockIndex.contains(index);
+                    }
+
+                    Widget widget = Block(
+                      blocks[index],
+                      NodeType.channel,
+                      index,
+                      showCreator: showCreator,
+                      onLongPress: () {
+                        if (!channelPageModel.selecting) {
+                          channelPageModel.onLongPressBlock(index);
+                        }
+                      },
+                      selecting: channelPageModel.selecting,
+                      selected: selected,
+                      onSelected: channelPageModel.onSelectBlock,
+                    );
+
+                    if (channelPageModel.showTooltipIndex == index) {
+                      widget = SimpleTooltip(
+                          backgroundColor: Theme.of(context).canvasColor,
+                          ballonPadding:
+                              EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                          arrowTipDistance: 4,
+                          arrowLength: 10,
+                          tooltipDirection: TooltipDirection.vertical,
+                          content: Container(
+                            child: Wrap(
+                              children: [
+                                TooltipButton(
+                                    icon: Icons.copy,
+                                    text: tr("channel.block.tooltip.copy"),
+                                    onTap: () {
+                                      channelPageModel.onTapCopyBlock(index);
+                                    }),
+                                TooltipButton(
+                                    icon: Icons.check_box_outlined,
+                                    text: tr("channel.block.tooltip.select"),
+                                    onTap: () {
+                                      channelPageModel.onTapSelection(index);
+                                    }),
+                              ],
+                            ),
                           ),
-                        ),
-                        borderColor: Colors.transparent,
-                        borderRadius: 5,
-                        show: true,
-                        child: widget);
-                  }
+                          borderColor: Colors.transparent,
+                          borderRadius: 5,
+                          show: true,
+                          child: widget);
+                    }
 
-                  return Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 2,
-                      horizontal: 20,
-                    ),
-                    child: widget,
-                  );
-                }, childCount: blocks.length),
-              ),
-            ],
+                    return Container(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 2,
+                        horizontal: 20,
+                      ),
+                      child: widget,
+                    );
+                  }, childCount: blocks.length),
+                ),
+              ],
+            ),
           ),
-        ),
-        widget,
-      ]),
+          widget,
+        ]),
+      ),
+    );
+  }
+
+  Widget buildForwardMenu(
+      BuildContext context, ChannelPageModel channelPageModel) {
+    return Container(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          BottomSheetButton(
+              text: tr("channel.block.selection.copy_to_doc"),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  CupertinoPageRoute(builder: (ctx) {
+                    return ForwardToDocPage(
+                      teamId: channelPageModel.node.teamId,
+                      onCancel: channelPageModel.onTapSelectionCancel,
+                      onConfirm: channelPageModel.onCopyBlocksToDoc,
+                    );
+                  }),
+                );
+              }),
+          BottomSheetButton(
+              text: tr("channel.block.selection.move_to_doc"),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  CupertinoPageRoute(builder: (ctx) {
+                    return ForwardToDocPage(
+                      teamId: channelPageModel.node.teamId,
+                      onCancel: channelPageModel.onTapSelectionCancel,
+                      onConfirm: (_) {},
+                    );
+                  }),
+                );
+              }),
+          BottomSheetButton(
+              text:
+                  tr("channel.block.selection.combine_and_forward_to_channel"),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  CupertinoPageRoute(builder: (ctx) {
+                    return ForwardToDocPage(
+                      teamId: channelPageModel.node.teamId,
+                      onCancel: channelPageModel.onTapSelectionCancel,
+                      onConfirm: (_) {},
+                    );
+                  }),
+                );
+              }),
+          BottomSheetButton(
+              text:
+                  tr("channel.block.selection.separate_and_forward_to_channel"),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  CupertinoPageRoute(builder: (ctx) {
+                    return ForwardToDocPage(
+                      teamId: channelPageModel.node.teamId,
+                      onCancel: channelPageModel.onTapSelectionCancel,
+                      onConfirm: (_) {},
+                    );
+                  }),
+                );
+              }),
+          Container(
+            height: 5,
+            width: double.infinity,
+            color: Colors.black12,
+          ),
+          BottomSheetButton(
+              text: tr("channel.block.selection.cancel"),
+              onTap: () {
+                Navigator.of(context).pop();
+              }),
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 10),
+          )
+        ],
+      ),
     );
   }
 }

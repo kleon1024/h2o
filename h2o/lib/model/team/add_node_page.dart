@@ -57,7 +57,7 @@ class AddNodePageModel extends ChangeNotifier {
     if (this.indentType == IndentType.increase) {
       indent += 1;
     }
-    var teamNodes = this.globalModel.nodeDao!.nodeMap[team.id]!;
+    var teamNodes = this.globalModel.nodeDao!.nodeMap[team.uuid]!;
     String uuidString = Uuid().v4();
     NodeBean nodeBean = NodeBean(
       uuid: uuidString,
@@ -65,7 +65,7 @@ class AddNodePageModel extends ChangeNotifier {
       name: controller.text,
       indent: indent,
       previousId: preNodeID,
-      teamId: team.id,
+      teamId: team.uuid,
     );
     debugPrint(this.globalModel.nodeDao!.nodeMap.toString());
     if (teamNodes.length > insertIndex) {

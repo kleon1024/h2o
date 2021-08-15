@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class TooltipButton extends StatelessWidget {
-  final IconData icon;
+class BottomSheetButton extends StatelessWidget {
+  final IconData? icon;
   final String? text;
   final Function()? onTap;
 
-  TooltipButton({
-    required this.icon,
+  BottomSheetButton({
+    this.icon,
     this.text,
     this.onTap,
   });
@@ -14,11 +14,14 @@ class TooltipButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     List<Widget> widgets = [];
-    widgets.add(Icon(this.icon, size: 16));
+    if (this.icon != null) {
+      widgets.add(Icon(this.icon, size: 16));
+    }
     if (this.text != null) {
       widgets.add(Text(
         this.text!,
         style: Theme.of(context).textTheme.bodyText2,
+        overflow: TextOverflow.ellipsis,
       ));
     }
 
@@ -26,8 +29,8 @@ class TooltipButton extends StatelessWidget {
       onTap: this.onTap,
       child: Container(
         // color: Colors.blue,
-        margin: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-        child: Column(
+        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: widgets,
         ),

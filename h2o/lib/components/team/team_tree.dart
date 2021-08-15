@@ -28,8 +28,8 @@ class TeamTree extends StatelessWidget {
     }
 
     List<NodeBean> nodes = [];
-    if (team != null && nodeDao.nodeMap.containsKey(team.id)) {
-      nodes = nodeDao.nodeMap[team.id]!;
+    if (team != null && nodeDao.nodeMap.containsKey(team.uuid)) {
+      nodes = nodeDao.nodeMap[team.uuid]!;
     }
 
     return Container(

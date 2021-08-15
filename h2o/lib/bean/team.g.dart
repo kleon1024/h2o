@@ -8,12 +8,12 @@ part of 'team.dart';
 
 TeamBean _$TeamBeanFromJson(Map<String, dynamic> json) {
   return TeamBean(
-    id: json['id'] as String,
+    uuid: json['uuid'] as String,
     name: json['name'] as String,
   );
 }
 
 Map<String, dynamic> _$TeamBeanToJson(TeamBean instance) => <String, dynamic>{
-      'id': instance.id,
+      'uuid': instance.uuid,
       'name': instance.name,
     };

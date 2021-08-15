@@ -20,7 +20,7 @@ class TeamDao extends ChangeNotifier {
   }
 
   Future loadTeams() async {
-    this.teams = [TeamBean(id: "123", name: "My Team")];
+    this.teams = [TeamBean(uuid: "123", name: "My Team")];
   }
 
   Future updateTeams() async {

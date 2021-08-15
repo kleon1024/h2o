@@ -26,6 +26,12 @@ class ChannelPageModel extends ChangeNotifier {
     if (update) {
       this.globalModel.blockDao!.loadBlocks(node);
     }
+    toolTipFocusNode.addListener(() {
+      if (!toolTipFocusNode.hasFocus) {
+        this.onDismissTooltip();
+      }
+    });
+    toolTipFocusAttachment = toolTipFocusNode.attach(context);
   }
 
   final controller = TextEditingController();
@@ -33,6 +39,8 @@ class ChannelPageModel extends ChangeNotifier {
   bool selecting = false;
   Set<int> selectedBlockIndex = Set();
   int showTooltipIndex = -1;
+  final toolTipFocusNode = FocusNode();
+  late FocusAttachment toolTipFocusAttachment;
 
   onSelectBlock(int index, bool value) {
     debugPrint(
@@ -54,7 +62,14 @@ class ChannelPageModel extends ChangeNotifier {
   }
 
   onLongPressBlock(int index) {
+    toolTipFocusAttachment.reparent();
+    toolTipFocusNode.requestFocus();
     this.showTooltipIndex = index;
+    notifyListeners();
+  }
+
+  onDismissTooltip() {
+    this.showTooltipIndex = -1;
     notifyListeners();
   }
 
@@ -71,6 +86,37 @@ class ChannelPageModel extends ChangeNotifier {
     this.selecting = false;
     this.selectedBlockIndex.clear();
     notifyListeners();
+  }
+
+  onCopyBlocksToDoc(NodeBean docNode) async {
+    List<int> orderedIndex = this.selectedBlockIndex.toList();
+    orderedIndex.sort();
+    if (!this.globalModel.blockDao!.blockMap.containsKey(docNode.uuid)) {
+      await this.globalModel.blockDao!.loadDocumentBlocks(docNode);
+    }
+    List<BlockBean> docBlocks =
+        this.globalModel.blockDao!.blockMap[docNode.uuid]!;
+    List<BlockBean> blocks =
+        this.globalModel.blockDao!.blockMap[this.node.uuid]!;
+    String previousId = EMPTY_UUID;
+    if (docBlocks.length > 0) {
+      previousId = docBlocks.last.uuid;
+    }
+    List<Operation> ops = [];
+    for (var index in orderedIndex) {
+      var newBlock = BlockBean.fromJson(blocks[index].toJson());
+      newBlock.previousId = previousId;
+      newBlock.uuid = Uuid().v4();
+      newBlock.nodeId = docNode.uuid;
+      previousId = newBlock.uuid;
+      docBlocks.add(newBlock);
+      ops.add(Operation(OperationType.InsertDocumentBlock,
+          block: BlockBean.fromJson(newBlock.toJson())));
+    }
+
+    this.globalModel.transactionDao!.transaction(Transaction(ops));
+    debugPrint(orderedIndex.toString());
+    this.onTapSelectionCancel();
   }
 
   onTapCreateBlock(String text) async {

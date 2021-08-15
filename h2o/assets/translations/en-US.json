@@ -42,5 +42,15 @@
   "channel.block.tooltip.copy": "Copy",
   "channel.block.tooltip.copy.toast": "Copied",
   "channel.block.selection.forward": "Forward",
-  "channel.block.selection.cancel": "Cancel"
+  "channel.block.selection.cancel": "cancel",
+  "channel.block.selection.forward_to_doc": "Forward to document",
+  "channel.block.selection.copy_to_doc": "Copy to document",
+  "channel.block.selection.move_to_doc": "Move to document",
+  "channel.block.selection.combine_and_forward_to_channel": "Combine and forward to channel",
+  "channel.block.selection.separate_and_forward_to_channel": "Separate and forward to channel",
+  "channel.forward_to_doc.move_to": "Move to",
+  "channel.forward_to_doc.copy_to": "Copy to",
+  "channel.forward_to_doc.cancel": "Cancel",
+  "channel.forward_to_doc.confirm": "Confirm",
+  "channel.forward_to_doc.select_doc": "Select a doc"
 }

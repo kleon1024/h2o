@@ -94,7 +94,7 @@ class Node extends StatelessWidget {
                   Text(" "),
                   Text(
                     nodeBean.name,
-                    style: TextStyle(fontSize: 16),
+                    style: Theme.of(context).textTheme.bodyText2,
                   ),
                 ],
               ),
