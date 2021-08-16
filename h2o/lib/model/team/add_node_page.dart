@@ -4,6 +4,7 @@ import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/team.dart';
 import 'package:h2o/dao/node.dart';
 import 'package:h2o/dao/transaction.dart';
+import 'package:h2o/global/constants.dart';
 import 'package:h2o/model/global.dart';
 import 'package:uuid/uuid.dart';
 
@@ -17,12 +18,11 @@ class AddNodePageModel extends ChangeNotifier {
   GlobalModel globalModel;
 
   TeamBean team;
-  String preNodeID;
-  int indent;
+  NodeBean preNode;
   bool showIndentRadio;
   int insertIndex;
 
-  AddNodePageModel(this.team, this.preNodeID, this.indent, this.showIndentRadio,
+  AddNodePageModel(this.team, this.preNode, this.showIndentRadio,
       this.insertIndex, this.context, this.globalModel);
 
   TextEditingController controller = TextEditingController();
@@ -54,8 +54,14 @@ class AddNodePageModel extends ChangeNotifier {
   }
 
   onTapCreateNode() async {
+    String parentId = preNode.parentId;
+    int indent = preNode.indent;
+    String previousId = preNode.uuid;
+
     if (this.indentType == IndentType.increase) {
+      parentId = preNode.uuid;
       indent += 1;
+      previousId = EMPTY_UUID;
     }
     var teamNodes = this.globalModel.nodeDao!.nodeMap[team.uuid]!;
     String uuidString = Uuid().v4();
@@ -64,16 +70,37 @@ class AddNodePageModel extends ChangeNotifier {
       type: EnumToString.convertToString(nodeType),
       name: controller.text,
       indent: indent,
-      previousId: preNodeID,
+      parentId: parentId,
+      previousId: previousId,
       teamId: team.uuid,
     );
-    debugPrint(this.globalModel.nodeDao!.nodeMap.toString());
-    if (teamNodes.length > insertIndex) {
-      teamNodes[insertIndex].previousId = nodeBean.uuid;
-    }
-    teamNodes.insert(insertIndex, nodeBean);
-    if (insertIndex > 0) {
-      teamNodes[insertIndex - 1].expanded = true;
+
+    if (this.indentType == IndentType.increase) {
+      if (preNode.children == null) {
+        await this.globalModel.nodeDao!.loadChildren(preNode);
+      }
+      var children = preNode.children!;
+      if (children.length > 0) {
+        children[0].previousId = nodeBean.uuid;
+      }
+      nodeBean.parent = preNode;
+      children.insert(0, nodeBean);
+      preNode.expanded = true;
+    } else {
+      List<NodeBean> siblings = teamNodes;
+      if (preNode.parent != null) {
+        siblings = preNode.parent!.children!;
+      }
+      nodeBean.parent = preNode.parent;
+
+      for (int i = 0; i < siblings.length; i++) {
+        if (siblings[i].uuid == preNode.uuid) {
+          if (i != siblings.length - 1) {
+            siblings[i + 1].previousId = nodeBean.uuid;
+          }
+          siblings.insert(i + 1, nodeBean);
+        }
+      }
     }
 
     List<Operation> ops = [];
@@ -88,18 +115,6 @@ class AddNodePageModel extends ChangeNotifier {
 
     Navigator.pop(this.context);
     notifyListeners();
-
-    // nodeBean = await Api.createTeamNode(
-    //   team.id,
-    //   data: {
-    //     "id": uuidString,
-    //     "name": controller.text,
-    //     "type": EnumToString.convertToString(nodeType),
-    //     "indent": indent,
-    //     "preNodeID": preNodeID,
-    //   },
-    //   options: this.globalModel.userDao!.accessTokenOptions(),
-    // );
     this.globalModel.triggerCallback(EventType.NODE_CREATED);
   }
 }

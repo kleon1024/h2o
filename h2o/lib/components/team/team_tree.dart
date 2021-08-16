@@ -52,12 +52,7 @@ class TeamTree extends StatelessWidget {
           slivers: [
             ReorderableSliverList(
                 onReorderStarted: (int index) {
-                  debugPrint("onReorderStarted");
                   navigationPageModel.onReorderStart(nodes[index]);
-                },
-                onNoReorder: (int index) {
-                  debugPrint("onNoReorder");
-                  navigationPageModel.onReorderEnd(nodes[index]);
                 },
                 onReorder: navigationPageModel.onReorder,
                 delegate:
@@ -65,18 +60,16 @@ class TeamTree extends StatelessWidget {
                   return Node(
                     nodes[index],
                     onTapExpand: () {
+                      nodeDao.loadChildren(nodes[index]);
                       navigationPageModel.onExpandNode(nodes[index]);
                     },
                     onTapPlus: () {
-                      var preNodeID = nodes[index].uuid;
-
                       Navigator.of(context).push(
                         CupertinoPageRoute(builder: (ctx) {
                           return ChangeNotifierProvider(
                               create: (_) => AddNodePageModel(
                                   team,
-                                  preNodeID,
-                                  nodes[index].indent,
+                                  nodes[index],
                                   true,
                                   index + 1,
                                   context,
@@ -89,10 +82,17 @@ class TeamTree extends StatelessWidget {
                 }, childCount: nodes.length)),
             SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-              String preNodeID = EMPTY_UUID;
-              int indent = 0;
+              NodeBean preNode = NodeBean(
+                uuid: EMPTY_UUID,
+                previousId: EMPTY_UUID,
+                parentId: EMPTY_UUID,
+                indent: 0,
+                name: "virtual-node",
+                teamId: team.uuid,
+                type: "virtual-node",
+              );
               if (nodes.length > 0) {
-                preNodeID = nodes[nodes.length - 1].uuid;
+                preNode = nodes.last;
               }
 
               return ElevatedButton.icon(
@@ -100,14 +100,8 @@ class TeamTree extends StatelessWidget {
                   Navigator.of(context).push(
                     CupertinoPageRoute(builder: (ctx) {
                       return ChangeNotifierProvider(
-                          create: (_) => AddNodePageModel(
-                              team,
-                              preNodeID,
-                              indent,
-                              false,
-                              nodes.length,
-                              context,
-                              globalModel),
+                          create: (_) => AddNodePageModel(team, preNode, false,
+                              nodes.length, context, globalModel),
                           child: AddNodePage());
                     }),
                   );

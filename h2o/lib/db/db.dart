@@ -60,6 +60,7 @@ class DBProvider {
                   "type TEXT,"
                   "name TEXT,"
                   "indent INTEGER DEFAULT 0,"
+                  "parent_id TEXT,"
                   "previous_id TEXT,"
                   "team_id TEXT,"
                   "created_at INTEGER,"
@@ -95,15 +96,16 @@ class DBProvider {
             }));
   }
 
-  Future<List<NodeBean>> getNodes(String uuid) async {
+  Future<List<NodeBean>> getNodes(String teamId, String parentId) async {
     final db = await database;
-    var list = await db.query("nodes", where: "team_id = ?", whereArgs: [uuid]);
+    var list = await db.query("nodes",
+        where: "team_id = ? AND parent_id = ?", whereArgs: [teamId, parentId]);
     return list.map((e) => NodeBean.fromJson(e)).toList();
   }
 
   Future insertNode(NodeBean bean) async {
     final db = await database;
-    var n = await findPreviousNode(bean.previousId);
+    var n = await findPreviousNode(bean.parentId, bean.previousId);
     if (n != null) {
       n.previousId = bean.uuid;
       await updateNode(n);
@@ -127,16 +129,22 @@ class DBProvider {
     return NodeBean.fromJson(nodes[0]);
   }
 
-  Future<NodeBean?> findPreviousNode(String uuid) async {
+  Future<NodeBean?> findPreviousNode(String parentId, String previousId) async {
     final db = await database;
-    var nodes =
-        await db.query("nodes", where: "previous_id = ?", whereArgs: [uuid]);
+    var nodes = await db.query("nodes",
+        where: "previous_id = ? AND parent_id = ?",
+        whereArgs: [previousId, parentId]);
     if (nodes.length > 1) {
       debugPrint("warning: find multiple nodes with same previous_id=" +
-          uuid +
+          previousId +
+          " AND parent_id=" +
+          parentId +
           " which is unexpected");
     } else if (nodes.length == 0) {
-      debugPrint("warning: cannot find any node with previous_id=" + uuid);
+      debugPrint("warning: cannot find any node with previous_id=" +
+          previousId +
+          " AND parent_id=" +
+          parentId);
       return null;
     }
     return NodeBean.fromJson(nodes[0]);
@@ -171,7 +179,7 @@ class DBProvider {
 
   Future deleteNode(NodeBean bean) async {
     final db = await database;
-    var n = await findPreviousNode(bean.uuid);
+    var n = await findPreviousNode(bean.parentId, bean.uuid);
     if (n != null) {
       n.previousId = bean.previousId;
       await updateNode(n);

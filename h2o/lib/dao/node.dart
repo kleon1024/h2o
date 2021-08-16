@@ -31,10 +31,7 @@ class NodeDao extends ChangeNotifier {
     }
   }
 
-  Future loadNodes() async {
-    String teamId = "123";
-    var nodes = await DBProvider.db.getNodes(teamId);
-
+  List<NodeBean> reorder(List<NodeBean> nodes) {
     List<NodeBean> reordered = [];
     Map<String, NodeBean> nodeMap = {};
     nodes.forEach((n) {
@@ -46,52 +43,31 @@ class NodeDao extends ChangeNotifier {
       var n = nodeMap[previousId];
       if (n == null) {
         debugPrint("reorder nodes unexpected previous node id: " + previousId);
+      } else {
+        reordered.add(n);
+        previousId = n.uuid;
       }
-      reordered.add(n!);
-      previousId = n.uuid;
     }
-    this.nodeMap[teamId] = reordered;
+    return reordered;
+  }
+
+  Future loadNodes() async {
+    String teamId = "123";
+    var nodes = await DBProvider.db.getNodes(teamId, EMPTY_UUID);
+    this.nodeMap[teamId] = reorder(nodes);
     notifyListeners();
   }
 
-  // Future updateNodes() async {
-  //   var teams = this.globalModel!.teamDao!.teams;
-  //   if (teams.length < 1) {
-  //     return;
-  //   }
-  //   String teamID =
-  //       teams[this.globalModel!.navigationPageModel!.currentTeamIndex].id;
-  //   List<NodeBean>? nodes = await Api.listTeamNodes(
-  //     teamID,
-  //     data: {"offset": 0, "limit": 100},
-  //     options: this.globalModel!.userDao!.accessTokenOptions(),
-  //   );
-  //
-  //   if (nodes != null) {
-  //     if (nodes.length == 0) {
-  //       nodeMap[teamID] = [];
-  //       return;
-  //     }
-  //     Map<String, NodeBean> preNodeMap = {};
-  //     nodes.forEach((node) {
-  //       preNodeMap[node.preNodeID] = node;
-  //     });
-  //     debugPrint(preNodeMap.toString());
-  //     NodeBean node = preNodeMap[EMPTY_UUID]!;
-  //     int cnt = 0;
-  //     List<NodeBean> orderedNodes = [];
-  //     while (node.posNodeID != EMPTY_UUID) {
-  //       cnt += 1;
-  //       if (cnt >= nodes.length) {
-  //         break;
-  //       }
-  //       orderedNodes.add(node);
-  //       node = preNodeMap[node.id]!;
-  //     }
-  //     orderedNodes.add(node);
-  //     nodeMap[teamID] = orderedNodes;
-  //   }
-  // }
+  Future loadChildren(NodeBean node) async {
+    String teamId = "123";
+    var nodes = await DBProvider.db.getNodes(teamId, node.uuid);
+    for (var n in nodes) {
+      n.parent = node;
+      debugPrint("loadChildren:" + n.uuid);
+    }
+    node.children = reorder(nodes);
+    notifyListeners();
+  }
 
   @override
   void dispose() {

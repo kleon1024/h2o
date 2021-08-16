@@ -8,6 +8,8 @@ class NodeBean {
   String type;
   String name;
   int indent;
+  @JsonKey(name: "parent_id")
+  String parentId;
   @JsonKey(name: "previous_id")
   String previousId;
   @JsonKey(name: "created_at")
@@ -20,6 +22,10 @@ class NodeBean {
   bool expanded;
   @JsonKey(ignore: true)
   bool isLeaf;
+  @JsonKey(ignore: true)
+  List<NodeBean>? children;
+  @JsonKey(ignore: true)
+  NodeBean? parent;
 
   NodeBean({
     required this.uuid,
@@ -27,7 +33,10 @@ class NodeBean {
     required this.name,
     required this.indent,
     required this.previousId,
+    required this.parentId,
     required this.teamId,
+    this.children,
+    this.parent,
     this.createdAt = 0,
     this.updatedAt = 0,
     this.expanded = false,
