@@ -51,7 +51,15 @@ class ForwardToDocPage extends StatelessWidget {
                   this.onCancel!();
                 }
               }),
-          title: Text(tr("channel.forward_to_doc.select_doc")),
+          centerTitle: true,
+          title: Text(
+            tr("channel.forward_to_doc.select_doc"),
+            style: Theme.of(context)
+                .textTheme
+                .bodyText1!
+                .merge(TextStyle(fontWeight: FontWeight.bold)),
+            overflow: TextOverflow.ellipsis,
+          ),
           actions: [],
         ),
       ),

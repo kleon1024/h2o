@@ -66,6 +66,7 @@ class BlockDao extends ChangeNotifier {
     debugPrint(block.properties);
     final chart = ChartBean.fromJson(jsonDecode(block.properties));
     for (var s in chart.series) {
+      s.points.clear();
       List<RowBean> rows = await DBProvider.db.getRows(chart.table, [s.x, s.y]);
       for (var r in rows) {
         s.points.add(DataPoint(x: r.values[0], y: r.values[1] as num));

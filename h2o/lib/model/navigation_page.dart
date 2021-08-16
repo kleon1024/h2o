@@ -28,6 +28,7 @@ class NavigationPageModel extends ChangeNotifier {
       if (node.children != null) {
         for (var n in node.children!) {
           n.isLeaf = n.children != null && n.children!.length == 0;
+          n.indent = node.indent + 1;
           nodes.add(n);
           nodes.addAll(getChildren(n));
         }
@@ -46,6 +47,7 @@ class NavigationPageModel extends ChangeNotifier {
           }
           for (var n in rawNodes) {
             n.isLeaf = n.children != null && n.children!.length == 0;
+            n.indent = 0;
             nodes.add(n);
             if (n.children != null) {
               nodes.addAll(getChildren(n));

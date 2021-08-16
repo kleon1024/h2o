@@ -308,9 +308,9 @@ class ChannelPage extends StatelessWidget {
                 );
               }),
           Container(
-            height: 5,
+            height: 1,
             width: double.infinity,
-            color: Colors.black12,
+            color: Theme.of(context).highlightColor,
           ),
           BottomSheetButton(
               text: tr("channel.block.selection.cancel"),

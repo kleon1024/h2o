@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:h2o/bean/block.dart';
+import 'package:h2o/bean/chart.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/dao/block.dart';
 import 'package:h2o/dao/transaction.dart';
@@ -84,6 +87,33 @@ class DocumentPageModel extends ChangeNotifier {
         editingPreBlockID = EMPTY_UUID;
       }
     }
+  }
+
+  onInsertChart(ChartBean chart) async {
+    List<BlockBean> blocks = this.globalModel.blockDao!.blockMap[node.uuid]!;
+    String uuidString = Uuid().v4();
+    BlockBean? newBlockBean = BlockBean(
+      uuid: uuidString,
+      type: EnumToString.convertToString(BlockType.chart),
+      text: "",
+      nodeId: node.uuid,
+      previousId: editingPreBlockID,
+      createdAt: DateTime.now().toUtc().millisecondsSinceEpoch,
+      updatedAt: DateTime.now().toUtc().millisecondsSinceEpoch,
+      authorId: globalModel.userDao!.user!.id,
+      properties: jsonEncode(chart.toJson()),
+    );
+
+    if (editingNew) {
+      blocks.insert(editingIndex, newBlockBean);
+    } else {
+      blocks.insert(editingIndex + 1, newBlockBean);
+    }
+    this.globalModel.transactionDao!.transaction(Transaction([
+          Operation(OperationType.InsertDocumentBlock,
+              block: BlockBean.fromJson(newBlockBean.toJson()))
+        ]));
+    notifyListeners();
   }
 
   onTapEmptyArea() {

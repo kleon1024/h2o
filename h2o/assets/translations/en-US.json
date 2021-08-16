@@ -52,5 +52,18 @@
   "channel.forward_to_doc.copy_to": "Copy to",
   "channel.forward_to_doc.cancel": "Cancel",
   "channel.forward_to_doc.confirm": "Confirm",
-  "channel.forward_to_doc.select_doc": "Select a doc"
+  "channel.forward_to_doc.select_doc": "Select a doc",
+  "doc.add_chart.title": "Add Chart",
+  "doc.add_chart.cancel": "Cancel",
+  "doc.add_chart.confirm": "Insert",
+  "doc.add_chart.type": "Type",
+  "doc.add_chart.type.line": "Line",
+  "doc.add_chart.type.line.description": "Line chart",
+  "doc.add_chart.type.column": "Column",
+  "doc.add_chart.type.column.description": "Column, bar chart",
+  "doc.add_chart.data_source": "Data Source",
+  "doc.add_chart.select_data_source": "Select a data source",
+  "doc.add_chart.preview": "Preview",
+  "doc.add_chart.horizontal_axis": "x",
+  "doc.add_chart.vertical_axis": "y"
 }

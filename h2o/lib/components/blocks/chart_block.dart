@@ -33,6 +33,7 @@ class ChartBlock extends StatelessWidget {
 
     ChartBean chart = blockDao.chartBlockMap[block.uuid]!;
     List<CartesianSeries> series = [];
+
     for (var s in chart.series) {
       switch (EnumToString.fromString(ChartSeriesType.values, s.type)) {
         case ChartSeriesType.line:

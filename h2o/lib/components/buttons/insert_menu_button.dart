@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class TooltipButton extends StatelessWidget {
+class InsertMenuButton extends StatelessWidget {
   final IconData? icon;
   final String? text;
   final Function()? onTap;
 
-  TooltipButton({
+  InsertMenuButton({
     this.icon,
     this.text,
     this.onTap,
@@ -15,23 +15,29 @@ class TooltipButton extends StatelessWidget {
   Widget build(BuildContext context) {
     List<Widget> widgets = [];
     if (this.icon != null) {
-      widgets.add(Icon(this.icon, size: 16));
+      widgets.add(Container(
+          width: 40,
+          height: 40,
+          color: Theme.of(context).cardColor,
+          child: Icon(this.icon, size: 16)));
     }
 
     if (this.text != null) {
       widgets.add(Text(
         this.text!,
-        style: Theme.of(context).textTheme.bodyText2,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.caption,
       ));
     }
 
     return GestureDetector(
       onTap: this.onTap,
       child: Container(
+        width: 85,
         // color: Colors.blue,
-        margin: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+        padding: EdgeInsets.symmetric(vertical: 10),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: widgets,
         ),
       ),
