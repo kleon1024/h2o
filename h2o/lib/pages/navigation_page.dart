@@ -1,7 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:h2o/components/team/team_sidebar.dart';
 import 'package:h2o/components/team/team_tree.dart';
 import 'package:h2o/model/global.dart';
 import 'package:h2o/model/navigation_page.dart';
@@ -14,21 +12,6 @@ class NavigationPage extends StatelessWidget {
     final navigationPageModel = Provider.of<NavigationPageModel>(context)
       ..setContext(context, globalModel);
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-      ),
-      child: Scaffold(
-        body: Container(
-          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-          child: Row(
-            children: [
-              Container(width: 40, child: TeamSideBar()),
-              Expanded(child: TeamTree()),
-            ],
-          ),
-        ),
-      ),
-    );
+    return TeamTree();
   }
 }

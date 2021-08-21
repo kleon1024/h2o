@@ -23,26 +23,17 @@ class TextBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var textStyle = Theme.of(context).textTheme.bodyText2!;
+    var textStyle = Theme.of(context).textTheme.bodyText1;
     var hint = "doc.block." + block.type + ".hint";
     switch (EnumToString.fromString(BlockType.values, block.type)) {
       case BlockType.heading1:
-        textStyle = Theme.of(context)
-            .textTheme
-            .headline6!
-            .merge(TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
+        textStyle = Theme.of(context).textTheme.headline1;
         break;
       case BlockType.heading2:
-        textStyle = Theme.of(context)
-            .textTheme
-            .headline6!
-            .merge(TextStyle(fontSize: 16, fontWeight: FontWeight.bold));
+        textStyle = Theme.of(context).textTheme.headline2;
         break;
       case BlockType.heading3:
-        textStyle = Theme.of(context)
-            .textTheme
-            .headline6!
-            .merge(TextStyle(fontSize: 13, fontWeight: FontWeight.bold));
+        textStyle = Theme.of(context).textTheme.headline3;
         break;
       default:
         textStyle = Theme.of(context).textTheme.bodyText1!;
@@ -70,7 +61,7 @@ class TextBlock extends StatelessWidget {
             border: InputBorder.none,
             isDense: true,
             hintText: tr(hint),
-            fillColor: Theme.of(context).cardColor,
+            fillColor: Colors.transparent,
             filled: true,
             contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 4),
           ),
@@ -79,6 +70,7 @@ class TextBlock extends StatelessWidget {
     }
 
     return Container(
+        color: Theme.of(context).canvasColor,
         padding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         child: Text(
           this.block.text

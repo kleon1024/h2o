@@ -7,6 +7,7 @@ class NodeBean {
   String uuid;
   String type;
   String name;
+  String draft;
   int indent;
   @JsonKey(name: "parent_id")
   String parentId;
@@ -41,6 +42,7 @@ class NodeBean {
     this.updatedAt = 0,
     this.expanded = false,
     this.isLeaf = false,
+    this.draft = "",
   });
 
   factory NodeBean.fromJson(Map<String, dynamic> json) =>

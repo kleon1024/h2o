@@ -21,6 +21,8 @@ class BlockBean {
   int createdAt;
   @JsonKey(name: "updated_at")
   int updatedAt;
+  @JsonKey(ignore: true)
+  int index;
 
   BlockBean({
     this.uuid = EMPTY_UUID,
@@ -33,6 +35,7 @@ class BlockBean {
     this.authorId = EMPTY_UUID,
     this.createdAt = 0,
     this.updatedAt = 0,
+    this.index = 0,
   });
 
   factory BlockBean.copyFrom(BlockBean bean) {

@@ -9,6 +9,7 @@ import 'package:h2o/model/global.dart';
 import 'package:h2o/model/table/add_column_page.dart';
 import 'package:h2o/model/table/table_page.dart';
 import 'package:h2o/pages/table/add_column_page.dart';
+import 'package:h2o/pages/unified_page.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 
@@ -141,10 +142,13 @@ class TablePage extends StatelessWidget {
       );
     }
 
-    return Scaffold(
+    return UnifiedPage(
+      child: Scaffold(
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(36),
           child: AppBar(
+            elevation: 0,
+            backgroundColor: Colors.transparent,
             title: Text(tablePageModel.node.name),
             actions: [
               IconButton(
@@ -167,7 +171,9 @@ class TablePage extends StatelessWidget {
         body: GestureDetector(
           onTap: tablePageModel.onTapEmptyArea,
           child: table,
-        ));
+        ),
+      ),
+    );
 
     //     Container(
     //       padding: EdgeInsets.symmetric(

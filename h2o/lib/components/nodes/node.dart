@@ -76,12 +76,13 @@ class Node extends StatelessWidget {
     }
 
     return Container(
+      padding: EdgeInsets.symmetric(vertical: 5),
       child: Row(children: [
         InkWell(
           onTap: nodeBean.isLeaf ? null : this.onTapExpand,
           child: Container(
             margin: EdgeInsets.only(right: 8, top: 8, bottom: 8),
-            child: Icon(icon, size: 16),
+            child: Icon(icon),
           ),
         ),
         Expanded(
@@ -95,11 +96,11 @@ class Node extends StatelessWidget {
                   padding: EdgeInsets.symmetric(vertical: 4),
                   child: Row(
                     children: [
-                      Icon(iconData, size: 16),
+                      Icon(iconData),
                       Text(" "),
                       Text(
                         nodeBean.name,
-                        style: Theme.of(context).textTheme.bodyText2,
+                        style: Theme.of(context).textTheme.bodyText1,
                       ),
                     ],
                   ),
@@ -112,7 +113,7 @@ class Node extends StatelessWidget {
           onTap: this.onTapPlus,
           child: Container(
             padding: EdgeInsets.only(left: 8, top: 8, bottom: 8),
-            child: Icon(CupertinoIcons.plus, size: 16),
+            child: Icon(CupertinoIcons.plus),
           ),
         ),
       ]),

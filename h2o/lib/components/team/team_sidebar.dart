@@ -19,8 +19,7 @@ class TeamSideBar extends StatelessWidget {
         SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
           return Container(
-              padding:
-                  EdgeInsets.only(top: 8 + (index == 0 ? 18 : 0), bottom: 8),
+              padding: EdgeInsets.symmetric(vertical: 8),
               child: InkWell(
                   onTap: () {
                     navigationPageModel.onTapTeamIcon(index);
@@ -32,7 +31,7 @@ class TeamSideBar extends StatelessWidget {
         SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
           return Container(
-            padding: EdgeInsets.symmetric(vertical: 18),
+            padding: EdgeInsets.symmetric(vertical: 8),
             child: InkWell(
               onTap: () {},
               child: CircleAvatar(

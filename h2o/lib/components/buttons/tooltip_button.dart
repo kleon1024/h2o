@@ -15,19 +15,21 @@ class TooltipButton extends StatelessWidget {
   Widget build(BuildContext context) {
     List<Widget> widgets = [];
     if (this.icon != null) {
-      widgets.add(Icon(this.icon, size: 16));
+      widgets.add(Icon(this.icon));
     }
 
     if (this.text != null) {
       widgets.add(Text(
         this.text!,
-        style: Theme.of(context).textTheme.bodyText2,
+        style: Theme.of(context).textTheme.bodyText1,
+        overflow: TextOverflow.ellipsis,
       ));
     }
 
     return GestureDetector(
       onTap: this.onTap,
       child: Container(
+        width: 60,
         // color: Colors.blue,
         margin: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
         child: Column(

@@ -123,6 +123,8 @@ class AddChartPageModel extends ChangeNotifier {
     }
     await refreshChart();
     notifyListeners();
+    Navigator.of(context).pop();
+    Navigator.of(context).pop();
   }
 
   refreshChart() async {

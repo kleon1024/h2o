@@ -87,15 +87,19 @@ class TransactionDao extends ChangeNotifier {
             case OperationType.InsertChannelBlock:
               await DBProvider.db.insertBlock(operation.block!);
               break;
+            case OperationType.DeleteChannelBlock:
+              await DBProvider.db.deleteBlock(operation.block!);
+              break;
+            case OperationType.UpdateChannelBlock:
+              await DBProvider.db.updateBlock(operation.block!);
+              break;
             case OperationType.InsertDocumentBlock:
-              debugPrint("6");
               await DBProvider.db.insertDocumentBlock(operation.block!);
               break;
             case OperationType.UpdateDocumentBlock:
               await DBProvider.db.updateBlock(operation.block!);
               break;
             case OperationType.DeleteDocumentBlock:
-              debugPrint("1");
               await DBProvider.db.deleteDocumentBlock(operation.block!);
               break;
             case OperationType.InsertTable:

@@ -71,7 +71,7 @@ class TablePageModel extends DataGridSource {
           padding: EdgeInsets.symmetric(horizontal: 8),
           child: Text(
             dataGridCell.value.toString(),
-            style: Theme.of(context).textTheme.bodyText2!,
+            style: Theme.of(context).textTheme.bodyText1!,
             overflow: TextOverflow.ellipsis,
           ));
     }).toList());

@@ -8,6 +8,7 @@ import 'package:h2o/dao/table.dart';
 import 'package:h2o/global/icons.dart';
 import 'package:h2o/model/global.dart';
 import 'package:h2o/model/table/add_column_page.dart';
+import 'package:h2o/pages/unified_page.dart';
 import 'package:provider/provider.dart';
 
 class AddColumnPage extends StatelessWidget {
@@ -16,7 +17,7 @@ class AddColumnPage extends StatelessWidget {
     final globalModel = Provider.of<GlobalModel>(context);
     final addColumnPageModel = Provider.of<AddColumnPageModel>(context);
 
-    var bodyTestStyle = Theme.of(context).textTheme.bodyText1!;
+    var bodyTestStyle = Theme.of(context).textTheme.bodyText2!;
     if (!addColumnPageModel.isNameValid) {
       bodyTestStyle =
           bodyTestStyle.merge(TextStyle(color: Theme.of(context).cardColor));
@@ -39,11 +40,10 @@ class AddColumnPage extends StatelessWidget {
                     )),
                 TextField(
                   style: Theme.of(context).textTheme.bodyText1,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.deny(
-                        RegExp(r"[/:;$@#%^*+=\|~]")),
-                  ],
                   autofocus: true,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r"^[^\s].*")),
+                  ],
                   onChanged: addColumnPageModel.onTextFieldChanged,
                   controller: addColumnPageModel.controller,
                   textInputAction: TextInputAction.done,
@@ -51,7 +51,7 @@ class AddColumnPage extends StatelessWidget {
                   decoration: InputDecoration(
                     contentPadding:
                         EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    fillColor: Theme.of(context).canvasColor,
+                    fillColor: Colors.black26,
                     filled: true,
                     border: InputBorder.none,
                     suffix: InkWell(
@@ -109,7 +109,7 @@ class AddColumnPage extends StatelessWidget {
                   ])),
               Icon(IconMap.columnType[columnType], size: 16)
             ]),
-            tileColor: Theme.of(context).canvasColor,
+            tileColor: Colors.black26,
             value: columnType,
             groupValue: addColumnPageModel.columnType,
             onChanged: addColumnPageModel.onColumnTypeRadioChanged,
@@ -129,7 +129,7 @@ class AddColumnPage extends StatelessWidget {
           keyboardType: TextInputType.text,
           decoration: InputDecoration(
             contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-            fillColor: Theme.of(context).canvasColor,
+            fillColor: Colors.black26,
             filled: true,
             border: InputBorder.none,
             suffix: InkWell(
@@ -204,50 +204,51 @@ class AddColumnPage extends StatelessWidget {
       ),
     );
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).cardColor,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(36),
-        child: AppBar(
-          automaticallyImplyLeading: false,
-          elevation: 0,
-          centerTitle: true,
-          leading: InkWell(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              child: Container(
-                width: 64,
-                child: Text(tr("table.add_column.cancel")),
-                alignment: Alignment.center,
-              )),
-          backgroundColor: Theme.of(context).canvasColor,
-          title: Text(tr("table.add_column.title"),
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyText1!
-                  .merge(TextStyle(fontWeight: FontWeight.bold))),
-          titleSpacing: 0.0,
-          actions: [
-            InkWell(
-                onTap: addColumnPageModel.isNameValid
-                    ? addColumnPageModel.onTapCreateColumn
-                    : null,
+    return UnifiedPage(
+      child: Scaffold(
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(36),
+          child: AppBar(
+            automaticallyImplyLeading: false,
+            elevation: 0,
+            centerTitle: true,
+            leading: InkWell(
+                onTap: () {
+                  Navigator.pop(context);
+                },
                 child: Container(
                   width: 64,
-                  child: Text(
-                    tr("table.add_column.confirm"),
-                    style: bodyTestStyle,
-                  ),
+                  child: Text(tr("table.add_column.cancel")),
                   alignment: Alignment.center,
                 )),
-          ],
+            backgroundColor: Colors.transparent,
+            title: Text(tr("table.add_column.title"),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyText1!
+                    .merge(TextStyle(fontWeight: FontWeight.bold))),
+            titleSpacing: 0.0,
+            actions: [
+              InkWell(
+                  onTap: addColumnPageModel.isNameValid
+                      ? addColumnPageModel.onTapCreateColumn
+                      : null,
+                  child: Container(
+                    width: 64,
+                    child: Text(
+                      tr("table.add_column.confirm"),
+                      style: bodyTestStyle,
+                    ),
+                    alignment: Alignment.center,
+                  )),
+            ],
+          ),
         ),
-      ),
-      body: Container(
-        child: BouncingScrollView(
-          scrollBar: true,
-          slivers: slivers,
+        body: Container(
+          child: BouncingScrollView(
+            scrollBar: true,
+            slivers: slivers,
+          ),
         ),
       ),
     );

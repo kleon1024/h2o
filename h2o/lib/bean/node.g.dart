@@ -17,6 +17,7 @@ NodeBean _$NodeBeanFromJson(Map<String, dynamic> json) {
     teamId: json['team_id'] as String,
     createdAt: json['created_at'] as int,
     updatedAt: json['updated_at'] as int,
+    draft: json['draft'] as String,
   );
 }
 
@@ -24,6 +25,7 @@ Map<String, dynamic> _$NodeBeanToJson(NodeBean instance) => <String, dynamic>{
       'uuid': instance.uuid,
       'type': instance.type,
       'name': instance.name,
+      'draft': instance.draft,
       'indent': instance.indent,
       'parent_id': instance.parentId,
       'previous_id': instance.previousId,

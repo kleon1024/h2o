@@ -6,7 +6,14 @@ import 'package:flutter/services.dart';
 import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
 import 'package:h2o/dao/node.dart';
 import 'package:h2o/global/icons.dart';
+import 'package:h2o/model/channel/channel_page.dart';
+import 'package:h2o/model/document/document_page.dart';
 import 'package:h2o/model/global.dart';
+import 'package:h2o/model/table/table_page.dart';
+import 'package:h2o/pages/channel/channel_page.dart';
+import 'package:h2o/pages/document/document_page.dart';
+import 'package:h2o/pages/table/table_page.dart';
+import 'package:h2o/pages/unified_page.dart';
 import 'package:provider/provider.dart';
 
 import '../../model/team/add_node_page.dart';
@@ -17,7 +24,7 @@ class AddNodePage extends StatelessWidget {
     final globalModel = Provider.of<GlobalModel>(context);
     final addNodePageModel = Provider.of<AddNodePageModel>(context);
 
-    var bodyTestStyle = Theme.of(context).textTheme.bodyText1!;
+    var bodyTestStyle = Theme.of(context).textTheme.bodyText2!;
     if (!addNodePageModel.isNameValid) {
       bodyTestStyle =
           bodyTestStyle.merge(TextStyle(color: Theme.of(context).cardColor));
@@ -40,11 +47,10 @@ class AddNodePage extends StatelessWidget {
                     )),
                 TextField(
                   style: Theme.of(context).textTheme.bodyText1,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.deny(
-                        RegExp(r"[/:;$@#%^*+=\|~]")),
-                  ],
                   autofocus: true,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r"^[^\s].*")),
+                  ],
                   onChanged: addNodePageModel.onTextFieldChanged,
                   controller: addNodePageModel.controller,
                   textInputAction: TextInputAction.done,
@@ -52,7 +58,7 @@ class AddNodePage extends StatelessWidget {
                   decoration: InputDecoration(
                     contentPadding:
                         EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    fillColor: Theme.of(context).canvasColor,
+                    fillColor: Colors.black26,
                     filled: true,
                     border: InputBorder.none,
                     suffix: InkWell(
@@ -110,7 +116,7 @@ class AddNodePage extends StatelessWidget {
                   ])),
               Icon(IconMap.nodeType[nodeType], size: 16)
             ]),
-            tileColor: Theme.of(context).canvasColor,
+            tileColor: Colors.black26,
             value: nodeType,
             groupValue: addNodePageModel.nodeType,
             onChanged: addNodePageModel.onNodeTypeRadioChanged,
@@ -172,50 +178,91 @@ class AddNodePage extends StatelessWidget {
       ]);
     }
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).cardColor,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(36),
-        child: AppBar(
-          automaticallyImplyLeading: false,
-          elevation: 0,
-          centerTitle: true,
-          leading: InkWell(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              child: Container(
-                width: 64,
-                child: Text(tr("team.add_node.cancel")),
-                alignment: Alignment.center,
-              )),
-          backgroundColor: Theme.of(context).canvasColor,
-          title: Text(tr("team.add_node.title"),
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyText1!
-                  .merge(TextStyle(fontWeight: FontWeight.bold))),
-          titleSpacing: 0.0,
-          actions: [
-            InkWell(
-                onTap: addNodePageModel.isNameValid
-                    ? addNodePageModel.onTapCreateNode
-                    : null,
+    return UnifiedPage(
+      child: Scaffold(
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(36),
+          child: AppBar(
+            automaticallyImplyLeading: false,
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            centerTitle: true,
+            leading: InkWell(
+                onTap: () {
+                  Navigator.pop(context);
+                },
                 child: Container(
                   width: 64,
-                  child: Text(
-                    tr("team.add_node.confirm"),
-                    style: bodyTestStyle,
-                  ),
+                  child: Text(tr("team.add_node.cancel")),
                   alignment: Alignment.center,
                 )),
-          ],
+            title: Text(tr("team.add_node.title"),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyText1!
+                    .merge(TextStyle(fontWeight: FontWeight.bold))),
+            titleSpacing: 0.0,
+            actions: [
+              InkWell(
+                  onTap: addNodePageModel.isNameValid
+                      ? () async {
+                          await addNodePageModel.onTapCreateNode(
+                              callback: (type, node) {
+                            switch (type) {
+                              case NodeType.channel:
+                                Navigator.of(context).push(
+                                  CupertinoPageRoute(builder: (ctx) {
+                                    return ChangeNotifierProvider(
+                                        create: (_) =>
+                                            ChannelPageModel(context, node),
+                                        child: ChannelPage());
+                                  }),
+                                );
+
+                                break;
+                              case NodeType.document:
+                                Navigator.of(context).push(
+                                  CupertinoPageRoute(builder: (ctx) {
+                                    return ChangeNotifierProvider(
+                                        create: (_) =>
+                                            DocumentPageModel(context, node),
+                                        child: DocumentPage());
+                                  }),
+                                );
+
+                                break;
+                              case NodeType.table:
+                                Navigator.of(context).push(
+                                  CupertinoPageRoute(builder: (ctx) {
+                                    return ChangeNotifierProvider(
+                                        create: (_) =>
+                                            TablePageModel(context, node),
+                                        child: TablePage());
+                                  }),
+                                );
+
+                                break;
+                              default:
+                            }
+                          });
+                        }
+                      : null,
+                  child: Container(
+                    width: 64,
+                    child: Text(
+                      tr("team.add_node.confirm"),
+                      style: bodyTestStyle,
+                    ),
+                    alignment: Alignment.center,
+                  )),
+            ],
+          ),
         ),
-      ),
-      body: Container(
-        child: BouncingScrollView(
-          scrollBar: true,
-          slivers: slivers,
+        body: Container(
+          child: BouncingScrollView(
+            scrollBar: true,
+            slivers: slivers,
+          ),
         ),
       ),
     );

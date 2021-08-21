@@ -27,11 +27,15 @@ class AddNodePageModel extends ChangeNotifier {
 
   TextEditingController controller = TextEditingController();
   NodeType nodeType = NodeType.directory;
-  bool isNameValid = false;
+  bool get isNameValid => controller.text.trim().isNotEmpty;
   IndentType indentType = IndentType.same;
 
   onNodeTypeRadioChanged(NodeType? value) {
     this.nodeType = value!;
+    notifyListeners();
+  }
+
+  onTextFieldChanged(String text) {
     notifyListeners();
   }
 
@@ -40,20 +44,7 @@ class AddNodePageModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  onTextFieldChanged(String text) {
-    text = text.trimLeft();
-    if (text.endsWith(" ")) {
-      text = text.substring(0, text.length - 1) + "-";
-    }
-    text = text.replaceAll(" ", "");
-    isNameValid = text.isNotEmpty;
-    controller.text = text;
-    controller.selection = TextSelection.fromPosition(
-        TextPosition(offset: controller.text.length));
-    notifyListeners();
-  }
-
-  onTapCreateNode() async {
+  onTapCreateNode({Function(NodeType type, NodeBean node)? callback}) async {
     String parentId = preNode.parentId;
     int indent = preNode.indent;
     String previousId = preNode.uuid;
@@ -64,11 +55,34 @@ class AddNodePageModel extends ChangeNotifier {
       previousId = EMPTY_UUID;
     }
     var teamNodes = this.globalModel.nodeDao!.nodeMap[team.uuid]!;
+    if (!this.showIndentRadio) {
+      indent = 0;
+      parentId = EMPTY_UUID;
+      if (teamNodes.length > 0) {
+        previousId = teamNodes.last.uuid;
+      } else {
+        previousId = EMPTY_UUID;
+      }
+      if (teamNodes.length == 0) {
+        preNode = NodeBean(
+          uuid: EMPTY_UUID,
+          previousId: EMPTY_UUID,
+          parentId: EMPTY_UUID,
+          indent: 0,
+          name: "virtual-node",
+          teamId: team.uuid,
+          type: "virtual-node",
+        );
+      } else {
+        preNode = teamNodes.last;
+      }
+    }
+
     String uuidString = Uuid().v4();
     NodeBean nodeBean = NodeBean(
       uuid: uuidString,
       type: EnumToString.convertToString(nodeType),
-      name: controller.text,
+      name: controller.text.trim(),
       indent: indent,
       parentId: parentId,
       previousId: previousId,
@@ -92,6 +106,9 @@ class AddNodePageModel extends ChangeNotifier {
         siblings = preNode.parent!.children!;
       }
       nodeBean.parent = preNode.parent;
+      if (teamNodes.length == 0) {
+        siblings.insert(0, nodeBean);
+      }
 
       for (int i = 0; i < siblings.length; i++) {
         if (siblings[i].uuid == preNode.uuid) {
@@ -113,8 +130,11 @@ class AddNodePageModel extends ChangeNotifier {
     }
     this.globalModel.transactionDao!.transaction(Transaction(ops));
 
-    Navigator.pop(this.context);
-    notifyListeners();
     this.globalModel.triggerCallback(EventType.NODE_CREATED);
+    Navigator.pop(this.context);
+    if (callback != null) {
+      callback(nodeType, nodeBean);
+    }
+    notifyListeners();
   }
 }

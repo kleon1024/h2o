@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/team.dart';
 import 'package:h2o/dao/transaction.dart';
@@ -12,6 +13,8 @@ class NavigationPageModel extends ChangeNotifier {
   int currentTeamIndex = 0;
   bool lastNodeExpandState = false;
   NodeBean? lastNodeReordering;
+
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey();
 
   setContext(BuildContext context, GlobalModel globalModel) {
     if (this.context == null) {

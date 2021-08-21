@@ -20,7 +20,7 @@ class BottomSheetButton extends StatelessWidget {
     if (this.text != null) {
       widgets.add(Text(
         this.text!,
-        style: Theme.of(context).textTheme.bodyText2,
+        style: Theme.of(context).textTheme.bodyText1,
         overflow: TextOverflow.ellipsis,
       ));
     }

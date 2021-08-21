@@ -11,6 +11,7 @@ import 'package:h2o/model/document/add_chart_page.dart';
 import 'package:h2o/model/document/document_page.dart';
 import 'package:h2o/model/global.dart';
 import 'package:h2o/pages/document/add_chart_page.dart';
+import 'package:h2o/pages/unified_page.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:reorderables/reorderables.dart';
@@ -22,14 +23,14 @@ class DocumentPage extends StatelessWidget {
     final blockDao = Provider.of<BlockDao>(context);
     final globalModel = Provider.of<GlobalModel>(context);
 
-    debugPrint("editingNew:" + documentPageModel.editingNew.toString());
+    debugPrint("editingNewLast=" + documentPageModel.editingNewLast.toString());
     debugPrint(
-        "editingBlock.id:" + documentPageModel.editingBlock.uuid.toString());
-    debugPrint(
-        "editingPreBlockID:" + documentPageModel.editingPreBlockID.toString());
-    debugPrint("editingIndex:" + documentPageModel.editingIndex.toString());
-    debugPrint("editState:" + documentPageModel.editState.toString());
-    debugPrint("editBlock.type:" + documentPageModel.editingBlock.type);
+        "editingBlock.uuid=" + documentPageModel.editingBlock.uuid.toString());
+    debugPrint("editingBlock.previousId=" +
+        documentPageModel.editingBlock.previousId.toString());
+    debugPrint("editingIndex=" + documentPageModel.editingIndex.toString());
+    debugPrint("editState=" + documentPageModel.editState.toString());
+    debugPrint("editBlock.type=" + documentPageModel.editingBlock.type);
 
     List<BlockBean> blocks = [];
     if (blockDao.blockMap.containsKey(documentPageModel.node.uuid)) {
@@ -39,134 +40,140 @@ class DocumentPage extends StatelessWidget {
 
     Widget menu = buildInsertMenu(context, documentPageModel, globalModel);
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).cardColor,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(36),
-        child: AppBar(
-          title: Text(documentPageModel.node.name),
-          actions: [
-            IconButton(
-                onPressed: () {}, icon: Icon(CupertinoIcons.group, size: 18)),
-          ],
+    return UnifiedPage(
+      child: Scaffold(
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(36),
+          child: AppBar(
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            title: Text(documentPageModel.node.name),
+            actions: [
+              IconButton(
+                  onPressed: () {}, icon: Icon(CupertinoIcons.group, size: 18)),
+            ],
+          ),
         ),
-      ),
-      body: Column(children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: documentPageModel.onTapEmptyArea,
-            child: BouncingScrollView(
-              scrollBar: true,
-              controller: ScrollController(),
-              slivers: [
-                ReorderableSliverList(
-                  onReorder: documentPageModel.onReorder,
-                  delegate:
-                      ReorderableSliverChildBuilderDelegate((context, index) {
-                    FocusNode? focusNode;
-                    if (documentPageModel.focusMap[blocks[index].uuid] !=
-                        null) {
-                      focusNode = documentPageModel
-                          .focusMap[blocks[index].uuid]![blocks[index].type]!;
-                    }
+        body: Column(children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: documentPageModel.onTapEmptyArea,
+              child: BouncingScrollView(
+                scrollBar: true,
+                controller: ScrollController(),
+                slivers: [
+                  ReorderableSliverList(
+                    onReorderStarted: documentPageModel.onReorderStarted,
+                    onReorder: documentPageModel.onReorder,
+                    delegate:
+                        ReorderableSliverChildBuilderDelegate((context, index) {
+                      FocusNode? focusNode;
+                      if (documentPageModel.focusMap[blocks[index].uuid] !=
+                          null) {
+                        focusNode = documentPageModel
+                            .focusMap[blocks[index].uuid]![blocks[index].type]!;
+                      }
 
-                    return Container(
-                        padding: EdgeInsets.symmetric(
-                          vertical: 0,
-                          horizontal: 20,
-                        ),
-                        child: Block(blocks[index], NodeType.document, index,
-                            showCreator: false,
-                            editing: documentPageModel.editingBlock.uuid ==
-                                blocks[index].uuid,
-                            handleRawKeyEvent:
-                                documentPageModel.handleRawKeyEvent,
-                            focusNode: focusNode,
-                            onTextFieldChanged:
-                                documentPageModel.onTextFieldChanged,
-                            onSubmitCreateBlock:
-                                documentPageModel.onSubmitCreateBlock,
-                            editingController: documentPageModel
-                                .editingController, onEnter: () {
-                          documentPageModel.onSubmitCreateBlock();
-                        }, onClick: () {
-                          documentPageModel.onTapBlock(blocks[index], index);
-                        }));
-                  }, childCount: blocks.length),
-                ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    if (documentPageModel.editingNew) {
                       return Container(
                           padding: EdgeInsets.symmetric(
                             vertical: 0,
                             horizontal: 20,
                           ),
-                          child: Block(
-                            documentPageModel.editingBlock,
-                            NodeType.document,
-                            index,
-                            showCreator: false,
-                            editing: documentPageModel.editingNew,
-                            handleRawKeyEvent:
-                                documentPageModel.handleRawKeyEvent,
-                            focusNode: documentPageModel.focusMap[
-                                    documentPageModel.editingBlock.uuid]![
-                                documentPageModel.editingBlock.type],
-                            onTextFieldChanged:
-                                documentPageModel.onTextFieldChanged,
-                            editingController:
-                                documentPageModel.editingController,
-                            onEnter: () {
-                              documentPageModel.onSubmitCreateBlock();
-                            },
-                            onSubmitCreateBlock:
-                                documentPageModel.onSubmitCreateBlock,
-                          ));
-                    } else {
-                      return Container();
-                    }
-                  }, childCount: 1),
-                ),
-              ],
+                          child: Block(blocks[index], NodeType.document, index,
+                              showCreator: false,
+                              editing: documentPageModel.isEditing &&
+                                  documentPageModel.editingBlock.uuid ==
+                                      blocks[index].uuid,
+                              handleRawKeyEvent:
+                                  documentPageModel.handleRawKeyEvent,
+                              focusNode: focusNode,
+                              onTextFieldChanged:
+                                  documentPageModel.onTextFieldChanged,
+                              onSubmitCreateBlock:
+                                  documentPageModel.onSubmitCreateBlock,
+                              editingController: documentPageModel
+                                  .editingController, onEnter: () {
+                            documentPageModel.onSubmitCreateBlock();
+                          }, onClick: () {
+                            documentPageModel.onTapBlock(blocks[index], index);
+                          }));
+                    }, childCount: blocks.length),
+                  ),
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      if (documentPageModel.editingNewLast) {
+                        return Container(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 0,
+                              horizontal: 20,
+                            ),
+                            child: Block(
+                              documentPageModel.editingBlock,
+                              NodeType.document,
+                              index,
+                              showCreator: false,
+                              editing: documentPageModel.editingNewLast,
+                              handleRawKeyEvent:
+                                  documentPageModel.handleRawKeyEvent,
+                              focusNode: documentPageModel.focusMap[
+                                      documentPageModel.editingBlock.uuid]![
+                                  documentPageModel.editingBlock.type],
+                              onTextFieldChanged:
+                                  documentPageModel.onTextFieldChanged,
+                              editingController:
+                                  documentPageModel.editingController,
+                              onEnter: () {
+                                documentPageModel.onSubmitCreateBlock();
+                              },
+                              onSubmitCreateBlock:
+                                  documentPageModel.onSubmitCreateBlock,
+                            ));
+                      } else {
+                        return Container();
+                      }
+                    }, childCount: 1),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        documentPageModel.isEditing
-            ? Container(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                height: 40,
-                decoration: new BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 25.0, // soften the shadow
-                      spreadRadius: 5.0, //extend the shadow
-                      offset: Offset(
-                        0, // Move to right 10  horizontally
-                        0, // Move to bottom 10 Vertically
+          documentPageModel.isEditing
+              ? Container(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  height: 40,
+                  decoration: new BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 25.0, // soften the shadow
+                        spreadRadius: 5.0, //extend the shadow
+                        offset: Offset(
+                          0, // Move to right 10  horizontally
+                          0, // Move to bottom 10 Vertically
+                        ),
+                      )
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      InkWell(
+                        child: Icon(Icons.add, size: 16),
+                        onTap: () {
+                          documentPageModel.onCancelEditing();
+                          showCupertinoModalBottomSheet(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return menu;
+                              });
+                        },
                       ),
-                    )
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    InkWell(
-                      child: Icon(Icons.add, size: 16),
-                      onTap: () {
-                        showCupertinoModalBottomSheet(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return menu;
-                            });
-                      },
-                    ),
-                  ],
-                ),
-              )
-            : Container()
-      ]),
+                    ],
+                  ),
+                )
+              : Container()
+        ]),
+      ),
     );
   }
 
@@ -248,6 +255,7 @@ class DocumentPage extends StatelessWidget {
                   icon: Icons.bar_chart_outlined,
                   text: "Bar Chart",
                   onTap: () {
+                    Navigator.of(context).pop();
                     Navigator.of(context).push(
                       CupertinoPageRoute(builder: (ctx) {
                         return ChangeNotifierProvider(
@@ -267,6 +275,7 @@ class DocumentPage extends StatelessWidget {
                   icon: Icons.show_chart,
                   text: "Line Chart",
                   onTap: () {
+                    Navigator.of(context).pop();
                     Navigator.of(context).push(
                       CupertinoPageRoute(builder: (ctx) {
                         return ChangeNotifierProvider(

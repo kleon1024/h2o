@@ -45,7 +45,7 @@ class DBProvider {
 
     return await databaseFactory.openDatabase(path,
         options: OpenDatabaseOptions(
-            version: 1,
+            version: 2,
             onOpen: (db) {},
             onCreate: (Database db, int version) async {
               debugPrint("Current db version: $version");
@@ -59,6 +59,7 @@ class DBProvider {
                   "uuid TEXT,"
                   "type TEXT,"
                   "name TEXT,"
+                  "draft TEXT,"
                   "indent INTEGER DEFAULT 0,"
                   "parent_id TEXT,"
                   "previous_id TEXT,"
@@ -89,17 +90,40 @@ class DBProvider {
                   "created_at INTEGER,"
                   "updated_at INTEGER"
                   ")");
+              await db.execute("CREATE TABLE IF NOT EXISTS channel_drafts("
+                  "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+                  "uuid TEXT,"
+                  "draft TEXT"
+                  ")");
             },
             onUpgrade: (Database db, int oldVersion, int newVersion) async {
+              if (oldVersion == 1) {
+                await db.execute("ALTER TABLE nodes ADD draft TEXT DEFAULT ''");
+              }
               debugPrint("Newer version: $newVersion");
               debugPrint("Older version: $oldVersion");
             }));
+  }
+
+  Future updateChannelDraft(String nodeId, String draft) async {
+    final db = await database;
+    await db.update("nodes", {"draft": draft},
+        where: "uuid = ?", whereArgs: [nodeId]);
   }
 
   Future<List<NodeBean>> getNodes(String teamId, String parentId) async {
     final db = await database;
     var list = await db.query("nodes",
         where: "team_id = ? AND parent_id = ?", whereArgs: [teamId, parentId]);
+    return list.map((e) => NodeBean.fromJson(e)).toList();
+  }
+
+  Future<List<NodeBean>> getPlainNodes(String teamId, String type) async {
+    final db = await database;
+    var list = await db.query("nodes",
+        where: "team_id = ? AND type = ?",
+        whereArgs: [teamId, type],
+        orderBy: "updated_at DESC");
     return list.map((e) => NodeBean.fromJson(e)).toList();
   }
 
@@ -150,10 +174,10 @@ class DBProvider {
     return NodeBean.fromJson(nodes[0]);
   }
 
-  Future<BlockBean?> findPreviousBlock(String uuid) async {
+  Future<BlockBean?> findPreviousBlock(String uuid, String nodeId) async {
     final db = await database;
-    var blocks =
-        await db.query("blocks", where: "previous_id = ?", whereArgs: [uuid]);
+    var blocks = await db.query("blocks",
+        where: "previous_id = ? AND node_id = ?", whereArgs: [uuid, nodeId]);
     if (blocks.length > 1) {
       debugPrint("warning: find multiple blocks with same previous_id=" +
           uuid +
@@ -220,11 +244,11 @@ class DBProvider {
   Future insertDocumentBlock(BlockBean bean) async {
     final db = await database;
 
-    var n = await findPreviousBlock(bean.previousId);
+    var n = await findPreviousBlock(bean.previousId, bean.nodeId);
     if (n != null) {
       n.previousId = bean.uuid;
       await updateBlock(n);
-      debugPrint("update block:" + n.previousId + ":" + n.uuid);
+      debugPrint("update block before insert:" + n.previousId + ":" + n.uuid);
     }
 
     await db.insert("blocks", bean.toJson());
@@ -233,11 +257,12 @@ class DBProvider {
 
   Future deleteDocumentBlock(BlockBean bean) async {
     final db = await database;
-    var n = await findPreviousBlock(bean.uuid);
+    var n = await findPreviousBlock(bean.uuid, bean.nodeId);
     if (n != null) {
       n.previousId = bean.previousId;
       await updateBlock(n);
-      debugPrint("update block:" + n.previousId + ":" + n.previousId);
+      debugPrint(
+          "update block before delete:" + n.previousId + ":" + n.previousId);
     }
     await db.delete("blocks", where: "uuid = ?", whereArgs: [bean.uuid]);
     debugPrint("delete block:" + bean.previousId + ":" + bean.uuid);

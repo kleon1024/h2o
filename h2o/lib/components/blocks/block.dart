@@ -88,7 +88,6 @@ class Block extends StatelessWidget {
     block = GestureDetector(
       onTap: onClick,
       onLongPress: onLongPress,
-      // focusColor: Theme.of(context).cardColor,
       child: block,
     );
 
@@ -98,13 +97,18 @@ class Block extends StatelessWidget {
 
     Widget checkbox = Container();
     if (this.selecting) {
-      checkbox = Checkbox(
-          value: this.selected,
-          onChanged: (val) {
-            if (this.onSelected != null) {
-              this.onSelected!(index, val!);
-            }
-          });
+      checkbox = Container(
+        height: 25,
+        alignment: Alignment.center,
+        child: Checkbox(
+            visualDensity: VisualDensity.compact,
+            value: this.selected,
+            onChanged: (val) {
+              if (this.onSelected != null) {
+                this.onSelected!(index, val!);
+              }
+            }),
+      );
     }
 
     if (this.showCreator) {
@@ -126,16 +130,16 @@ class Block extends StatelessWidget {
                         child: Row(
                           children: [
                             Text(
-                              "Author ",
-                              style: TextStyle(
-                                  height: 1, fontWeight: FontWeight.bold),
+                              "Author",
+                              style: Theme.of(context).textTheme.caption!.merge(
+                                  TextStyle(fontWeight: FontWeight.bold)),
                             ),
+                            Text(" "),
                             Text(
                               timeago.format(
                                   DateTime.fromMillisecondsSinceEpoch(
                                       blockBean.updatedAt)),
-                              style: TextStyle(
-                                  height: 1, fontWeight: FontWeight.bold),
+                              style: Theme.of(context).textTheme.caption,
                             ),
                           ],
                         ),

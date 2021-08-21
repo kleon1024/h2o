@@ -56,9 +56,21 @@ class BlockDao extends ChangeNotifier {
     }
   }
 
-  Future loadBlocks(NodeBean node) async {
-    var blocks = await DBProvider.db.getBlocks(node.uuid);
-    this.blockMap[node.uuid] = blocks;
+  Future loadBlocks(NodeBean node, int offset, int limit,
+      {Function(int)? callback}) async {
+    var blocks =
+        await DBProvider.db.getBlocks(node.uuid, offset: offset, limit: limit);
+    if (offset > 0) {
+      this
+          .blockMap[node.uuid]!
+          .insertAll(this.blockMap[node.uuid]!.length, blocks);
+    } else {
+      this.blockMap[node.uuid] = blocks;
+    }
+
+    if (callback != null) {
+      callback(blocks.length);
+    }
     notifyListeners();
   }
 
@@ -90,9 +102,11 @@ class BlockDao extends ChangeNotifier {
       if (n == null) {
         debugPrint(
             "reorder blocks unexpected previous block id: " + previousId);
+      } else {
+        n.index = i;
+        reordered.add(n);
+        previousId = n.uuid;
       }
-      reordered.add(n!);
-      previousId = n.uuid;
     }
     this.blockMap[node.uuid] = reordered;
     this.globalModel!.triggerCallback(EventType.NODE_BLOCKS_UPDATED);

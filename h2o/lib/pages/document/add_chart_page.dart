@@ -7,9 +7,11 @@ import 'package:h2o/bean/data_point.dart';
 import 'package:h2o/components/blocks/chart_block.dart';
 import 'package:h2o/components/scroll/bouncing_scroll_view.dart';
 import 'package:h2o/dao/node.dart';
+import 'package:h2o/model/channel/select_nodes_page.dart';
 import 'package:h2o/model/document/add_chart_page.dart';
 import 'package:h2o/model/global.dart';
-import 'package:h2o/pages/channel/forward_to_doc.dart';
+import 'package:h2o/pages/channel/select_nodes_page.dart';
+import 'package:h2o/pages/unified_page.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
@@ -19,7 +21,7 @@ class AddChartPage extends StatelessWidget {
     final globalModel = Provider.of<GlobalModel>(context);
     final addChartPageModel = Provider.of<AddChartPageModel>(context);
 
-    var bodyTestStyle = Theme.of(context).textTheme.bodyText1!;
+    var bodyTestStyle = Theme.of(context).textTheme.bodyText2!;
     if (!addChartPageModel.isNameValid) {
       bodyTestStyle =
           bodyTestStyle.merge(TextStyle(color: Theme.of(context).cardColor));
@@ -52,18 +54,24 @@ class AddChartPage extends StatelessWidget {
       onTap: () {
         Navigator.of(context).push(
           CupertinoPageRoute(builder: (ctx) {
-            return ForwardToDocPage(
-              type: NodeType.table,
-              teamId: addChartPageModel.node.teamId,
-              onCancel: () {},
-              onConfirm: addChartPageModel.onSelectTableNode,
+            return ChangeNotifierProvider(
+              create: (_) => SelectNodesPageModel(
+                context,
+                globalModel,
+                type: NodeType.table,
+                teamId: addChartPageModel.node.teamId,
+              ),
+              child: SelectNodesPage(
+                onCancel: () {},
+                onConfirm: addChartPageModel.onSelectTableNode,
+              ),
             );
           }),
         );
       },
       child: Container(
         height: 50,
-        color: Theme.of(context).canvasColor,
+        color: Colors.black26,
         child: Row(
           children: [
             Expanded(
@@ -83,23 +91,6 @@ class AddChartPage extends StatelessWidget {
     );
 
     var slivers = [
-      SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: 15,
-                ),
-                Container(
-                    padding: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                    child: Text(
-                      tr("doc.add_chart.preview"),
-                      style: Theme.of(context).textTheme.bodyText1,
-                    ))
-              ]);
-        }, childCount: 1),
-      ),
       SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
           return Container(
@@ -158,7 +149,7 @@ class AddChartPage extends StatelessWidget {
                   backgroundColor: Theme.of(context).canvasColor,
                   child: Container(
                     height: 50,
-                    color: Theme.of(context).canvasColor,
+                    color: Colors.black26,
                     child: Row(
                       children: [
                         Expanded(
@@ -211,7 +202,7 @@ class AddChartPage extends StatelessWidget {
                   backgroundColor: Theme.of(context).canvasColor,
                   child: Container(
                     height: 50,
-                    color: Theme.of(context).canvasColor,
+                    color: Colors.black26,
                     child: Row(
                       children: [
                         Expanded(
@@ -249,50 +240,51 @@ class AddChartPage extends StatelessWidget {
       ),
     ];
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).cardColor,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(36),
-        child: AppBar(
-          automaticallyImplyLeading: false,
-          elevation: 0,
-          centerTitle: true,
-          leading: InkWell(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              child: Container(
-                width: 64,
-                child: Text(tr("doc.add_chart.cancel")),
-                alignment: Alignment.center,
-              )),
-          backgroundColor: Theme.of(context).canvasColor,
-          title: Text(tr("doc.add_chart.title"),
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyText1!
-                  .merge(TextStyle(fontWeight: FontWeight.bold))),
-          titleSpacing: 0.0,
-          actions: [
-            InkWell(
-                onTap: addChartPageModel.isNameValid
-                    ? addChartPageModel.onTapInsertChart
-                    : null,
+    return UnifiedPage(
+      child: Scaffold(
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(36),
+          child: AppBar(
+            automaticallyImplyLeading: false,
+            elevation: 0,
+            centerTitle: true,
+            leading: InkWell(
+                onTap: () {
+                  Navigator.pop(context);
+                },
                 child: Container(
                   width: 64,
-                  child: Text(
-                    tr("doc.add_chart.confirm"),
-                    style: bodyTestStyle,
-                  ),
+                  child: Text(tr("doc.add_chart.cancel")),
                   alignment: Alignment.center,
                 )),
-          ],
+            backgroundColor: Colors.transparent,
+            title: Text(tr("doc.add_chart.title"),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyText1!
+                    .merge(TextStyle(fontWeight: FontWeight.bold))),
+            titleSpacing: 0.0,
+            actions: [
+              InkWell(
+                  onTap: addChartPageModel.isNameValid
+                      ? addChartPageModel.onTapInsertChart
+                      : null,
+                  child: Container(
+                    width: 64,
+                    child: Text(
+                      tr("doc.add_chart.confirm"),
+                      style: bodyTestStyle,
+                    ),
+                    alignment: Alignment.center,
+                  )),
+            ],
+          ),
         ),
-      ),
-      body: Container(
-        child: BouncingScrollView(
-          scrollBar: true,
-          slivers: slivers,
+        body: Container(
+          child: BouncingScrollView(
+            scrollBar: true,
+            slivers: slivers,
+          ),
         ),
       ),
     );

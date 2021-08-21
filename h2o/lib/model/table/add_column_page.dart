@@ -20,7 +20,7 @@ class AddColumnPageModel extends ChangeNotifier {
 
   TextEditingController controller = TextEditingController();
   ColumnType columnType = ColumnType.string;
-  bool isNameValid = false;
+  bool get isNameValid => controller.text.trim().isNotEmpty;
   String defaultValue = "";
   TextEditingController defaultValueController = TextEditingController();
 
@@ -45,15 +45,6 @@ class AddColumnPageModel extends ChangeNotifier {
   }
 
   onTextFieldChanged(String text) {
-    text = text.trimLeft();
-    if (text.endsWith(" ")) {
-      text = text.substring(0, text.length - 1) + "-";
-    }
-    text = text.replaceAll(" ", "");
-    isNameValid = text.isNotEmpty;
-    controller.text = text;
-    controller.selection = TextSelection.fromPosition(
-        TextPosition(offset: controller.text.length));
     notifyListeners();
   }
 
@@ -62,7 +53,7 @@ class AddColumnPageModel extends ChangeNotifier {
     ColumnBean columnBean = ColumnBean(
       uuid: uuidString,
       type: EnumToString.convertToString(columnType),
-      name: controller.text,
+      name: controller.text.trim(),
       tableId: node.uuid,
       defaultValue: defaultValue,
     );
