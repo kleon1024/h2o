@@ -13,5 +13,8 @@ class IconMap {
     ColumnType.string: CupertinoIcons.textformat_abc,
     ColumnType.integer: CupertinoIcons.textformat_123,
     ColumnType.date: CupertinoIcons.calendar,
+    ColumnType.number: CupertinoIcons.number,
+    ColumnType.select: CupertinoIcons.chevron_down_circle,
+    ColumnType.multi_select: CupertinoIcons.list_bullet,
   };
 }

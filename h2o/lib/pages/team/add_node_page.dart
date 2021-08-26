@@ -166,7 +166,7 @@ class AddNodePage extends StatelessWidget {
                         style: Theme.of(context).textTheme.caption,
                       ),
                     ])),
-                Icon(IconMap.nodeType[nodeType], size: 16)
+                Icon(IconMap.nodeType[nodeType])
               ]),
               tileColor: Theme.of(context).canvasColor,
               value: nodeType,
@@ -218,7 +218,6 @@ class AddNodePage extends StatelessWidget {
                                         child: ChannelPage());
                                   }),
                                 );
-
                                 break;
                               case NodeType.document:
                                 Navigator.of(context).push(
@@ -229,19 +228,17 @@ class AddNodePage extends StatelessWidget {
                                         child: DocumentPage());
                                   }),
                                 );
-
                                 break;
-                              case NodeType.table:
-                                Navigator.of(context).push(
-                                  CupertinoPageRoute(builder: (ctx) {
-                                    return ChangeNotifierProvider(
-                                        create: (_) =>
-                                            TablePageModel(context, node),
-                                        child: TablePage());
-                                  }),
-                                );
-
-                                break;
+                              // case NodeType.table:
+                              //   Navigator.of(context).push(
+                              //     CupertinoPageRoute(builder: (ctx) {
+                              //       return ChangeNotifierProvider(
+                              //           create: (_) =>
+                              //               TablePageModel(context, node),
+                              //           child: TablePage());
+                              //     }),
+                              //   );
+                              //   break;
                               default:
                             }
                           });

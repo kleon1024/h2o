@@ -5,9 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:h2o/bean/column.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/row.dart';
+import 'package:h2o/components/table/square_chip.dart';
 import 'package:h2o/dao/table.dart';
 import 'package:h2o/dao/transaction.dart';
 import 'package:h2o/model/global.dart';
+import 'package:h2o/model/table/select_page.dart';
+import 'package:h2o/pages/table/select_page.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:uuid/uuid.dart';
@@ -55,8 +58,37 @@ class TablePageModel extends DataGridSource {
       .map<DataGridRow>((r) => DataGridRow(cells: () {
             List<DataGridCell> cells = [];
             for (int i = 0; i < rawColumns.length; i++) {
-              cells.add(DataGridCell<Object>(
-                  columnName: rawColumns[i].name, value: r.values[i]));
+              if (rawColumns[i].type ==
+                  EnumToString.convertToString(ColumnType.created_time)) {
+                debugPrint("created_time");
+                String date =
+                    DateTime.fromMillisecondsSinceEpoch(r.createdAt).toString();
+                date = date.substring(0, date.length - 4);
+                cells.add(DataGridCell<Object>(
+                  columnName: rawColumns[i].name,
+                  value: date,
+                ));
+              } else if (rawColumns[i].type ==
+                  EnumToString.convertToString(ColumnType.updated_time)) {
+                debugPrint("updated_time");
+                String date =
+                    DateTime.fromMillisecondsSinceEpoch(r.updatedAt).toString();
+                date = date.substring(0, date.length - 4);
+                cells.add(DataGridCell<Object>(
+                  columnName: rawColumns[i].name,
+                  value: date,
+                ));
+              } else if (rawColumns[i].type == ColumnType.select) {
+              } else if (rawColumns[i].type == ColumnType.multi_select) {
+              } else {
+                debugPrint("default:" + r.values[i].toString());
+                cells.add(
+                  DataGridCell<Object>(
+                    columnName: rawColumns[i].name,
+                    value: r.values[i].toString(),
+                  ),
+                );
+              }
             }
             return cells;
           }()))
@@ -64,17 +96,47 @@ class TablePageModel extends DataGridSource {
 
   @override
   DataGridRowAdapter? buildRow(DataGridRow row) {
-    return DataGridRowAdapter(
-        cells: row.getCells().map<Widget>((dataGridCell) {
-      return Container(
+    var rawCells = row.getCells();
+    List<Widget> cells = [];
+    for (int i = 0; i < rawCells.length; i++) {
+      if (rawColumns[i].type ==
+          EnumToString.convertToString(ColumnType.select)) {
+        cells.add(InkWell(
+          onTap: () {},
+          child: Container(
+            alignment: Alignment.centerLeft,
+            child: Wrap(
+              children: [
+                SquareChip(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        CupertinoPageRoute(builder: (ctx) {
+                          return ChangeNotifierProvider(
+                              create: (_) => SelectPageModel(context,
+                                  globalModel, node, rawColumns[i], this),
+                              child: SelectPage());
+                        }),
+                      );
+                    },
+                    text: "chip")
+              ],
+            ),
+          ),
+        ));
+      } else {
+        cells.add(Container(
           alignment: Alignment.centerLeft,
           padding: EdgeInsets.symmetric(horizontal: 8),
           child: Text(
-            dataGridCell.value.toString(),
+            rawCells[i].value,
             style: Theme.of(context).textTheme.bodyText1!,
             overflow: TextOverflow.ellipsis,
-          ));
-    }).toList());
+          ),
+        ));
+      }
+    }
+
+    return DataGridRowAdapter(cells: cells);
   }
 
   @override
@@ -108,11 +170,17 @@ class TablePageModel extends DataGridSource {
     focusNode.addListener(() {
       if (!focusNode.hasFocus) {
         debugPrint("lost focus");
+        row.updatedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
         this.globalModel.transactionDao!.transaction(Transaction([
               Operation(OperationType.UpdateRow, node: node, columns: [
                 column.uuid
               ], rows: [
-                RowBean(uuid: row.uuid, values: [editingController.text])
+                RowBean(
+                  uuid: row.uuid,
+                  createdAt: row.createdAt,
+                  updatedAt: row.updatedAt,
+                  values: [editingController.text],
+                )
               ])
             ]));
         notifyListeners();
@@ -179,7 +247,12 @@ class TablePageModel extends DataGridSource {
       columnsStr.add(c.uuid);
       rowStr.add(c.defaultValue);
     });
-    var rowBean = RowBean(uuid: Uuid().v4(), values: row);
+    var rowBean = RowBean(
+      uuid: Uuid().v4(),
+      createdAt: DateTime.now().toUtc().millisecondsSinceEpoch,
+      updatedAt: DateTime.now().toUtc().millisecondsSinceEpoch,
+      values: row,
+    );
 
     List<RowBean> rows = this.globalModel.tableDao!.tableRowMap[node.uuid]!;
     rows.add(rowBean);

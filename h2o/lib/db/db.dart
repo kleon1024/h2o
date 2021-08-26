@@ -7,6 +7,7 @@ import 'package:h2o/bean/block.dart';
 import 'package:h2o/bean/column.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/row.dart';
+import 'package:h2o/bean/select.dart';
 import 'package:h2o/dao/table.dart';
 import 'package:h2o/utils/platform.dart';
 import 'package:path/path.dart' as p;
@@ -45,7 +46,7 @@ class DBProvider {
 
     return await databaseFactory.openDatabase(path,
         options: OpenDatabaseOptions(
-            version: 2,
+            version: 3,
             onOpen: (db) {},
             onCreate: (Database db, int version) async {
               debugPrint("Current db version: $version");
@@ -95,10 +96,26 @@ class DBProvider {
                   "uuid TEXT,"
                   "draft TEXT"
                   ")");
+              await db.execute("CREATE TABLE IF NOT EXISTS selects("
+                  "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+                  "uuid TEXT,"
+                  "text TEXT,"
+                  "column_id TEXT,"
+                  "color INT"
+                  ")");
             },
             onUpgrade: (Database db, int oldVersion, int newVersion) async {
               if (oldVersion == 1) {
                 await db.execute("ALTER TABLE nodes ADD draft TEXT DEFAULT ''");
+              }
+              if (oldVersion == 2) {
+                await db.execute("CREATE TABLE IF NOT EXISTS selects("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+                    "uuid TEXT,"
+                    "text TEXT,"
+                    "column_id TEXT,"
+                    "color INT"
+                    ")");
               }
               debugPrint("Newer version: $newVersion");
               debugPrint("Older version: $oldVersion");
@@ -274,7 +291,11 @@ class DBProvider {
     var sql = "CREATE TABLE \"" +
         bean.uuid +
         "\" (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
-            "uuid TEXT"
+            "uuid TEXT,"
+            "created_by TEXT,"
+            "updated_by TEXT,"
+            "created_at INT,"
+            "updated_at INT"
             ")";
     debugPrint(sql);
     await db.execute(sql);
@@ -290,10 +311,13 @@ class DBProvider {
         type = "TEXT";
         break;
       case ColumnType.integer:
-        type = "INTEGER";
+        type = "INT";
         break;
       case ColumnType.date:
-        type = "DATETIME";
+        type = "INT";
+        break;
+      case ColumnType.number:
+        type = "DOUBLE";
         break;
       default:
         type = "TEXT";
@@ -305,6 +329,7 @@ class DBProvider {
         bean.uuid +
         "\" " +
         type;
+
     sql += " DEFAULT '" + bean.defaultValue + "'";
 
     debugPrint(sql);
@@ -315,12 +340,52 @@ class DBProvider {
     final db = await database;
     var list =
         await db.query("columns", where: "table_id = ?", whereArgs: [uuid]);
-    return list.map((e) => ColumnBean.fromJson(e)).toList();
+    List<ColumnBean> columns = list.map((e) => ColumnBean.fromJson(e)).toList();
+    for (var c in columns) {
+      if (c.type == EnumToString.convertToString(ColumnType.select) ||
+          c.type == EnumToString.convertToString(ColumnType.multi_select)) {
+        c.selects = await getSelects(c.uuid);
+      }
+    }
+    debugPrint("get cols table_id=" + uuid + " columns=" + columns.toString());
+    return columns;
+  }
+
+  Future insertSelect(SelectBean bean) async {
+    final db = await database;
+    await db.insert("selects", bean.toJson());
+    debugPrint("insert select column_id=" + bean.columnId + " id=" + bean.uuid);
+  }
+
+  Future deleteSelect(SelectBean bean) async {
+    final db = await database;
+    await db.delete("selects", where: "uuid = ?", whereArgs: [bean.uuid]);
+    debugPrint("delete select column_id=" + bean.columnId + " id=" + bean.uuid);
+  }
+
+  // Future insertRowSelect(String rowId, String selectId) async {
+  //   final db = await database;
+  //   await db.insert("row_selects", {"row_id": rowId, "select_id": selectId});
+  //   debugPrint("insert row select row_id=" + rowId + " select_id=" + selectId);
+  // }
+  //
+  // Future deleteRowSelect(String rowId, String selectId) async {
+  //   final db = await database;
+  //   await db.delete("row_selects",
+  //       where: "row_id = ? AND select_id = ?", whereArgs: [rowId, selectId]);
+  //   debugPrint("delete row select row_id=" + rowId + " select_id=" + selectId);
+  // }
+
+  Future<List<SelectBean>> getSelects(String columnId) async {
+    final db = await database;
+    var list = await db
+        .query("selects", where: "column_id = ?", whereArgs: [columnId]);
+    return list.map((e) => SelectBean.fromJson(e)).toList();
   }
 
   Future<List<RowBean>> getRows(String uuid, List<String> columns) async {
     final db = await database;
-    List<String> colSqls = ["\"uuid\""];
+    List<String> colSqls = ["\"uuid\"", "\"created_at\", \"updated_at\""];
     columns.forEach((c) {
       colSqls.add("\"" + c + "\"");
     });
@@ -332,7 +397,11 @@ class DBProvider {
               columns.forEach((c) {
                 row.add(e[c]!);
               });
-              return RowBean(uuid: e["uuid"]! as String, values: row);
+              return RowBean(
+                  uuid: e["uuid"]! as String,
+                  createdAt: e["created_at"] as int,
+                  updatedAt: e["updated_at"] as int,
+                  values: row);
             }())
         .toList();
   }
@@ -348,6 +417,8 @@ class DBProvider {
         record["\"" + columns[i] + "\""] = row.values[i];
       }
       record["uuid"] = row.uuid;
+      record["created_at"] = row.createdAt;
+      record["updated_at"] = row.updatedAt;
       batch.insert("\"" + tableId + "\"", record);
     });
 
@@ -368,6 +439,8 @@ class DBProvider {
       for (int i = 0; i < columns.length; i++) {
         record["\"" + columns[i] + "\""] = row.values[i];
       }
+      record["created_at"] = row.createdAt;
+      record["updated_at"] = row.updatedAt;
       batch.update("\"" + tableId + "\"", record,
           where: "uuid = ?", whereArgs: [row.uuid]);
     });

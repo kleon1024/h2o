@@ -48,6 +48,7 @@ dependencies:
   reorderables: ^0.4.1
   web_socket_channel: ^2.1.0
   flutter_easyrefresh: ^2.2.1
+  hexcolor: ^2.0.5
   path: ^1.8.0
   channel:
     git: https://github.com/kleon1024/channel.git

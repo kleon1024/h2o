@@ -90,6 +90,7 @@ class AddColumnPage extends StatelessWidget {
         delegate: SliverChildBuilderDelegate((context, index) {
           ColumnType columnType = ColumnType.values[index];
           return RadioListTile<ColumnType>(
+            dense: true,
             title: Row(children: [
               Expanded(
                   child: Column(
@@ -107,7 +108,7 @@ class AddColumnPage extends StatelessWidget {
                       style: Theme.of(context).textTheme.caption,
                     ),
                   ])),
-              Icon(IconMap.columnType[columnType], size: 16)
+              Icon(IconMap.columnType[columnType])
             ]),
             tileColor: Colors.black26,
             value: columnType,
@@ -118,7 +119,7 @@ class AddColumnPage extends StatelessWidget {
       ),
     ];
 
-    Widget defaultWidget;
+    Widget? defaultWidget;
     switch (addColumnPageModel.columnType) {
       case ColumnType.string:
         defaultWidget = TextField(
@@ -157,7 +158,7 @@ class AddColumnPage extends StatelessWidget {
           keyboardType: TextInputType.text,
           decoration: InputDecoration(
             contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-            fillColor: Theme.of(context).canvasColor,
+            fillColor: Colors.black26,
             filled: true,
             border: InputBorder.none,
             suffix: InkWell(
@@ -173,36 +174,118 @@ class AddColumnPage extends StatelessWidget {
           ),
         );
         break;
+      case ColumnType.number:
+        defaultWidget = TextField(
+          style: Theme.of(context).textTheme.bodyText1,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r"^[1-9.][0-9.]*")),
+          ],
+          onChanged: addColumnPageModel.onDefaultIntegerValueTextFieldChanged,
+          controller: addColumnPageModel.defaultValueController,
+          textInputAction: TextInputAction.done,
+          keyboardType: TextInputType.text,
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+            fillColor: Colors.black26,
+            filled: true,
+            border: InputBorder.none,
+            suffix: InkWell(
+              onTap: () {
+                addColumnPageModel.controller.clear();
+              },
+              child: Container(
+                padding: EdgeInsets.only(right: 8),
+                child: Icon(CupertinoIcons.clear_circled,
+                    size: 16, color: Colors.white),
+              ),
+            ),
+          ),
+        );
+        break;
+      case ColumnType.date:
+        defaultWidget = Container(
+          child: Placeholder(
+            fallbackHeight: 30,
+          ),
+        );
+        break;
       default:
-        defaultWidget = Container();
+        defaultWidget = null;
     }
 
-    slivers.add(
-      SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: 15,
-                ),
-                Container(
-                    padding: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                    child: Text(
-                      tr("table.add_column.default"),
-                      style: Theme.of(context).textTheme.bodyText1,
-                    ))
-              ]);
-        }, childCount: 1),
-      ),
-    );
-    slivers.add(
-      SliverList(
+    if (defaultWidget != null) {
+      slivers.add(
+        SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 15,
+                  ),
+                  Container(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                      child: Text(
+                        tr("table.add_column.default"),
+                        style: Theme.of(context).textTheme.bodyText1,
+                      ))
+                ]);
+          }, childCount: 1),
+        ),
+      );
+      slivers.add(SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
           return defaultWidget;
         }, childCount: 1),
-      ),
-    );
+      ));
+    }
+
+    // if (addColumnPageModel.columnType == ColumnType.integer) {
+    //   slivers.add(SliverList(
+    //     delegate: SliverChildBuilderDelegate((context, index) {
+    //       return Container(
+    //         child: Row(
+    //           children: [
+    //             Checkbox(
+    //               visualDensity: VisualDensity.compact,
+    //               value: addColumnPageModel.autoIncrement,
+    //               onChanged: addColumnPageModel.onAutoIncrementChanged,
+    //             ),
+    //             Text(tr("table.add_column.autoincrement")),
+    //           ],
+    //         ),
+    //       );
+    //     }, childCount: 1),
+    //   ));
+    // }
+
+    // if (addColumnPageModel.columnType == ColumnType.date) {
+    //   slivers.add(SliverList(
+    //     delegate: SliverChildBuilderDelegate((context, index) {
+    //       return Container(
+    //         child: Row(
+    //           children: [
+    //             Checkbox(
+    //               visualDensity: VisualDensity.compact,
+    //               value: addColumnPageModel.currentTime,
+    //               onChanged: addColumnPageModel.onAutoIncrementChanged,
+    //             ),
+    //             Text(tr("table.add_column.current_date")),
+    //           ],
+    //         ),
+    //       );
+    //     }, childCount: 1),
+    //   ));
+    // }
+
+    slivers.add(SliverList(
+      delegate: SliverChildBuilderDelegate((context, index) {
+        return Container(
+          height: 60,
+        );
+      }, childCount: 1),
+    ));
 
     return UnifiedPage(
       child: Scaffold(
@@ -244,10 +327,15 @@ class AddColumnPage extends StatelessWidget {
             ],
           ),
         ),
-        body: Container(
-          child: BouncingScrollView(
-            scrollBar: true,
-            slivers: slivers,
+        body: GestureDetector(
+          onTap: () {
+            FocusScope.of(context).requestFocus(FocusNode());
+          },
+          child: Container(
+            child: BouncingScrollView(
+              scrollBar: true,
+              slivers: slivers,
+            ),
           ),
         ),
       ),

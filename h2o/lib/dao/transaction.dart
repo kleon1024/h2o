@@ -5,6 +5,7 @@ import 'package:h2o/bean/block.dart';
 import 'package:h2o/bean/column.dart';
 import 'package:h2o/bean/node.dart';
 import 'package:h2o/bean/row.dart';
+import 'package:h2o/bean/select.dart';
 import 'package:h2o/db/db.dart';
 import 'package:h2o/model/global.dart';
 
@@ -24,6 +25,8 @@ enum OperationType {
   InsertColumn,
   DeleteColumn,
   UpdateColumn,
+  InsertSelect,
+  DeleteSelect,
   InsertRow,
   DeleteRow,
   UpdateRow,
@@ -36,9 +39,15 @@ class Operation {
   ColumnBean? column;
   List<String>? columns;
   List<RowBean>? rows;
+  SelectBean? select;
 
   Operation(this.type,
-      {this.node, this.block, this.column, this.columns, this.rows});
+      {this.node,
+      this.block,
+      this.column,
+      this.columns,
+      this.rows,
+      this.select});
 }
 
 class Transaction {
@@ -107,6 +116,12 @@ class TransactionDao extends ChangeNotifier {
               break;
             case OperationType.InsertColumn:
               await DBProvider.db.insertColumn(operation.column!);
+              break;
+            case OperationType.InsertSelect:
+              await DBProvider.db.insertSelect(operation.select!);
+              break;
+            case OperationType.DeleteSelect:
+              await DBProvider.db.deleteSelect(operation.select!);
               break;
             case OperationType.InsertRow:
               await DBProvider.db.insertRows(

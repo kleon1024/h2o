@@ -291,7 +291,7 @@ class ChannelPage extends StatelessWidget {
 
                             if (channelPageModel.showTooltipIndex == index) {
                               widget = SimpleTooltip(
-                                  backgroundColor: Colors.black26,
+                                  backgroundColor: Colors.black54,
                                   ballonPadding: EdgeInsets.symmetric(
                                       vertical: 6, horizontal: 4),
                                   arrowTipDistance: 4,

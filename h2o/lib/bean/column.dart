@@ -1,3 +1,4 @@
+import 'package:h2o/bean/select.dart';
 import 'package:h2o/global/constants.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -16,6 +17,8 @@ class ColumnBean {
   int createdAt;
   @JsonKey(name: "updated_at")
   int updatedAt;
+  @JsonKey(ignore: true)
+  List<SelectBean>? selects;
 
   ColumnBean({
     this.uuid = EMPTY_UUID,
@@ -25,6 +28,7 @@ class ColumnBean {
     this.tableId = EMPTY_UUID,
     this.createdAt = 0,
     this.updatedAt = 0,
+    this.selects,
   });
 
   factory ColumnBean.fromJson(Map<String, dynamic> json) =>

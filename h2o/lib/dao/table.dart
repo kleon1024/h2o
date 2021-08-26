@@ -9,7 +9,12 @@ import 'package:h2o/model/global.dart';
 enum ColumnType {
   string,
   integer,
+  number,
   date,
+  select,
+  multi_select,
+  created_time,
+  updated_time,
 }
 
 class TableDao extends ChangeNotifier {
@@ -32,47 +37,16 @@ class TableDao extends ChangeNotifier {
     tableColumnMap[nodeBean.uuid] =
         await DBProvider.db.getColumns(nodeBean.uuid);
 
-    tableRowMap[nodeBean.uuid] = await DBProvider.db.getRows(nodeBean.uuid,
-        tableColumnMap[nodeBean.uuid]!.map((c) => c.uuid).toList());
+    List<ColumnBean> columns = tableColumnMap[nodeBean.uuid]!;
+    List<String> cols = [];
+    for (var c in columns) {
+      cols.add(c.uuid);
+    }
+
+    tableRowMap[nodeBean.uuid] =
+        await DBProvider.db.getRows(nodeBean.uuid, cols);
     notifyListeners();
   }
-
-  // Future updateTables(NodeBean nodeBean) async {
-  //   TableBean? table = await Api.getNodeTable(
-  //     nodeBean.uuid,
-  //     options: this.globalModel!.userDao!.accessTokenOptions(),
-  //     cancelToken: cancelToken,
-  //   );
-  //
-  //   if (table != null) {
-  //     tableMap[nodeBean.uuid] = table;
-  //
-  //     if (table.columns.length == 0) {
-  //       if (tableRowMap[nodeBean.uuid] == null) {
-  //         tableRowMap[nodeBean.uuid] = [];
-  //       }
-  //       this.globalModel!.triggerCallback(EventType.TABLE_UPDATED);
-  //       return;
-  //     }
-  //     notifyListeners();
-  //
-  //     List<Map<String, String>>? rows = await Api.getTableRows(
-  //       table.uuid,
-  //       data: {
-  //         'columns': table.columns.map((c) => c.id).toList(),
-  //         'offset': 0,
-  //         'limit': 10
-  //       },
-  //       options: this.globalModel!.userDao!.accessTokenOptions(),
-  //       cancelToken: cancelToken,
-  //     );
-  //     if (rows != null) {
-  //       tableRowMap[nodeBean.uuid] = rows;
-  //       this.globalModel!.triggerCallback(EventType.TABLE_UPDATED);
-  //     }
-  //     notifyListeners();
-  //   }
-  // }
 
   @override
   void dispose() {

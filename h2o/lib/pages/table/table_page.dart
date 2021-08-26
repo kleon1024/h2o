@@ -102,26 +102,22 @@ class TablePage extends StatelessWidget {
       table = Container(
           height: MediaQuery.of(context).size.height * 0.65,
           child: Center(
-              child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.of(context).push(
-                CupertinoPageRoute(builder: (ctx) {
-                  return ChangeNotifierProvider(
-                      create: (_) => AddColumnPageModel(
-                          context, globalModel, node, tablePageModel),
-                      child: AddColumnPage());
-                }),
-              );
-            },
-            icon: Icon(CupertinoIcons.plus),
-            label: Text(tr("table.add_column.button")),
-          )));
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  CupertinoPageRoute(builder: (ctx) {
+                    return ChangeNotifierProvider(
+                        create: (_) => AddColumnPageModel(
+                            context, globalModel, node, tablePageModel),
+                        child: AddColumnPage());
+                  }),
+                );
+              },
+              icon: Icon(CupertinoIcons.plus),
+              label: Text(tr("table.add_column.button")),
+            ),
+          ));
     } else {
-      // headers.insert(0, "#");
-
-      // var width = 60.0;
-      // var height = 25.0;
-
       table = SfDataGrid(
         source: tablePageModel,
         allowEditing: true,
@@ -132,7 +128,6 @@ class TablePage extends StatelessWidget {
         footerFrozenRowsCount: 1,
         footer: InkWell(
           onTap: tablePageModel.onTapCreateRow,
-          onHover: (_) {},
           child: Container(
             alignment: Alignment.center,
             child: Icon(CupertinoIcons.plus),
@@ -162,7 +157,7 @@ class TablePage extends StatelessWidget {
                       }),
                     );
                   },
-                  icon: Icon(CupertinoIcons.square_grid_2x2, size: 16)),
+                  icon: Icon(CupertinoIcons.list_bullet_below_rectangle)),
               // IconButton(
               //     onPressed: () {}, icon: Icon(CupertinoIcons.table, size: 16)),
             ],
@@ -174,18 +169,5 @@ class TablePage extends StatelessWidget {
         ),
       ),
     );
-
-    //     Container(
-    //       padding: EdgeInsets.symmetric(
-    //         vertical: 3,
-    //         horizontal: 10,
-    //       ),
-    //       child: BouncingScrollView(
-    //         scrollBar: true,
-    //         slivers: slivers,
-    //       ),
-    //     ),
-    //   ),
-    // );
   }
 }

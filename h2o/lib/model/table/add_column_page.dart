@@ -23,6 +23,8 @@ class AddColumnPageModel extends ChangeNotifier {
   bool get isNameValid => controller.text.trim().isNotEmpty;
   String defaultValue = "";
   TextEditingController defaultValueController = TextEditingController();
+  // bool autoIncrement = false;
+  // bool currentTime = false;
 
   onColumnTypeRadioChanged(ColumnType? value) {
     this.columnType = value!;
@@ -32,6 +34,9 @@ class AddColumnPageModel extends ChangeNotifier {
         break;
       case ColumnType.integer:
         defaultValue = "0";
+        break;
+      case ColumnType.number:
+        defaultValue = "0.0";
         break;
       case ColumnType.date:
         defaultValue = DateTime.now().toString();
@@ -56,6 +61,7 @@ class AddColumnPageModel extends ChangeNotifier {
       name: controller.text.trim(),
       tableId: node.uuid,
       defaultValue: defaultValue,
+      selects: [],
     );
     this.globalModel.tableDao!.tableColumnMap[node.uuid]!.add(columnBean);
     this.globalModel.transactionDao!.transaction(Transaction([
